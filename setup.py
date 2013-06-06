@@ -9,14 +9,15 @@ with open('README.rst') as readme:
 
 setup(
     name = 'datapackage',
-    version = '0.1.0'
+    version = '0.1.0',
     url = 'https://github.com/tryggvib/datapackage',
     license = 'GPLv3',
     description = description,
     long_description = long_description,
-    author = 'Tryggvi Björgvinsson'
+    author = 'Tryggvi Björgvinsson',
     author_email = 'tryggvi.bjorgvinsson@okfn.org',
-    py_modules = ['datapackage'],
+    packages = ['datapackage'],
+    package_dir={'datapackage': 'datapackage'},
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
