@@ -1,7 +1,7 @@
 datapackage
 ===========
 
-datapackage provides means to work with DataPackages as defined on
+**datapackage** provides means to work with DataPackages as defined on
 `dataprotocols.org <http://www.dataprotocols.org/en/latest/data-packages.html>`__.
 
 ::
@@ -23,4 +23,4 @@ License
 -------
 
 datapackage is available under the GNU General Public License, version
-3. See LIENCE for more details.
+3. See LICENCE for more details.
