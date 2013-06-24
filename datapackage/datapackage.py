@@ -35,7 +35,8 @@ class DataPackage(object):
     FIELD_PARSERS = {
         'number': float,
         'integer': int,
-        'date': lambda x: datetime.datetime.strptime(x, '%Y-%m-%d'),
+        'date': lambda x: \
+            datetime.datetime.strptime(x, '%Y-%m-%d').date(),
         'time': lambda x: time.strptime(x, '%H:%M'),
         'datetime': lambda x: \
             datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S%Z'),
@@ -77,8 +78,12 @@ class DataPackage(object):
                 format_string = re.sub(old, new, format_string,
                                        flags=re.IGNORECASE)
 
-            # Return the parser
-            return lambda x: datetime.datetime.strptime(x, format_string)
+            # Return the parser (here's a difference between date and datetime
+            if field['type'] == 'datetime':
+                return lambda x: datetime.datetime.strptime(x, format_string)
+            else:
+                return lambda x: \
+                    datetime.datetime.strptime(x, format_string).date()
 
         # If type is geopoint we need to create a parser that can parse three
         # different formats into one dictionary
