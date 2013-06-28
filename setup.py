@@ -12,13 +12,13 @@ with open('README.rst') as readme:
 
 setup(
     name = 'datapackage',
-    version = '0.1.1',
+    version = '0.1.2',
     url = 'https://github.com/tryggvib/datapackage',
     license = 'GPLv3',
     description = description,
     long_description = long_description,
-    author = 'Tryggvi Björgvinsson',
-    author_email = 'tryggvi.bjorgvinsson@okfn.org',
+    maintainer = 'Tryggvi Björgvinsson',
+    maintainer_email = 'tryggvi.bjorgvinsson@okfn.org',
     packages = ['datapackage'],
     package_dir={'datapackage': 'datapackage'},
     classifiers=[
