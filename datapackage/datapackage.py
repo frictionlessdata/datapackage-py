@@ -180,16 +180,10 @@ class DataPackage(object):
         not end with a slash the last piece of the URI will be replaced with
         the descriptor URN.
         """
-        try:
-            descriptor = self.open_resource('datapackage.json')
-        except IOError:
-            raise IOError("Descriptor file not found")
+        descriptor = self.open_resource('datapackage.json')
 
         # Load the descriptor json contents
-        try:
-            json_descriptor = json.load(descriptor)
-        except ValueError:
-            raise ValueError("Unable to parse descriptor json representation.")
+        json_descriptor = json.load(descriptor)
 
         # Return the descriptor json contents (as the dict json.load returns
         return json_descriptor
