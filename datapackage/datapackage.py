@@ -110,18 +110,26 @@ class DataPackage(object):
         # back on unicode type if no parser is found
         return self.FIELD_PARSERS.get(field['type'], unicode)
 
-    def __init__(self, uri):
+    def __init__(self, uri, opener=None):
         """
-        Constructor for the DataPackage class. A URI to the data package must
-        be provided. This can be either a file path or a url.
-        """
+        Construct a DataPackage.
 
+        :param basestring uri: URI or file path to the data package.
+            ``datapackage.json`` should exist under this URI.
+        :param function opener: optional function instead of ``urllib.urlopen``
+            to read data; e.g. ``opener=zf.open`` where ``zf = ZipFS('a.zip')``
+        :type opener: function
+        """
+        self.opener = opener or urllib.urlopen
         # Bind the URI to this instance
         self.uri = uri
         # Load the descriptor as a dictionary into a variable
         self.descriptor = self.get_descriptor()
         # Load the resources as a dictionary into a variable
         self.resources = self.get_resources()
+
+    def open_resource(self, path):
+        return self.opener(urlparse.urljoin(self.uri, path))
 
     @property
     def title(self):
@@ -172,10 +180,8 @@ class DataPackage(object):
         not end with a slash the last piece of the URI will be replaced with
         the descriptor URN.
         """
-        descriptor_uri = urlparse.urljoin(self.uri, 'datapackage.json')
-        # Open the descriptor with urllib.urlopen (accepts url and paths)
         try:
-            descriptor = urllib.urlopen(descriptor_uri)
+            descriptor = self.open_resource('datapackage.json')
         except IOError:
             raise IOError("Descriptor file not found")
 
@@ -228,7 +234,7 @@ class DataPackage(object):
         # Get the resource dictionary representation
         resource_dict = self.resources[id]
         # Open the resource location
-        resource_file = urllib.urlopen(resource_dict['location'])
+        resource_file = self.open_resource(resource_dict['location'])
         # We assume CSV so we create the csv file
         reader = csv.reader(resource_file)
         # Throw away the first line (headers)
