@@ -236,5 +236,5 @@ class DataPackage(object):
         # For each row we yield it as a dictionary where keys are the field
         # names and the value the value in that row
         for row in reader:
-            yield { field['id']: self._field_parser(field)(row[idx]) \
-                        for idx, field in enumerate(resource_dict['fields'])}
+            yield dict((field['id'], self._field_parser(field)(row[idx]))
+                       for idx, field in enumerate(resource_dict['fields']))
