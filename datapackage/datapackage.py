@@ -110,18 +110,26 @@ class DataPackage(object):
         # back on unicode type if no parser is found
         return self.FIELD_PARSERS.get(field['type'], unicode)
 
-    def __init__(self, uri):
+    def __init__(self, uri, opener=None):
         """
-        Constructor for the DataPackage class. A URI to the data package must
-        be provided. This can be either a file path or a url.
-        """
+        Construct a DataPackage.
 
+        :param basestring uri: URI or file path to the data package.
+            ``datapackage.json`` should exist under this URI.
+        :param function opener: optional function instead of ``urllib.urlopen``
+            to read data; e.g. ``opener=zf.open`` where ``zf = ZipFS('a.zip')``
+        :type opener: function
+        """
+        self.opener = opener or urllib.urlopen
         # Bind the URI to this instance
         self.uri = uri
         # Load the descriptor as a dictionary into a variable
         self.descriptor = self.get_descriptor()
         # Load the resources as a dictionary into a variable
         self.resources = self.get_resources()
+
+    def open_resource(self, path):
+        return self.opener(urlparse.urljoin(self.uri, path))
 
     @property
     def title(self):
@@ -130,7 +138,7 @@ class DataPackage(object):
         Default is an empty string if no title is present
         """
 
-        return self.descriptor.get('title', '')
+        return self.descriptor.get('title', u'')
 
     @property
     def description(self):
@@ -139,7 +147,7 @@ class DataPackage(object):
         Default is an empty string if no description is present
         """
 
-        return self.descriptor.get('description', '')
+        return self.descriptor.get('description', u'')
 
     @property
     def data(self):
@@ -172,29 +180,10 @@ class DataPackage(object):
         not end with a slash the last piece of the URI will be replaced with
         the descriptor URN.
         """
-
-        # Check to see if the data packages is located on the file system
-        if self._package_is_local():
-            join = urlparse.urljoin
-        # If not we use the regular os.path.join (it's a file)
-        # This is used to be Windows compliant (might not be necessary but
-        # we take no chances!)
-        else:
-            join = os.path.join
-            
-        # Perform the join to get the descriptor URI
-        descriptor_uri = join(self.uri, 'datapackage.json')
-        # Open the descriptor with urllib.urlopen (accepts url and paths)
-        try:
-            descriptor = urllib.urlopen(descriptor_uri)
-        except IOError:
-            raise IOError("Descriptor file not found")
+        descriptor = self.open_resource('datapackage.json')
 
         # Load the descriptor json contents
-        try:
-            json_descriptor = json.load(descriptor)
-        except ValueError:
-            raise ValueError("Unable to parse descriptor json representation.")
+        json_descriptor = json.load(descriptor)
 
         # Return the descriptor json contents (as the dict json.load returns
         return json_descriptor
@@ -220,7 +209,7 @@ class DataPackage(object):
                           resource.get('schema', {}).get('fields', [])
                       }
             # Add the resource to the resource dictionary collection
-            sources[resource.get('id','')] = source
+            sources[resource.get('id', u'')] = source
 
         # Return the resource collection
         return sources
@@ -239,7 +228,7 @@ class DataPackage(object):
         # Get the resource dictionary representation
         resource_dict = self.resources[id]
         # Open the resource location
-        resource_file = urllib.urlopen(resource_dict['location'])
+        resource_file = self.open_resource(resource_dict['location'])
         # We assume CSV so we create the csv file
         reader = csv.reader(resource_file)
         # Throw away the first line (headers)
@@ -247,5 +236,5 @@ class DataPackage(object):
         # For each row we yield it as a dictionary where keys are the field
         # names and the value the value in that row
         for row in reader:
-            yield { field['id']: self._field_parser(field)(row[idx]) \
-                        for idx, field in enumerate(resource_dict['fields'])}
+            yield dict((field['id'], self._field_parser(field)(row[idx]))
+                       for idx, field in enumerate(resource_dict['fields']))
