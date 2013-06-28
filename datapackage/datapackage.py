@@ -172,18 +172,7 @@ class DataPackage(object):
         not end with a slash the last piece of the URI will be replaced with
         the descriptor URN.
         """
-
-        # Check to see if the data packages is located on the file system
-        if self._package_is_local():
-            join = urlparse.urljoin
-        # If not we use the regular os.path.join (it's a file)
-        # This is used to be Windows compliant (might not be necessary but
-        # we take no chances!)
-        else:
-            join = os.path.join
-            
-        # Perform the join to get the descriptor URI
-        descriptor_uri = join(self.uri, 'datapackage.json')
+        descriptor_uri = urlparse.urljoin(self.uri, 'datapackage.json')
         # Open the descriptor with urllib.urlopen (accepts url and paths)
         try:
             descriptor = urllib.urlopen(descriptor_uri)
