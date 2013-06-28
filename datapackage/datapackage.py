@@ -138,7 +138,7 @@ class DataPackage(object):
         Default is an empty string if no title is present
         """
 
-        return self.descriptor.get('title', '')
+        return self.descriptor.get('title', u'')
 
     @property
     def description(self):
@@ -147,7 +147,7 @@ class DataPackage(object):
         Default is an empty string if no description is present
         """
 
-        return self.descriptor.get('description', '')
+        return self.descriptor.get('description', u'')
 
     @property
     def data(self):
@@ -209,7 +209,7 @@ class DataPackage(object):
                           resource.get('schema', {}).get('fields', [])
                       }
             # Add the resource to the resource dictionary collection
-            sources[resource.get('id','')] = source
+            sources[resource.get('id', u'')] = source
 
         # Return the resource collection
         return sources
