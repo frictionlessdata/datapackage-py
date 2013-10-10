@@ -246,7 +246,21 @@ class DataPackage(object):
         reader.next()
         # For each row we yield it as a dictionary where keys are the field
         # names and the value the value in that row
-        for row in reader:
-            yield dict((field['id'],
-            self._field_parser(field)(row[idx].decode(resource_dict.get('encoding'))))
-                       for idx, field in enumerate(resource_dict['fields']))
+        for row_idx, row in enumerate(reader):
+            # Each row will be returned as a dictionary where the keys are
+            # the field id
+            row_dict = {}
+            # Loop over fields in the schema and parse the values
+            for field_idx, field in enumerate(resource_dict['fields']):
+                # Decode the field value
+                value = row[field_idx].decode(resource_dict.get('encoding'))
+
+                # We wrap this in a try clause so that we can give error
+                # messages about specific fields in a row
+                try:
+                    row_dict[field['id']] = self._field_parser(field)(value)
+                except:
+                    msg = u'Field "{field}" in row {row} could not be parsed.'
+                    raise ValueError(msg.format(field=field['id'], row=row_idx))
+
+            yield row_dict
