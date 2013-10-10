@@ -203,6 +203,9 @@ class DataPackage(object):
             source = {'location':
                           # Location is url path or None (in that order)
                           resource.get('url', resource.get('path', None)),
+                      'encoding':
+                        # The encoding of the file - defaults to utf-8
+                          resource.get('encoding','utf-8'),
                       'fields':
                           # Fields are found in schema.fields
                           resource.get('schema', {}).get('fields', [])
@@ -235,5 +238,6 @@ class DataPackage(object):
         # For each row we yield it as a dictionary where keys are the field
         # names and the value the value in that row
         for row in reader:
-            yield dict((field['id'], self._field_parser(field)(row[idx]))
+            yield dict((field['id'],
+            self._field_parser(field)(row[idx].decode(resource_dict.get('encoding'))))
                        for idx, field in enumerate(resource_dict['fields']))
