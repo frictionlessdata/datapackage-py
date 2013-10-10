@@ -131,6 +131,15 @@ class DataPackage(object):
         return self.opener(urlparse.urljoin(self.uri, path))
 
     @property
+    def name(self):
+        """ 
+        The name of the dataset as described by its descriptor.
+        Default is an empty string if no name is present
+        """
+
+        return self.descriptor.get('name',u'')
+
+    @property
     def title(self):
         """
         The title of the dataset as described by its descriptor.
