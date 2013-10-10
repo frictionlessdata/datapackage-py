@@ -75,8 +75,7 @@ class DataPackage(object):
             
             # For each replacement we substitute (and ignore the case)
             for (old, new) in replacement_order:
-                format_string = re.sub(old, new, format_string,
-                                       flags=re.IGNORECASE)
+                format_string = re.sub("(?i)%s" % old, new, format_string)
 
             # Return the parser (here's a difference between date and datetime
             if field['type'] == 'datetime':
