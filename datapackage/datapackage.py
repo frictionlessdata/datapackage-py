@@ -199,9 +199,9 @@ class DataPackage(object):
     def get_resources(self):
         """
         Get the data package's resources as a dictionary. The key for each
-        resource is the value of its id attribute. If no id is provided then
+        resource is the value of its name attribute. If no name is provided then
         the key is an empty string. This means that resources can be
-        overwritten if they have the same (or no id).
+        overwritten if they have the same (or no name).
         """
 
         # Initialise the empty dictionary
@@ -220,24 +220,29 @@ class DataPackage(object):
                           resource.get('schema', {}).get('fields', [])
                       }
             # Add the resource to the resource dictionary collection
-            sources[resource.get('id', u'')] = source
+            sources[resource.get('name', resource.get('id', u''))] = source
 
         # Return the resource collection
         return sources
 
-    def get_data(self, id=''):
+    def get_data(self, name='', id=''):
         """
         Generator that yields the data for a given resource.
         The resource defaults to a resource identified by the empty string
-        (no id attribute in descriptor)
+        (no name attribute in descriptor)
         """
+        # We support both name and id (id is an old deprecated field in the
+        # data package standard). If user has used id and not name we assign
+        # the id to the name.
+        if not name and id:
+            name = id
 
         # Check if the id can be found in the resources or throw a KeyError
-        if id not in self.resources:
+        if name not in self.resources:
             raise KeyError("Source not found")
 
         # Get the resource dictionary representation
-        resource_dict = self.resources[id]
+        resource_dict = self.resources[name]
         # Open the resource location
         resource_file = self.open_resource(resource_dict['location'])
         # We assume CSV so we create the csv file
@@ -252,15 +257,19 @@ class DataPackage(object):
             row_dict = {}
             # Loop over fields in the schema and parse the values
             for field_idx, field in enumerate(resource_dict['fields']):
+                # Again, id is an old deprecated word from the standard and
+                # we use the name (but support the old id).
+                field_name = field.get('name', field.get('id', ''))
+
                 # Decode the field value
                 value = row[field_idx].decode(resource_dict.get('encoding'))
 
                 # We wrap this in a try clause so that we can give error
                 # messages about specific fields in a row
                 try:
-                    row_dict[field['id']] = self._field_parser(field)(value)
+                    row_dict[field_name] = self._field_parser(field)(value)
                 except:
                     msg = u'Field "{field}" in row {row} could not be parsed.'
-                    raise ValueError(msg.format(field=field['id'], row=row_idx))
+                    raise ValueError(msg.format(field=field_name, row=row_idx))
 
             yield row_dict
