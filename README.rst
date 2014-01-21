@@ -19,6 +19,11 @@ datapackage
     >> print sum([row['CPI'] for row in datapkg.data])
     668134.635662
 
+Python support
+--------------
+
+**datapackage** supports both Python 2 and 3.
+
 License
 -------
 

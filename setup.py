@@ -12,7 +12,7 @@ with open('README.rst') as readme:
 
 setup(
     name = 'datapackage',
-    version = '0.2.1',
+    version = '0.3.0',
     url = 'https://github.com/tryggvib/datapackage',
     license = 'GPLv3',
     description = description,
@@ -27,6 +27,8 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
     ],
