@@ -1,3 +1,3 @@
 # -*- coding: utf-8 -*-
 
-from datapackage import DataPackage
+from .datapackage import DataPackage
