@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import urllib
+import io
 import csv
 import json
 import itertools
@@ -30,9 +31,10 @@ if sys.version_info.major < 3:
     urllib.parse = urlparse
     urllib.request = urllib
     next = lambda x: x.next()
+    bytes = str
+    str = unicode
 else:
     import urllib.request
-    unicode = str
 
 
 class DataPackage(object):
@@ -116,7 +118,7 @@ class DataPackage(object):
 
         # If none of the edge cases we use the default field parsers and fall
         # back on unicode type if no parser is found
-        return self.FIELD_PARSERS.get(field['type'], unicode)
+        return self.FIELD_PARSERS.get(field['type'], str)
 
     def __init__(self, uri, opener=None):
         """
@@ -200,7 +202,8 @@ class DataPackage(object):
         descriptor = self.open_resource('datapackage.json')
 
         # Load the descriptor json contents
-        json_descriptor = json.load(descriptor)
+        str_descriptor = descriptor.read().decode()
+        json_descriptor = json.loads(str_descriptor)
 
         # Return the descriptor json contents (as the dict json.load returns
         return json_descriptor
@@ -254,6 +257,8 @@ class DataPackage(object):
         resource_dict = self.resources[name]
         # Open the resource location
         resource_file = self.open_resource(resource_dict['location'])
+        resource_file = (line.decode(resource_dict.get('encoding'))
+                         for line in resource_file)
         # We assume CSV so we create the csv file
         reader = csv.reader(resource_file)
         # Throw away the first line (headers)
@@ -271,7 +276,7 @@ class DataPackage(object):
                 field_name = field.get('name', field.get('id', ''))
 
                 # Decode the field value
-                value = row[field_idx].decode(resource_dict.get('encoding'))
+                value = row[field_idx]
 
                 # We wrap this in a try clause so that we can give error
                 # messages about specific fields in a row
