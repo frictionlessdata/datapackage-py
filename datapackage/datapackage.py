@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import urllib
-import urlparse
 import csv
 import json
 import itertools
@@ -25,6 +24,16 @@ import os
 import datetime, time
 import base64
 import re
+import sys
+if sys.version_info.major < 3:
+    import urlparse
+    urllib.parse = urlparse
+    urllib.request = urllib
+    next = lambda x: x.next()
+else:
+    import urllib.request
+    unicode = str
+
 
 class DataPackage(object):
     """
@@ -35,10 +44,10 @@ class DataPackage(object):
     FIELD_PARSERS = {
         'number': float,
         'integer': int,
-        'date': lambda x: \
+        'date': lambda x:
             datetime.datetime.strptime(x, '%Y-%m-%d').date(),
         'time': lambda x: time.strptime(x, '%H:%M'),
-        'datetime': lambda x: \
+        'datetime': lambda x:
             datetime.datetime.strptime(x, '%Y-%m-%dT%H:%M:%S%Z'),
         'boolean': bool,
         'binary': base64.b64decode,
@@ -69,10 +78,10 @@ class DataPackage(object):
             format_string = field['format']
             # Order of the replacements is important since month and minutes
             # can be denoted in a similar fashion
-            replacement_order = [('hh','%m'), (':mm',':%M'), ('ss', '%S'),
-                                 ('yyyy','%Y'), ('yy','%y'), ('mm', '%m'),
-                                 ('dd','%d')]
-            
+            replacement_order = [('hh', '%m'), (':mm', ':%M'), ('ss', '%S'),
+                                 ('yyyy', '%Y'), ('yy', '%y'), ('mm', '%m'),
+                                 ('dd', '%d')]
+
             # For each replacement we substitute (and ignore the case)
             for (old, new) in replacement_order:
                 format_string = re.sub("(?i)%s" % old, new, format_string)
@@ -93,14 +102,14 @@ class DataPackage(object):
                     parsed = json.loads(value)
                     if type(parsed) == list:
                         # Geopoint coded as [123.4, 567.8]
-                        return {'lat':parsed[0], 'lon':parsed[1]}
+                        return {'lat': parsed[0], 'lon': parsed[1]}
                     else:
                         # Geopoint coded as {'lat':123.4, 'lon':567.8}
                         return parsed
                 except:
                     # Geopoint probably coded as "123.4, 567.8"
                     geotuple = value.split(',')
-                    return {'lat':float(geotuple[0]), 'lon':float(geotuple[1])} 
+                    return {'lat': float(geotuple[0]), 'lon': float(geotuple[1])}
 
             # Return the parser
             return parse_geopoint
@@ -119,7 +128,7 @@ class DataPackage(object):
             to read data; e.g. ``opener=zf.open`` where ``zf = ZipFS('a.zip')``
         :type opener: function
         """
-        self.opener = opener or urllib.urlopen
+        self.opener = opener or urllib.request.urlopen
         # Bind the URI to this instance
         self.uri = uri
         # Load the descriptor as a dictionary into a variable
@@ -128,16 +137,16 @@ class DataPackage(object):
         self.resources = self.get_resources()
 
     def open_resource(self, path):
-        return self.opener(urlparse.urljoin(self.uri, path))
+        return self.opener(urllib.parse.urljoin(self.uri, path))
 
     @property
     def name(self):
-        """ 
+        """
         The name of the dataset as described by its descriptor.
         Default is an empty string if no name is present
         """
 
-        return self.descriptor.get('name',u'')
+        return self.descriptor.get('name', u'')
 
     @property
     def title(self):
@@ -160,7 +169,7 @@ class DataPackage(object):
     @property
     def data(self):
         """
-        An iterator that returns dictionary representation of the rows in 
+        An iterator that returns dictionary representation of the rows in
         all resources.
         """
 
@@ -176,7 +185,7 @@ class DataPackage(object):
         URI uses the file: scheme)
         """
 
-        parsed_results = urlparse.urlparse(self.uri)
+        parsed_results = urllib.parse.urlparse(self.uri)
         return parsed_results.scheme == '' or parsed_results.netloc == ''
 
     def get_descriptor(self):
@@ -214,7 +223,7 @@ class DataPackage(object):
                           resource.get('url', resource.get('path', None)),
                       'encoding':
                         # The encoding of the file - defaults to utf-8
-                          resource.get('encoding','utf-8'),
+                          resource.get('encoding', 'utf-8'),
                       'fields':
                           # Fields are found in schema.fields
                           resource.get('schema', {}).get('fields', [])
@@ -248,7 +257,7 @@ class DataPackage(object):
         # We assume CSV so we create the csv file
         reader = csv.reader(resource_file)
         # Throw away the first line (headers)
-        reader.next()
+        next(reader)
         # For each row we yield it as a dictionary where keys are the field
         # names and the value the value in that row
         for row_idx, row in enumerate(reader):
