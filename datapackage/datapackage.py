@@ -192,14 +192,17 @@ class DataPackage(object):
         otherwise may be the general license name or identifier.
 
         """
-        lic = self.descriptor.get('license')
-        lics = self.descriptor.get('licenses')
-        if lic and lics:
+        descriptor_license = self.descriptor.get('license')
+        descriptor_licenses = self.descriptor.get('licenses')
+        if descriptor_license and descriptor_licenses:
             raise KeyError("datapackage has both license and licenses defined")
-        elif lic:
-            return [{"type": lic, "url": LICENSES.get(lic, None)}]
-        elif lics:
-            return lics
+        elif descriptor_license:
+            return [{
+                "type": descriptor_license,
+                "url": LICENSES.get(descriptor_license, None)
+            }]
+        elif descriptor_licenses:
+            return descriptor_licenses
         else:
             raise KeyError("datapackage does not have any licenses")
 
@@ -207,8 +210,8 @@ class DataPackage(object):
     def licenses(self, val):
         if 'license' in self.descriptor:
             del self.descriptor['license']
-        for lic in val:
-            if sorted(lic.keys()) != ["type", "url"]:
+        for descriptor_license in val:
+            if sorted(descriptor_license.keys()) != ["type", "url"]:
                 raise ValueError(
                     "license should only have keys for 'type' and 'url'")
         self.descriptor['licenses'] = val
