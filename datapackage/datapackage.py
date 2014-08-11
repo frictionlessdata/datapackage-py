@@ -149,12 +149,33 @@ class DataPackage(object):
 
     @property
     def name(self):
-        """
-        The name of the dataset as described by its descriptor.
-        Default is an empty string if no name is present
-        """
+        """The name of the dataset as described by its descriptor. This is a
+        required property, described by the datapackage protocol as
+        follows:
 
-        return self.descriptor.get('name', u'')
+        short url-usable (and preferably human-readable) name of the
+        package. This MUST be lower-case and contain only alphanumeric
+        characters along with ".", "_" or "-" characters. It will
+        function as a unique identifier and therefore SHOULD be unique
+        in relation to any registry in which this package will be
+        deposited (and preferably globally unique).
+
+        The name SHOULD be invariant, meaning that it SHOULD NOT
+        change when a data package is updated, unless the new package
+        version should be considered a distinct package, e.g. due to
+        significant changes in structure or interpretation. Version
+        distinction SHOULD be left to the version field. As a
+        corollary, the name also SHOULD NOT include an indication of
+        time range covered.
+
+        """
+        return self.descriptor.get('name')
+
+    @name.setter
+    def name(self, val):
+        if not val:
+            raise ValueError("datapackage name must be non-empty")
+        self.descriptor['name'] = val
 
     @property
     def title(self):
