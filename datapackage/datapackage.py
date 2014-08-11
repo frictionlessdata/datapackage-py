@@ -195,30 +195,6 @@ class DataPackage(object):
             raise ValueError("datapackage name must be non-empty")
         self.descriptor['name'] = val
 
-    def _get_licenses(self):
-        license = self.descriptor.get('license')
-        licenses = self.descriptor.get('licenses')
-        if license and licenses:
-            raise KeyError("datapackage has both license and licenses defined")
-        elif license:
-            return [{"type": license, "url": LICENSES.get(license, None)}]
-        elif licenses:
-            return licenses
-        else:
-            raise KeyError("datapackage does not have any licenses")
-
-    @property
-    def license(self):
-        """The license MUST be a string and its value SHOULD be an Open
-        Definition license ID (preferably one that is Open Definition
-        approved.
-
-        """
-        licenses = self._get_licenses()
-        if len(licenses) > 1:
-            raise KeyError("datapackage has more than one license, use 'licenses' instead")
-        return licenses[0]["type"]
-
     @property
     def licenses(self):
         """MUST be an array. Each entry MUST be a hash with a type and a url
@@ -227,11 +203,51 @@ class DataPackage(object):
         otherwise may be the general license name or identifier.
 
         """
-        return self._get_licenses()
+        lic = self.descriptor.get('license')
+        lics = self.descriptor.get('licenses')
+        if lic and lics:
+            raise KeyError("datapackage has both license and licenses defined")
+        elif lic:
+            return [{"type": lic, "url": LICENSES.get(lic, None)}]
+        elif lics:
+            return lics
+        else:
+            raise KeyError("datapackage does not have any licenses")
+
+    @licenses.setter
+    def licenses(self, val):
+        if 'license' in self.descriptor:
+            del self.descriptor['license']
+        for lic in val:
+            if sorted(lic.keys()) != ["type", "url"]:
+                raise ValueError(
+                    "license should only have keys for 'type' and 'url'")
+        self.descriptor['licenses'] = val
+
+    def add_license(self, license_type, url=None):
+        """Adds a license to the list of licenses for the datapackage.
+
+        Parameters
+        ----------
+
+        license_type: string
+            The name of the license, which should be an Open
+            Definition license ID if an ID exists for the license and
+            otherwise may be the general license name or identifier.
+
+        url: string (optional)
+            The URL corresponding to the license. If license_type is a
+            standard Open Definition license, then the URL will try to
+            be inferred automatically.
+
+        """
+        url = url or LICENSES.get(license_type, None)
+        licenses = self.licenses
+        licenses.append({"type": license_type, "url": url})
+        self.licenses = licenses
 
     @property
     def datapackage_version(self):
-
         """The version of the data package specification this datapackage.json
         conforms to. It should follow the Semantic Versioning
         requirements (http://semver.org/).
