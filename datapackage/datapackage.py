@@ -178,6 +178,21 @@ class DataPackage(object):
         self.descriptor['name'] = val
 
     @property
+    def datapackage_version(self):
+        """The version of the data package specification this datapackage.json
+        conforms to. It should follow the Semantic Versioning
+        requirements (http://semver.org/).
+
+        """
+        return self.descriptor.get('datapackage_version')
+
+    @datapackage_version.setter
+    def datapackage_version(self, val):
+        if not val:
+            raise ValueError("datapackage version must be non-empty")
+        self.descriptor['datapackage_version'] = val
+
+    @property
     def title(self):
         """
         The title of the dataset as described by its descriptor.
