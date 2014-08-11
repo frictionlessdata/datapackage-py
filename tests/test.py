@@ -22,7 +22,7 @@ def test_get_empty_name():
 
 
 @raises(KeyError)
-def test_get_empty_name2():
+def test_get_name_when_none():
     dpkg = DataPackage("tests/test.dpkg")
     dpkg.descriptor['name'] = None
     dpkg.name
@@ -41,7 +41,7 @@ def test_set_empty_name():
 
 
 @raises(ValueError)
-def test_set_empty_name2():
+def test_set_name_as_none():
     dpkg = DataPackage("tests/test.dpkg")
     dpkg.name = None
 
@@ -108,7 +108,7 @@ def test_get_empty_datapackage_version():
 
 
 @raises(KeyError)
-def test_get_empty_datapackage_version2():
+def test_get_datapackage_version_when_none():
     dpkg = DataPackage("tests/test.dpkg")
     dpkg.descriptor['datapackage_version'] = None
     dpkg.datapackage_version
@@ -218,13 +218,13 @@ def test_set_sources():
 
 
 @raises(ValueError)
-def test_set_bad_sources():
+def test_set_sources_bad_keys():
     dpkg = DataPackage("tests/test.dpkg")
     dpkg.sources = [{"foo": "foo", "bar": "bar"}]
 
 
 @raises(ValueError)
-def test_set_bad_sources2():
+def test_set_sources_missing_name():
     dpkg = DataPackage("tests/test.dpkg")
     dpkg.sources = [{"web": "foo", "email": "bar"}]
 
