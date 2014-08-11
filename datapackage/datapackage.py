@@ -229,18 +229,13 @@ class DataPackage(object):
     def add_license(self, license_type, url=None):
         """Adds a license to the list of licenses for the datapackage.
 
-        Parameters
-        ----------
-
-        license_type: string
-            The name of the license, which should be an Open
-            Definition license ID if an ID exists for the license and
-            otherwise may be the general license name or identifier.
-
-        url: string (optional)
-            The URL corresponding to the license. If license_type is a
-            standard Open Definition license, then the URL will try to
-            be inferred automatically.
+        :param string license_type: The name of the license, which
+            should be an Open Definition license ID if an ID exists
+            for the license and otherwise may be the general license
+            name or identifier.
+        :param string url: The URL corresponding to the license. If
+            license_type is a standard Open Definition license, then
+            the URL will try to be inferred automatically.
 
         """
         url = url or LICENSES.get(license_type, None)
@@ -361,14 +356,10 @@ class DataPackage(object):
     def add_source(self, name, web=None, email=None):
         """Adds a source to the list of sources for this datapackage.
 
-        Parameters
-        ----------
-        name: str
-            The human-readable name of the source.
-        web: str
-            A URL pointing to the source.
-        email: str
-            An email address for the contact of the source.
+        :param string name: The human-readable name of the source.
+        :param string web: A URL pointing to the source.
+        :param string email: An email address for the contact of the
+            source.
 
         """
         sources = self.sources
