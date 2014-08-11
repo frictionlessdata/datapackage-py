@@ -36,22 +36,9 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request
 
-from .util import verify_semantic_version
+from .util import verify_semantic_version, get_licenses
 
-
-# Some common, conformant recommended licenses as listed at
-# http://opendefinition.org/licenses/
-LICENSES = {
-    "CC0": "http://opendefinition.org/licenses/cc-zero",
-    "PDDL": "http://opendefinition.org/licenses/odc-pddl",
-    "CC-BY-4.0": "http://opendefinition.org/licenses/cc-by",
-    "CC-BY": "http://opendefinition.org/licenses/cc-by",
-    "ODC-BY": "http://opendefinition.org/licenses/odc-by",
-    "CC-BY-SA-4.0": "http://opendefinition.org/licenses/cc-by-sa",
-    "CC-BY-SA": "http://opendefinition.org/licenses/cc-by-sa",
-    "ODbL": "http://opendefinition.org/licenses/odc-odbl",
-    "FAL": "http://opendefinition.org/licenses/fal"
-}
+LICENSES = get_licenses()
 
 
 class DataPackage(object):
