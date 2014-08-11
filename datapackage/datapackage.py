@@ -37,6 +37,21 @@ else:
     import urllib.request
 
 
+# Some common, conformant recommended licenses as listed at
+# http://opendefinition.org/licenses/
+LICENSES = {
+    "CC0": "http://opendefinition.org/licenses/cc-zero",
+    "PDDL": "http://opendefinition.org/licenses/odc-pddl",
+    "CC-BY-4.0": "http://opendefinition.org/licenses/cc-by",
+    "CC-BY": "http://opendefinition.org/licenses/cc-by",
+    "ODC-BY": "http://opendefinition.org/licenses/odc-by",
+    "CC-BY-SA-4.0": "http://opendefinition.org/licenses/cc-by-sa",
+    "CC-BY-SA": "http://opendefinition.org/licenses/cc-by-sa",
+    "ODbL": "http://opendefinition.org/licenses/odc-odbl",
+    "FAL": "http://opendefinition.org/licenses/fal"
+}
+
+
 class DataPackage(object):
     """
     Package for loading and managing a data package as defined by:
@@ -180,8 +195,43 @@ class DataPackage(object):
             raise ValueError("datapackage name must be non-empty")
         self.descriptor['name'] = val
 
+    def _get_licenses(self):
+        license = self.descriptor.get('license')
+        licenses = self.descriptor.get('licenses')
+        if license and licenses:
+            raise KeyError("datapackage has both license and licenses defined")
+        elif license:
+            return [{"type": license, "url": LICENSES.get(license, None)}]
+        elif licenses:
+            return licenses
+        else:
+            raise KeyError("datapackage does not have any licenses")
+
+    @property
+    def license(self):
+        """The license MUST be a string and its value SHOULD be an Open
+        Definition license ID (preferably one that is Open Definition
+        approved.
+
+        """
+        licenses = self._get_licenses()
+        if len(licenses) > 1:
+            raise KeyError("datapackage has more than one license, use 'licenses' instead")
+        return licenses[0]["type"]
+
+    @property
+    def licenses(self):
+        """MUST be an array. Each entry MUST be a hash with a type and a url
+        property linking to the actual text. The type SHOULD be an
+        Open Definition license ID if an ID exists for the license and
+        otherwise may be the general license name or identifier.
+
+        """
+        return self._get_licenses()
+
     @property
     def datapackage_version(self):
+
         """The version of the data package specification this datapackage.json
         conforms to. It should follow the Semantic Versioning
         requirements (http://semver.org/).
