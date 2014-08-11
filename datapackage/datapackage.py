@@ -169,7 +169,10 @@ class DataPackage(object):
         time range covered.
 
         """
-        return self.descriptor.get('name')
+        name = self.descriptor.get('name')
+        if not name:
+            raise KeyError("datapackage does not have a name")
+        return name
 
     @name.setter
     def name(self, val):
@@ -184,7 +187,10 @@ class DataPackage(object):
         requirements (http://semver.org/).
 
         """
-        return self.descriptor.get('datapackage_version')
+        version = self.descriptor.get("datapackage_version")
+        if not version:
+            raise KeyError("datapackage does not have a datapackage version")
+        return version
 
     @datapackage_version.setter
     def datapackage_version(self, val):
