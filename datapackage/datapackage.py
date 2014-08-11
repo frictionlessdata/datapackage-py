@@ -36,6 +36,8 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request
 
+from .util import verify_semantic_version
+
 
 # Some common, conformant recommended licenses as listed at
 # http://opendefinition.org/licenses/
@@ -262,7 +264,7 @@ class DataPackage(object):
     def datapackage_version(self, val):
         if not val:
             raise ValueError("datapackage version must be non-empty")
-        self.descriptor['datapackage_version'] = val
+        self.descriptor['datapackage_version'] = verify_semantic_version(val)
 
     @property
     def title(self):
@@ -273,14 +275,147 @@ class DataPackage(object):
 
         return self.descriptor.get('title', u'')
 
+    @title.setter
+    def title(self, val):
+        if not val:
+            val = ""
+        self.descriptor['title'] = str(val)
+
     @property
     def description(self):
         """
-        The descriptor of the dataset as described by its descriptor.
+        The description of the dataset as described by its descriptor.
         Default is an empty string if no description is present
         """
 
         return self.descriptor.get('description', u'')
+
+    @description.setter
+    def description(self, val):
+        if not val:
+            val = ""
+        self.descriptor['description'] = str(val)
+
+    @property
+    def homepage(self):
+        """
+        URL string for the data packages web site
+        Default is an empty string if no homepage is present
+        """
+        return self.descriptor.get('homepage', u'')
+
+    @homepage.setter
+    def homepage(self, val):
+        if not val:
+            val = ""
+        self.descriptor['homepage'] = str(val)
+
+    @property
+    def version(self):
+        """A version string identifying the version of the package. It should
+        conform to the Semantic Versioning requirements
+        (http://semver.org/).
+
+        Defaults to 0.0.1 if not specified.
+
+        """
+        return self.descriptor.get('version', u'0.0.1')
+
+    @version.setter
+    def version(self, val):
+        self.descriptor['version'] = verify_semantic_version(val)
+
+    @property
+    def sources(self):
+        """An array of source hashes. Each source hash may have name, web and
+        email fields.
+
+        Defaults to an empty list.
+
+        """
+        return self.descriptor.get('sources', [])
+
+    @sources.setter
+    def sources(self, val):
+        if not val:
+            val = []
+
+        sources = []
+        for source in val:
+            keys = set(source.keys())
+            extra_keys = keys - set(["name", "web", "email"])
+            if len(extra_keys) > 0:
+                raise ValueError(
+                    "source has unexpected keys: {}".format(extra_keys))
+            if "name" not in keys:
+                raise ValueError("source is missing a name")
+            sources.append({
+                str(key): str(val) for key, val in source.iteritems()})
+
+        names = [source["name"] for source in sources]
+        if len(names) != len(set(names)):
+            raise ValueError("source names are not unique")
+
+        self.descriptor['sources'] = sources
+
+    def add_source(self, name, web=None, email=None):
+        """Adds a source to the list of sources for this datapackage.
+
+        Parameters
+        ----------
+        name: str
+            The human-readable name of the source.
+        web: str
+            A URL pointing to the source.
+        email: str
+            An email address for the contact of the source.
+
+        """
+        sources = self.sources
+        sources.append({
+            "name": str(name),
+            "web": web or u'',
+            "email": email or u''
+        })
+        self.sources = sources
+
+    def remove_source(self, name):
+        """Removes the source with the given name."""
+        sources = [s for s in self.sources if s["name"] != name]
+        if len(sources) == len(self.sources):
+            raise KeyError("source with name '{}' does not exist".format(name))
+        self.sources = sources
+
+    @property
+    def keywords(self):
+        """An array of string keywords to assist users searching for the
+        package in catalogs.
+
+        Defaults to an empty list.
+
+        """
+        return self.descriptor.get('keywords', [])
+
+    @keywords.setter
+    def keywords(self, val):
+        if not val:
+            val = []
+        self.descriptor['keywords'] = [str(x) for x in val]
+
+    @property
+    def image(self):
+        """A link to an image to use for this data package.
+
+        Defaults to an empty string.
+
+        """
+        return self.descriptor.get('image', u'')
+
+    @image.setter
+    def image(self, val):
+        if not val:
+            val = u''
+        self.descriptor['image'] = str(val)
 
     @property
     def data(self):
