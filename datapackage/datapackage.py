@@ -139,7 +139,7 @@ class DataPackage(object):
         self.resources = self.get_resources()
 
     def open_resource(self, path):
-        return self.opener(urllib.parse.urljoin(self.uri, path))
+        return self.opener(os.path.join(self.uri, path))
 
     @property
     def name(self):
