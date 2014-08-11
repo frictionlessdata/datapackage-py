@@ -139,7 +139,13 @@ class DataPackage(object):
         self.resources = self.get_resources()
 
     def open_resource(self, path):
-        return self.opener(urllib.parse.urljoin(self.uri, path))
+        # use os.path.join if the path is local, otherwise use urljoin
+        # -- we don't want to just use os.path.join because otherwise
+        # on Windows it will try to create URLs with backslashes
+        if self._package_is_local():
+            return self.opener(os.path.join(self.uri, path))
+        else:
+            return self.opener(urllib.parse.urljoin(self.uri, path))
 
     @property
     def name(self):
