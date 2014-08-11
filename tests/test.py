@@ -292,3 +292,9 @@ def test_set_image():
     assert dpkg.image == ''
     dpkg.image = "bar.jpg"
     assert dpkg.image == "bar.jpg"
+
+
+def test_web_url():
+    dpkg = DataPackage('http://data.okfn.org/data/cpi/')
+    assert dpkg.title == "Annual Consumer Price Index (CPI)"
+    assert dpkg.description == "Annual Consumer Price Index (CPI) for most countries in the world. Reference year is 2005."
