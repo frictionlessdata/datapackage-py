@@ -17,12 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import urllib
-import io
 import csv
 import json
 import itertools
 import os
-import datetime, time
+import datetime
+import time
 import base64
 import re
 import sys
