@@ -67,6 +67,11 @@ class Resource(object):
 
     @property
     def fullpath(self):
+        """The full path to the resource. Like 'path', this is a Unix-style
+        path, but includes the datapackage uri in the path, rather
+        than being relative to it.
+
+        """
         path = self.path
         if path:
             # use posix path since it is supposed to be unix-style
@@ -89,8 +94,12 @@ class Resource(object):
     def url(self, val):
         if not val and 'url' in self.descriptor:
             del self.descriptor['url']
-        else:
-            self.descriptor['url'] = is_url(str(val))
+            return
+
+        if not is_url(val):
+            raise ValueError("not a url: {}".format(val))
+
+        self.descriptor['url'] = str(val)
 
     @property
     def name(self):

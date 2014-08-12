@@ -85,3 +85,29 @@ class TestDatapackage(object):
         self.resource.fullpath = posixpath.join(self.dpkg.uri, "barfoo.json")
         assert self.resource.path == "barfoo.json"
         assert self.resource.fullpath == posixpath.join(self.dpkg.uri, "barfoo.json")
+
+    def test_get_url(self):
+        """Try reading the resource url"""
+        url = self.resource.url
+        assert url == "http://foobar.com/"
+
+    def test_get_missing_url(self):
+        """Try reading the resource url when it is missing"""
+        del self.resource.descriptor['url']
+        url = self.resource.url
+        assert url is None
+
+    def test_clear_url(self):
+        """Check that setting the url to none removes it from the descriptor"""
+        self.resource.url = None
+        assert 'url' not in self.resource.descriptor
+
+    def test_set_url(self):
+        """Try setting the resource url"""
+        self.resource.url = "https://www.google.com"
+        assert self.resource.url == "https://www.google.com"
+
+    @raises(ValueError)
+    def test_set_bad_url(self):
+        """Try setting the resource url to an invalid url"""
+        self.resource.url = "google"
