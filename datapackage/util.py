@@ -28,6 +28,11 @@ SemanticVersion = namedtuple(
     ["major", "minor", "patch", "prerelease", "metadata"])
 
 
+# For semantic versioning, the pre-release and metadata should only be
+# alphanumeric plus hyphens and periods
+valid_version_regex = re.compile(r"^[0-9A-Za-z-\.]+$")
+
+
 def parse_version(version):
     """Parse a version string according to semantic versioning.
 
@@ -69,20 +74,16 @@ def parse_version(version):
     except ValueError:
         raise ValueError("patch version is not an integer: {}".format(patch))
 
-    # pre-release and metadata should only be alphanumeric plus
-    # hyphens and periods
-    valid = re.compile(r"^[0-9A-Za-z-\.]+$")
-
     # check that prerelease is valid
     if prerelease:
-        match = valid.match(prerelease)
+        match = valid_version_regex.match(prerelease)
         if not match:
             raise ValueError(
                 "invalid pre-release version: {}".format(prerelease))
 
     # check that metadata is valid
     if metadata:
-        match = valid.match(metadata)
+        match = valid_version_regex.match(metadata)
         if not match:
             raise ValueError(
                 "invalid metadata: {}".format(metadata))
