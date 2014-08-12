@@ -36,7 +36,7 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request
 
-from .util import verify_version, get_licenses
+from .util import verify_version, parse_version, format_version, get_licenses
 from .util import is_local, is_url, is_email
 
 LICENSES = get_licenses()
@@ -316,6 +316,58 @@ class DataPackage(object):
     @version.setter
     def version(self, val):
         self.descriptor['version'] = verify_version(val)
+
+    def bump_major_version(self, keep_metadata=False):
+        """Increases the major version by one, e.g. 1.0.0 --> 2.0.0
+
+        Note that this sets the minor and patch versions to zero, and
+        erases the prerelease and metadata information (unless
+        `keep_metadata` is True, in which case the metadata will be
+        preserved).
+
+        """
+        version = parse_version(self.version)
+        major = version[0]
+        if keep_metadata:
+            metadata = version[-1]
+        else:
+            metadata = None
+        new_version = format_version((major + 1, 0, 0, None, metadata))
+        self.version = new_version
+
+    def bump_minor_version(self, keep_metadata=False):
+        """Increases the minor version by one, e.g. 1.0.0 --> 1.1.0
+
+        Note that this sets the patch version to zero, and erases the
+        prerelease and metadata information (unless `keep_metadata` is
+        True, in which case the metadata will be preserved).
+
+        """
+        version = parse_version(self.version)
+        major, minor = version[:2]
+        if keep_metadata:
+            metadata = version[-1]
+        else:
+            metadata = None
+        new_version = format_version((major, minor + 1, 0, None, metadata))
+        self.version = new_version
+
+    def bump_patch_version(self, keep_metadata=False):
+        """Increases the patch version by one, e.g. 1.0.0 --> 1.0.1
+
+        Note that this erases the prerelease and metadata information
+        (unless `keep_metadata` is True, in which case the metadata
+        will be preserved).
+
+        """
+        version = parse_version(self.version)
+        major, minor, patch = version[:3]
+        if keep_metadata:
+            metadata = version[-1]
+        else:
+            metadata = None
+        new_version = format_version((major, minor, patch + 1, None, metadata))
+        self.version = new_version
 
     @property
     def sources(self):

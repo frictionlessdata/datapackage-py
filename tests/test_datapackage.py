@@ -309,3 +309,81 @@ class TestDatapackage(object):
         self.dpkg = datapackage.DataPackage('http://data.okfn.org/data/cpi/')
         assert self.dpkg.title == "Annual Consumer Price Index (CPI)"
         assert self.dpkg.description == "Annual Consumer Price Index (CPI) for most countries in the world. Reference year is 2005."
+
+    def test_bump_major_version(self):
+        """Tests bumping the major version of the datapackage"""
+        self.dpkg.version = "1.0.0"
+        self.dpkg.bump_major_version()
+        assert self.dpkg.version == "2.0.0"
+
+        self.dpkg.version = "1.1.0"
+        self.dpkg.bump_major_version()
+        assert self.dpkg.version == "2.0.0"
+
+        self.dpkg.version = "1.0.1"
+        self.dpkg.bump_major_version()
+        assert self.dpkg.version == "2.0.0"
+
+        self.dpkg.version = "1.0.1-foo"
+        self.dpkg.bump_major_version()
+        assert self.dpkg.version == "2.0.0"
+
+        self.dpkg.version = "1.0.1-foo+bar"
+        self.dpkg.bump_major_version()
+        assert self.dpkg.version == "2.0.0"
+
+        self.dpkg.version = "1.0.1-foo+bar"
+        self.dpkg.bump_major_version(True)
+        assert self.dpkg.version == "2.0.0+bar"
+
+    def test_bump_minor_version(self):
+        """Tests bumping the minor version of the datapackage"""
+        self.dpkg.version = "1.0.0"
+        self.dpkg.bump_minor_version()
+        assert self.dpkg.version == "1.1.0"
+
+        self.dpkg.version = "1.1.0"
+        self.dpkg.bump_minor_version()
+        assert self.dpkg.version == "1.2.0"
+
+        self.dpkg.version = "1.0.1"
+        self.dpkg.bump_minor_version()
+        assert self.dpkg.version == "1.1.0"
+
+        self.dpkg.version = "1.0.1-foo"
+        self.dpkg.bump_minor_version()
+        assert self.dpkg.version == "1.1.0"
+
+        self.dpkg.version = "1.0.1-foo+bar"
+        self.dpkg.bump_minor_version()
+        assert self.dpkg.version == "1.1.0"
+
+        self.dpkg.version = "1.0.1-foo+bar"
+        self.dpkg.bump_minor_version(True)
+        assert self.dpkg.version == "1.1.0+bar"
+
+    def test_bump_patch_version(self):
+        """Tests bumping the patch version of the datapackage"""
+        self.dpkg.version = "1.0.0"
+        self.dpkg.bump_patch_version()
+        assert self.dpkg.version == "1.0.1"
+
+        self.dpkg.version = "1.1.0"
+        self.dpkg.bump_patch_version()
+        assert self.dpkg.version == "1.1.1"
+
+        self.dpkg.version = "1.0.1"
+        self.dpkg.bump_patch_version()
+        assert self.dpkg.version == "1.0.2"
+
+        self.dpkg.version = "1.0.1-foo"
+        self.dpkg.bump_patch_version()
+        assert self.dpkg.version == "1.0.2"
+
+        self.dpkg.version = "1.0.1-foo+bar"
+        self.dpkg.bump_patch_version()
+        assert self.dpkg.version == "1.0.2"
+
+        self.dpkg.version = "1.0.1-foo+bar"
+        self.dpkg.bump_patch_version(True)
+        assert self.dpkg.version == "1.0.2+bar"
