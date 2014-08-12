@@ -17,16 +17,25 @@ if sys.version_info[0] < 3:
 
 from . import sources
 from . import licenses
-from .util import is_url, is_mimetype
+from .util import is_local, is_url, is_mimetype
 
 name_regex = re.compile(r"^[0-9A-Za-z-_\.]+$")
 
 
 class Resource(object):
 
-    def __init__(self, datapackage_uri, descriptor):
+    def __init__(self, datapackage_uri, descriptor, opener=None):
         self.datapackage_uri = datapackage_uri
         self.descriptor = descriptor
+        self.is_local = is_local(self.datapackage_uri)
+
+    def _open(self, mode):
+        if self.is_local:
+            return open(self.fullpath, mode)
+        else:
+            if mode not in ('r', 'rb'):
+                raise ValueError('urls can only be opened read-only')
+            return urllib.urlopen(self.fullpath)
 
     @property
     def data(self):
@@ -82,16 +91,12 @@ class Resource(object):
         """
         path = self.path
         if path:
-            # use posix path since it is supposed to be unix-style
-            path = posixpath.join(self.datapackage_uri, path)
+            if self.is_local:
+                # use posix path since it is supposed to be unix-style
+                path = posixpath.join(self.datapackage_uri, path)
+            else:
+                path = urllib.parse.urljoin(self.datapackage_uri, path)
         return path
-
-    @fullpath.setter
-    def fullpath(self, val):
-        if val:
-            # use posix path since it is supposed to be unix-style
-            val = posixpath.relpath(val, self.datapackage_uri)
-        self.path = val
 
     @property
     def url(self):
@@ -234,7 +239,13 @@ class Resource(object):
         """Compute the size of the file specified by the path"""
         if not self.path:
             raise ValueError("path to file is not specified")
-        size = os.path.getsize(self.fullpath)
+        if self.is_local:
+            size = os.path.getsize(self.fullpath)
+        else:
+            site = urllib.urlopen(self.fullpath)
+            meta = site.info()
+            size = int(meta.getheaders("Content-Length")[0])
+
         return size
 
     def _url_bytes(self):
@@ -247,6 +258,13 @@ class Resource(object):
         return size
 
     def update_bytes(self, verify=True):
+        """Re-compute the size of the resource, using either the inline data,
+        the path, or the url (whichever one exists first, in that
+        order). If 'verify' is True and a size is already present in
+        the descriptor, then this will check that the size hasn't
+        changed, and throw an error if it has.
+
+        """
         old_size = self.bytes
         if self.data:
             new_size = self._data_bytes()
@@ -270,8 +288,10 @@ class Resource(object):
         return self.descriptor.get('hash', None)
 
     def _data_hash(self):
+        """Computes the md5 checksum of the inline data."""
+        bytestr = str(json.dumps(self.data)).encode(self.encoding)
         md5 = hashlib.md5()
-        md5.update(self.data)
+        md5.update(bytestr)
         hash = md5.hexdigest()
         return hash
 
@@ -282,7 +302,7 @@ class Resource(object):
         if not self.path:
             raise ValueError("path to file is not specified")
         md5 = hashlib.md5()
-        with open(self.path, 'rb') as fh:
+        with self._open('rb') as fh:
             while True:
                 chunk = fh.read(128)
                 if not chunk:
@@ -292,6 +312,7 @@ class Resource(object):
         return hash
 
     def _url_hash(self):
+        """Computes the md5 checksum of the file saved at the url."""
         # probably want to download the data first and store it
         # somewhere before computing the MD5 sum otherwise it'll have
         # be downloaded twice. But then if that's the case then

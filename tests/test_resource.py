@@ -75,23 +75,9 @@ class TestDatapackage(object):
         self.resource.path = None
         assert 'path' not in self.resource.descriptor
 
-    def test_clear_fullpath(self):
-        """Check that setting the full path to none removes it from the
-        descriptor
-
-        """
-        self.resource.fullpath = None
-        assert 'path' not in self.resource.descriptor
-
     def test_set_path(self):
         """Check that setting the path works"""
         self.resource.path = "barfoo.json"
-        assert self.resource.path == "barfoo.json"
-        assert self.resource.fullpath == posixpath.join(self.dpkg.uri, "barfoo.json")
-
-    def test_set_fullpath(self):
-        """Check that setting the full path works"""
-        self.resource.fullpath = posixpath.join(self.dpkg.uri, "barfoo.json")
         assert self.resource.path == "barfoo.json"
         assert self.resource.fullpath == posixpath.join(self.dpkg.uri, "barfoo.json")
 
