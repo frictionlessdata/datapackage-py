@@ -116,7 +116,10 @@ class DataPackage(object):
                 except:
                     # Geopoint probably coded as "123.4, 567.8"
                     geotuple = value.split(',')
-                    return {'lat': float(geotuple[0]), 'lon': float(geotuple[1])}
+                    return {
+                        'lat': float(geotuple[0]),
+                        'lon': float(geotuple[1])
+                    }
 
             # Return the parser
             return parse_geopoint
@@ -396,7 +399,8 @@ class DataPackage(object):
             if "web" in keys and not is_url(source["web"]):
                 raise ValueError("not a url: {}".format(source["web"]))
             if "email" in keys and not is_email(source["email"]):
-                raise ValueError("not an email address: {}".format(source["email"]))
+                raise ValueError(
+                    "not an email address: {}".format(source["email"]))
             sources.append({
                 str(key): str(val) for key, val in source.iteritems()})
 
@@ -495,8 +499,8 @@ class DataPackage(object):
     def get_resources(self):
         """
         Get the data package's resources as a dictionary. The key for each
-        resource is the value of its name attribute. If no name is provided then
-        the key is an empty string. This means that resources can be
+        resource is the value of its name attribute. If no name is provided
+        then the key is an empty string. This means that resources can be
         overwritten if they have the same (or no name).
         """
 
@@ -505,16 +509,14 @@ class DataPackage(object):
         # Loop through the resources
         for resource in self.descriptor['resources']:
             # Create a resource dictionary
-            source = {'location':
-                          # Location is url path or None (in that order)
-                          resource.get('url', resource.get('path', None)),
-                      'encoding':
-                        # The encoding of the file - defaults to utf-8
-                          resource.get('encoding', 'utf-8'),
-                      'fields':
-                          # Fields are found in schema.fields
-                          resource.get('schema', {}).get('fields', [])
-                      }
+            source = {
+                # Location is url path or None (in that order)
+                'location': resource.get('url', resource.get('path', None)),
+                # The encoding of the file - defaults to utf-8
+                'encoding': resource.get('encoding', 'utf-8'),
+                # Fields are found in schema.fields
+                'fields': resource.get('schema', {}).get('fields', [])
+            }
             # Add the resource to the resource dictionary collection
             sources[resource.get('name', resource.get('id', u''))] = source
 
