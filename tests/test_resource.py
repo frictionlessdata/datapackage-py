@@ -130,6 +130,7 @@ class TestDatapackage(object):
         """Try setting the resource name to none"""
         self.resource.name = None
         assert self.resource.name == ''
+        assert self.resource.descriptor['name'] == ''
 
     @raises(ValueError)
     def test_set_invalid_name(self):
@@ -154,6 +155,7 @@ class TestDatapackage(object):
         """Try setting the resource format to none"""
         self.resource.format = None
         assert self.resource.format == ''
+        assert self.resource.descriptor['format'] == ''
 
     def test_get_mediatype(self):
         """Try reading the resource mediatype"""
@@ -173,8 +175,29 @@ class TestDatapackage(object):
         """Try setting the resource mediatype to none"""
         self.resource.mediatype = None
         assert self.resource.mediatype == ''
+        assert self.resource.descriptor['mediatype'] == ''
 
     @raises(ValueError)
     def test_set_invalid_mediatype(self):
         """Try setting the resource mediatype to an invalid mimetype"""
         self.resource.mediatype = "foo"
+
+    def test_get_encoding(self):
+        """Try reading the resource encoding"""
+        assert self.resource.encoding == 'utf-8'
+
+    def test_get_default_encoding(self):
+        """Try reading the default encoding"""
+        del self.resource.descriptor['encoding']
+        assert self.resource.encoding == 'utf-8'
+
+    def test_set_encoding(self):
+        """Try setting the resource encoding"""
+        self.resource.encoding = 'latin1'
+        assert self.resource.encoding == 'latin1'
+
+    def test_set_encoding_to_none(self):
+        """Try setting the resource encoding to none"""
+        self.resource.encoding = None
+        assert self.resource.encoding == 'utf-8'
+        assert self.resource.descriptor['encoding'] == 'utf-8'

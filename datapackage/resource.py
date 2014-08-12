@@ -167,6 +167,12 @@ class Resource(object):
         """
         return self.descriptor.get('encoding', u'utf-8')
 
+    @encoding.setter
+    def encoding(self, val):
+        if not val:
+            val = u'utf-8'
+        self.descriptor['encoding'] = str(val)
+
     @property
     def bytes(self):
         """The size of the file in bytes."""
