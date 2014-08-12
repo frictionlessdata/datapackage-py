@@ -239,12 +239,12 @@ class TestDatapackage(object):
     @raises(ValueError)
     def test_set_sources_bad_website(self):
         """Check that an error occurs when the web URL is invalid"""
-        self.dpkg.sources = [{"name": "foo", "email": "bar"}]
+        self.dpkg.sources = [{"name": "foo", "web": "bar"}]
 
     @raises(ValueError)
     def test_set_sources_bad_email(self):
         """Check that an error occurs when the email is invalid"""
-        self.dpkg.sources = [{"name": "foo", "web": "bar"}]
+        self.dpkg.sources = [{"name": "foo", "email": "bar"}]
 
     def test_add_source(self):
         """Try adding a new source with add_source"""
