@@ -111,3 +111,27 @@ class TestDatapackage(object):
     def test_set_bad_url(self):
         """Try setting the resource url to an invalid url"""
         self.resource.url = "google"
+
+    def test_get_name(self):
+        """Try reading the resource name"""
+        assert self.resource.name == "foobar"
+
+    def test_get_default_name(self):
+        """Try reading the default resource name"""
+        del self.resource.descriptor['name']
+        assert self.resource.name == ''
+
+    def test_set_name(self):
+        """Try setting the resource name"""
+        self.resource.name = "barfoo"
+        assert self.resource.name == "barfoo"
+
+    def test_set_name_to_none(self):
+        """Try setting the resource name to none"""
+        self.resource.name = None
+        assert self.resource.name == ''
+
+    @raises(ValueError)
+    def test_set_invalid_name(self):
+        """Try setting the resource name to an invalid name"""
+        self.resource.name = "foo bar"

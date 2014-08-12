@@ -4,6 +4,7 @@ import urllib
 import hashlib
 import json
 import posixpath
+import re
 
 if sys.version_info[0] < 3:
     import urlparse
@@ -16,6 +17,8 @@ if sys.version_info[0] < 3:
 from . import sources
 from . import licenses
 from .util import is_url
+
+name_regex = re.compile(r"^[0-9A-Za-z-_\.]+$")
 
 
 class Resource(object):
@@ -114,6 +117,15 @@ class Resource(object):
 
         """
         return self.descriptor.get('name', u'')
+
+    @name.setter
+    def name(self, val):
+        if not val:
+            val = u''
+        elif not name_regex.match(val):
+            raise ValueError(
+                "name '{}' contains invalid characters".format(val))
+        self.descriptor['name'] = val
 
     @property
     def format(self):
