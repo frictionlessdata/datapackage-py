@@ -154,3 +154,27 @@ class TestDatapackage(object):
         """Try setting the resource format to none"""
         self.resource.format = None
         assert self.resource.format == ''
+
+    def test_get_mediatype(self):
+        """Try reading the resource mediatype"""
+        assert self.resource.mediatype == "application/json"
+
+    def test_get_default_mediatype(self):
+        """Try reading the default mediatype"""
+        del self.resource.descriptor['mediatype']
+        assert self.resource.mediatype == ''
+
+    def test_set_mediatype(self):
+        """Try setting the resource mediatype"""
+        self.resource.mediatype = 'text/csv'
+        assert self.resource.mediatype == 'text/csv'
+
+    def test_set_mediatype_to_none(self):
+        """Try setting the resource mediatype to none"""
+        self.resource.mediatype = None
+        assert self.resource.mediatype == ''
+
+    @raises(ValueError)
+    def test_set_invalid_mediatype(self):
+        """Try setting the resource mediatype to an invalid mimetype"""
+        self.resource.mediatype = "foo"

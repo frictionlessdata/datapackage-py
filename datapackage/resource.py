@@ -16,7 +16,7 @@ if sys.version_info[0] < 3:
 
 from . import sources
 from . import licenses
-from .util import is_url
+from .util import is_url, is_mimetype
 
 name_regex = re.compile(r"^[0-9A-Za-z-_\.]+$")
 
@@ -133,16 +133,13 @@ class Resource(object):
         the the standard file extension for this type of resource.
 
         """
-        fmt = self.descriptor.get('format', None)
-        if not fmt and self.path:
-            fmt = os.path.splitext(self.path)[1]
-        return fmt
+        return self.descriptor.get('format', '')
 
     @format.setter
     def format(self, val):
         if not val:
             val = u''
-        self.descriptor['format'] = val
+        self.descriptor['format'] = str(val)
 
     @property
     def mediatype(self):
@@ -150,7 +147,15 @@ class Resource(object):
         'application/vnd.ms-excel'.
 
         """
-        return self.descriptor.get('mediatype', None)
+        return self.descriptor.get('mediatype', '')
+
+    @mediatype.setter
+    def mediatype(self, val):
+        if not val:
+            val = u''
+        elif not is_mimetype(val):
+            raise ValueError("not a valid mimetype: {}".format(val))
+        self.descriptor['mediatype'] = str(val)
 
     @property
     def encoding(self):

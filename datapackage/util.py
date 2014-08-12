@@ -157,3 +157,11 @@ def is_email(val):
 
     """
     return bool(re.match(r"[^@]+@[^@]+\.[^@]+", val))
+
+
+def is_mimetype(val):
+    """Checks to see whether a string is a valid mimetype. This is a very
+    basic check that just looks for <something>/<something>.
+
+    """
+    return bool(re.match(r"[^/]+/[^/]+", val))
