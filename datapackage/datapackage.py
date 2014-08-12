@@ -36,7 +36,7 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request
 
-from .util import verify_semantic_version, get_licenses
+from .util import verify_semantic_version, get_licenses, is_local
 
 LICENSES = get_licenses()
 
@@ -146,7 +146,7 @@ class DataPackage(object):
         # use os.path.join if the path is local, otherwise use urljoin
         # -- we don't want to just use os.path.join because otherwise
         # on Windows it will try to create URLs with backslashes
-        if self._package_is_local():
+        if is_local(self.uri):
             return self.opener(os.path.join(self.uri, path))
         else:
             return self.opener(urllib.parse.urljoin(self.uri, path))
@@ -408,17 +408,6 @@ class DataPackage(object):
         # Get all of the generators for the resources
         data_generators = [self.get_data(k) for k in self.resources.keys()]
         return itertools.chain.from_iterable(data_generators)
-
-    def _package_is_local(self):
-        """
-        Checks to see if the data package is located on the local file system.
-        This simple check just looks if there is a scheme or netloc associated
-        with the data package URI (and will therefore return False when the
-        URI uses the file: scheme)
-        """
-
-        parsed_results = urllib.parse.urlparse(self.uri)
-        return parsed_results.scheme == '' or parsed_results.netloc == ''
 
     def get_descriptor(self):
         """

@@ -1,8 +1,12 @@
 import sys
 import os
 import json
+import urllib
 
 if sys.version_info[0] < 3:
+    import urlparse
+    urllib.parse = urlparse
+    urllib.request = urllib
     next = lambda x: x.next()
     bytes = str
     str = unicode
@@ -22,6 +26,8 @@ def verify_semantic_version(version):
 
 
 def get_licenses():
+    """Reads a dictionary of licenses, and their corresponding URLs, out
+    of a JSON file."""
     # figure out the real directory name relative to this file, so we
     # can read in the licenses file
     dirname = os.path.split(os.path.realpath(__file__))[0]
@@ -29,3 +35,14 @@ def get_licenses():
     with open(filename, "r") as fh:
         licenses = json.load(fh)
     return licenses
+
+
+def is_local(path):
+    """Checks whether a path is a local path, or a remote URL. This simple
+    check just looks if there is a scheme or netloc associated with
+    the path (and will therefore return False when the path uses the
+    file: scheme)
+
+    """
+    parsed_results = urllib.parse.urlparse(path)
+    return parsed_results.scheme == '' or parsed_results.netloc == ''
