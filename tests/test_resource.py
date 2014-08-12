@@ -135,3 +135,22 @@ class TestDatapackage(object):
     def test_set_invalid_name(self):
         """Try setting the resource name to an invalid name"""
         self.resource.name = "foo bar"
+
+    def test_get_format(self):
+        """Try reading the resource format"""
+        assert self.resource.format == "json"
+
+    def test_get_default_format(self):
+        """Try reading the default resource format"""
+        del self.resource.descriptor['format']
+        assert self.resource.format == ''
+
+    def test_set_format(self):
+        """Try setting the resource format"""
+        self.resource.format = 'csv'
+        assert self.resource.format == 'csv'
+
+    def test_set_format_to_none(self):
+        """Try setting the resource format to none"""
+        self.resource.format = None
+        assert self.resource.format == ''

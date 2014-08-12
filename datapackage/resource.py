@@ -138,6 +138,12 @@ class Resource(object):
             fmt = os.path.splitext(self.path)[1]
         return fmt
 
+    @format.setter
+    def format(self, val):
+        if not val:
+            val = u''
+        self.descriptor['format'] = val
+
     @property
     def mediatype(self):
         """The mediatype/mimetype of the resource, e.g. 'text/csv',
