@@ -224,26 +224,29 @@ class Resource(object):
         return self.descriptor.get('bytes', None)
 
     def _data_bytes(self):
-        # need to make sure the data is in the proper encoding, I
-        # think? It should just be a JSON object or string, but does
-        # that mean that len() is sufficient or not?
-        raise NotImplementedError
+        """Compute the size of the inline data"""
+        if not self.data:
+            raise ValueError("data is not specified")
+        bytestr = str(json.dumps(self.data)).encode(self.encoding)
+        return len(bytestr)
 
     def _path_bytes(self):
+        """Compute the size of the file specified by the path"""
         if not self.path:
             raise ValueError("path to file is not specified")
-        size = os.path.getsize(self.path)
+        size = os.path.getsize(self.fullpath)
         return size
 
     def _url_bytes(self):
+        """Compute the size of the file specified by the url"""
         if not self.url:
             raise ValueError("url to file is not specified")
         site = urllib.urlopen(self.url)
         meta = site.info()
-        size = meta.getheaders("Content-Length")[0]
+        size = int(meta.getheaders("Content-Length")[0])
         return size
 
-    def update_bytes(self):
+    def update_bytes(self, verify=True):
         old_size = self.bytes
         if self.data:
             new_size = self._data_bytes()
@@ -254,7 +257,7 @@ class Resource(object):
         else:
             raise ValueError("resource not found")
 
-        if old_size and (old_size != new_size):
+        if verify and old_size and (old_size != new_size):
             raise RuntimeError(
                 "size of file has changed! (was: {}, is now: {})".format(
                     old_size, new_size))
@@ -295,7 +298,7 @@ class Resource(object):
         # _path_hash can probably just be used?
         raise NotImplementedError
 
-    def update_hash(self):
+    def update_hash(self, verify=True):
         old_hash = self.hash
         if self.data:
             new_hash = self._data_hash()
@@ -306,7 +309,7 @@ class Resource(object):
         else:
             raise ValueError("resource not found")
 
-        if old_hash and (old_hash != new_hash):
+        if verify and old_hash and (old_hash != new_hash):
             raise RuntimeError(
                 "hash of file has changed! (was: {}, is now: {})".format(
                     old_hash, new_hash))

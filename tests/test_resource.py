@@ -238,3 +238,52 @@ class TestDatapackage(object):
         assert self.resource._guess_format() == 'csv'
         self.resource.mediatype = "image/jpeg"
         assert self.resource._guess_format() == 'jpe'
+
+    def test_data_bytes(self):
+        """Checks that the size is computed correctly from the data"""
+        assert self.resource._data_bytes() == self.resource.bytes
+
+    @raises(ValueError)
+    def test_data_bytes_no_data(self):
+        """Check that an error is raised when _data_bytes is called but there
+        is no data
+
+        """
+        self.resource.data = None
+        self.resource._data_bytes()
+
+    def test_path_bytes(self):
+        """Checks that the size is computed correctly from the path"""
+        assert self.resource._path_bytes() == self.resource.bytes
+
+    @raises(ValueError)
+    def test_path_bytes_no_path(self):
+        """Check that an error is raised when _path_bytes is called but there
+        is no path
+
+        """
+        self.resource.path = None
+        self.resource._path_bytes()
+
+    @patch('urllib.urlopen')
+    def test_url_bytes(self, mock_urlopen):
+        """Checks that the size is computed correctly from the url"""
+
+        mock_meta = Mock()
+        mock_meta.getheaders.side_effect = [['14']]
+
+        mock_site = Mock()
+        mock_site.info.return_value = mock_meta
+
+        mock_urlopen.return_value = mock_site
+
+        assert self.resource._url_bytes() == self.resource.bytes
+
+    @raises(ValueError)
+    def test_url_bytes_no_url(self):
+        """Check that an error is raised when _url_bytes is called but there
+        is no url
+
+        """
+        self.resource.url = None
+        self.resource._url_bytes()
