@@ -1,0 +1,69 @@
+{
+  "name": "cpi",
+  "title": "Annual Consumer Price Index (CPI)",
+  "description": "Annual Consumer Price Index (CPI) for most countries in the world. Reference year is 2005.",
+  "licenses": [
+    {
+      "id": "odc-pddl",
+      "url": "http://opendatacommons.org/licenses/pddl/"
+    }
+  ],
+  "keywords": [
+    "CPI",
+    "World",
+    "Consumer Price Index",
+    "Annual Data",
+    "The World Bank"
+  ],
+  "version": "1.1.1",
+  "last_updated": "2013-12-20",
+  "sources": [
+    {
+      "name": "The World Bank",
+      "web": "http://data.worldbank.org/indicator/FP.CPI.TOTL"
+    }
+  ],
+  "resources": [
+    {
+      "url": "https://raw.githubusercontent.com/datasets/cpi/master/data/cpi.csv",
+      "schema": {
+        "fields": [
+          {
+            "id": "Country Name",
+            "type": "string",
+            "name": "Country Name"
+          },
+          {
+            "id": "Country Code",
+            "type": "string",
+            "name": "Country Code"
+          },
+          {
+            "id": "Year",
+            "type": "date",
+            "format": "yyyy",
+            "name": "Year"
+          },
+          {
+            "id": "CPI",
+            "description": "CPI (where 2005=100)",
+            "type": "number",
+            "name": "CPI"
+          }
+        ]
+      },
+      "name": "cpi"
+    }
+  ],
+  "readme": "# CPI datapackage\n\nAnnual Consumer Price Index (CPI) for most countries in the world when it has been measured. The reference year is 2005 (meaning the value of CPI for all countries is 100 and all other CPI values are relative to that year).\n\n# Data\n\nThe data comes from [The World Bank](http://data.worldbank.org/indicator/FP.CPI.TOTL) and is collected from 1960 to 2011. There are some values missing from data so users of the data will have to *guess* what should be in the empty slots.\n\nThe actual download happens via [The World Bank's API (with csv as the requested format)](http://api.worldbank.org/indicator/FP.CPI.TOTL?format=csv).\n\nIt is parsed via the script **cpi2datapackage.py**, located in scripts.\n\n## Usage of cpi2datapackage.py\n\n    usage: cpi2datapackage.py [-h] [-o filename] [source]\n    \n    convert WorldBank CPI data to a data package resource\n\n    positional arguments:\n      source                source file to generate output from\n    \n    optional arguments:\n      -h, --help            show this help message and exit\n      -o filename, --output filename\n                            define output filename\n",
+  "readmeHtml": "<h1 id=\"cpi-datapackage\">CPI datapackage</h1>\n<p>Annual Consumer Price Index (CPI) for most countries in the world when it has been measured. The reference year is 2005 (meaning the value of CPI for all countries is 100 and all other CPI values are relative to that year).</p>\n<h1 id=\"data\">Data</h1>\n<p>The data comes from <a href=\"http://data.worldbank.org/indicator/FP.CPI.TOTL\">The World Bank</a> and is collected from 1960 to 2011. There are some values missing from data so users of the data will have to <em>guess</em> what should be in the empty slots.</p>\n<p>The actual download happens via <a href=\"http://api.worldbank.org/indicator/FP.CPI.TOTL?format=csv\">The World Bank&#39;s API (with csv as the requested format)</a>.</p>\n<p>It is parsed via the script <strong>cpi2datapackage.py</strong>, located in scripts.</p>\n<h2 id=\"usage-of-cpi2datapackage-py\">Usage of cpi2datapackage.py</h2>\n<pre><code>usage: cpi2datapackage.py [-h] [-o filename] [source]\n\nconvert WorldBank CPI data to a data package resource\n\npositional arguments:\n  source                source file to generate output from\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -o filename, --output filename\n                        define output filename\n</code></pre>",
+  "homepage": "https://github.com/datasets/cpi",
+  "bugs": {
+    "url": "https://github.com/datasets/cpi/issues"
+  },
+  "isCore": true,
+  "owner": "core",
+  "id": "cpi",
+  "download_url": "https://raw.githubusercontent.com/datasets/cpi/master/data/cpi.csv",
+  "readme_html": "<h1 id=\"cpi-datapackage\">CPI datapackage</h1>\n<p>Annual Consumer Price Index (CPI) for most countries in the world when it has been measured. The reference year is 2005 (meaning the value of CPI for all countries is 100 and all other CPI values are relative to that year).</p>\n<h1 id=\"data\">Data</h1>\n<p>The data comes from <a href=\"http://data.worldbank.org/indicator/FP.CPI.TOTL\">The World Bank</a> and is collected from 1960 to 2011. There are some values missing from data so users of the data will have to <em>guess</em> what should be in the empty slots.</p>\n<p>The actual download happens via <a href=\"http://api.worldbank.org/indicator/FP.CPI.TOTL?format=csv\">The World Bank&#39;s API (with csv as the requested format)</a>.</p>\n<p>It is parsed via the script <strong>cpi2datapackage.py</strong>, located in scripts.</p>\n<h2 id=\"usage-of-cpi2datapackage-py\">Usage of cpi2datapackage.py</h2>\n<pre><code>usage: cpi2datapackage.py [-h] [-o filename] [source]\n\nconvert WorldBank CPI data to a data package resource\n\npositional arguments:\n  source                source file to generate output from\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -o filename, --output filename\n                        define output filename\n</code></pre>"
+}

@@ -1,11 +1,12 @@
-from datapackage import DataPackage
+import datapackage
 from nose.tools import raises
+from mock import Mock, patch
 
 
 class TestDatapackage(object):
 
     def setup(self):
-        self.dpkg = DataPackage("tests/test.dpkg")
+        self.dpkg = datapackage.DataPackage("tests/test.dpkg")
 
     def teardown(self):
         pass
@@ -294,8 +295,17 @@ class TestDatapackage(object):
         self.dpkg.image = "bar.jpg"
         assert self.dpkg.image == "bar.jpg"
 
-    def test_web_url(self):
+    @patch('urllib.urlopen')
+    def test_web_url(self, mock_urlopen):
         """Try reading a datapackage from the web"""
-        self.dpkg = DataPackage('http://data.okfn.org/data/cpi/')
+
+        # setup the mock for url read
+        with open("tests/cpi/datapackage.json", "r") as fh:
+            metadata = fh.read()
+        mock = Mock()
+        mock.read.side_effect = [metadata]
+        mock_urlopen.return_value = mock
+
+        self.dpkg = datapackage.DataPackage('http://data.okfn.org/data/cpi/')
         assert self.dpkg.title == "Annual Consumer Price Index (CPI)"
         assert self.dpkg.description == "Annual Consumer Price Index (CPI) for most countries in the world. Reference year is 2005."
