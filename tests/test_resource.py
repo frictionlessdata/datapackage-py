@@ -15,6 +15,15 @@ class TestDatapackage(object):
     def teardown(self):
         pass
 
+    def patch_urlopen_size(self, mock_urlopen, size):
+        mock_meta = Mock()
+        mock_meta.getheaders.side_effect = [[size]]
+
+        mock_site = Mock()
+        mock_site.info.return_value = mock_meta
+
+        mock_urlopen.return_value = mock_site
+
     def test_get_data(self):
         """Try reading the resource data"""
         data = self.resource.data
@@ -268,15 +277,7 @@ class TestDatapackage(object):
     @patch('urllib.urlopen')
     def test_url_bytes(self, mock_urlopen):
         """Checks that the size is computed correctly from the url"""
-
-        mock_meta = Mock()
-        mock_meta.getheaders.side_effect = [['14']]
-
-        mock_site = Mock()
-        mock_site.info.return_value = mock_meta
-
-        mock_urlopen.return_value = mock_site
-
+        self.patch_urlopen_size(mock_urlopen, '14')
         assert self.resource._url_bytes() == self.resource.bytes
 
     @raises(ValueError)
@@ -287,3 +288,121 @@ class TestDatapackage(object):
         """
         self.resource.url = None
         self.resource._url_bytes()
+
+    def test_compute_bytes_from_data(self):
+        """Test computing the size from inline data"""
+        del self.resource.descriptor['bytes']
+        self.resource.update_bytes()
+        assert self.resource.bytes == 14
+
+    def test_update_bytes_data_unchanged(self):
+        """Test that updating the size from inline data does not throw an
+        error when the size has not changed.
+
+        """
+        self.resource.update_bytes()
+        assert self.resource.bytes == 14
+
+    def test_compute_bytes_from_path(self):
+        """Test computing the size from the file given by the path"""
+        self.resource.data = None
+        del self.resource.descriptor['bytes']
+        self.resource.update_bytes()
+        assert self.resource.bytes == 14
+
+    def test_update_bytes_path_unchanged(self):
+        """Test that updating the size from the file given by the path does
+        not throw an error when the size has not changed.
+
+        """
+        self.resource.data = None
+        self.resource.update_bytes()
+        assert self.resource.bytes == 14
+
+    @patch('urllib.urlopen')
+    def test_compute_bytes_from_url(self, mock_urlopen):
+        """Test computing the size from the url"""
+        self.patch_urlopen_size(mock_urlopen, '14')
+        self.resource.data = None
+        self.resource.path = None
+        del self.resource.descriptor['bytes']
+        self.resource.update_bytes()
+        assert self.resource.bytes == 14
+
+    @patch('urllib.urlopen')
+    def test_update_bytes_url_unchanged(self, mock_urlopen):
+        """Test that updating the size from the url does not throw an
+        error when the size has not changed.
+
+        """
+        self.patch_urlopen_size(mock_urlopen, '14')
+        self.resource.data = None
+        self.resource.path = None
+        self.resource.update_bytes()
+        assert self.resource.bytes == 14
+
+    @raises(RuntimeError)
+    def test_update_bytes_data_changed(self):
+        """Check that updating the bytes from the inline data throws an error
+        when the size has changed.
+
+        """
+        self.resource.descriptor['bytes'] = 15
+        self.resource.update_bytes()
+
+    @raises(RuntimeError)
+    def test_update_bytes_path_changed(self):
+        """Check that updating the bytes from the path throws an error when
+        the size has changed.
+
+        """
+        self.resource.data = None
+        self.resource.descriptor['bytes'] = 15
+        self.resource.update_bytes()
+
+    @raises(RuntimeError)
+    @patch('urllib.urlopen')
+    def test_update_bytes_url_changed(self, mock_urlopen):
+        """Check that updating the bytes from the url throws an error when the
+        size has changed.
+
+        """
+        self.patch_urlopen_size(mock_urlopen, '14')
+        self.resource.data = None
+        self.resource.path = None
+        self.resource.descriptor['bytes'] = 15
+        self.resource.update_bytes()
+
+    def test_update_bytes_data_changed_unverified(self):
+        """Check that updating the bytes from the inline data works, when the
+        size has changed but the size is not being verified.
+
+        """
+        self.resource.descriptor['bytes'] = 15
+        self.resource.update_bytes(verify=False)
+        assert self.resource.bytes == 14
+        assert self.resource.descriptor['bytes'] == 14
+
+    def test_update_bytes_path_changed_unverified(self):
+        """Check that updating the bytes from the path works, when the size
+        has changed but the size is not being verified.
+
+        """
+        self.resource.data = None
+        self.resource.descriptor['bytes'] = 15
+        self.resource.update_bytes(verify=False)
+        assert self.resource.bytes == 14
+        assert self.resource.descriptor['bytes'] == 14
+
+    @patch('urllib.urlopen')
+    def test_update_bytes_url_changed_unverified(self, mock_urlopen):
+        """Check that updating the bytes from the url works, when the size has
+        changed but the size is not being verified.
+
+        """
+        self.patch_urlopen_size(mock_urlopen, '14')
+        self.resource.data = None
+        self.resource.descriptor['bytes'] = 15
+        self.resource.update_bytes(verify=False)
+        assert self.resource.bytes == 14
+        assert self.resource.descriptor['bytes'] == 14
