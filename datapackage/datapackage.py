@@ -36,7 +36,7 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request
 
-from .util import verify_semantic_version, get_licenses
+from .util import verify_version, get_licenses
 from .util import is_local, is_url, is_email
 
 LICENSES = get_licenses()
@@ -253,7 +253,7 @@ class DataPackage(object):
     def datapackage_version(self, val):
         if not val:
             raise ValueError("datapackage version must be non-empty")
-        self.descriptor['datapackage_version'] = verify_semantic_version(val)
+        self.descriptor['datapackage_version'] = verify_version(val)
 
     @property
     def title(self):
@@ -315,7 +315,7 @@ class DataPackage(object):
 
     @version.setter
     def version(self, val):
-        self.descriptor['version'] = verify_semantic_version(val)
+        self.descriptor['version'] = verify_version(val)
 
     @property
     def sources(self):
