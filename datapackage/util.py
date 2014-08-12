@@ -165,3 +165,10 @@ def is_mimetype(val):
 
     """
     return bool(re.match(r"[^/]+/[^/]+", val))
+
+
+def get_size_from_url(url):
+    site = urllib.urlopen(url)
+    meta = site.info()
+    size = int(meta.getheaders("Content-Length")[0])
+    return size

@@ -18,6 +18,7 @@ if sys.version_info[0] < 3:
 from . import sources
 from . import licenses
 from .util import is_local, is_url, is_mimetype
+from .util import get_size_from_url
 
 name_regex = re.compile(r"^[0-9A-Za-z-_\.]+$")
 
@@ -242,9 +243,7 @@ class Resource(object):
         if self.is_local:
             size = os.path.getsize(self.fullpath)
         else:
-            site = urllib.urlopen(self.fullpath)
-            meta = site.info()
-            size = int(meta.getheaders("Content-Length")[0])
+            size = get_size_from_url(self.fullpath)
 
         return size
 
@@ -252,10 +251,7 @@ class Resource(object):
         """Compute the size of the file specified by the url"""
         if not self.url:
             raise ValueError("url to file is not specified")
-        site = urllib.urlopen(self.url)
-        meta = site.info()
-        size = int(meta.getheaders("Content-Length")[0])
-        return size
+        return get_size_from_url(self.url)
 
     def update_bytes(self, verify=True):
         """Re-compute the size of the resource, using either the inline data,
