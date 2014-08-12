@@ -14,6 +14,20 @@ if sys.version_info[0] < 3:
     str = unicode
 
 
+# This is a named tuple for representing semantic versions (see
+# http://semver.org/). Semantic versions look like this:
+#
+#    major.minor.patch-prerelease+metadata
+#
+# where the -prerelease and +metadata are optional. The major, minor,
+# and patch versions should all be integers; the prerelease and
+# metadata versions should be alphanumeric (plus hyphens and periods
+# are ok).
+SemanticVersion = namedtuple(
+    "SemanticVersion",
+    ["major", "minor", "patch", "prerelease", "metadata"])
+
+
 def parse_version(version):
     """Parse a version string according to semantic versioning.
 
@@ -73,10 +87,7 @@ def parse_version(version):
             raise ValueError(
                 "invalid metadata: {}".format(metadata))
 
-    Version = namedtuple(
-        "Version",
-        ["major", "minor", "patch", "prerelease", "metadata"])
-    version = Version(major, minor, patch, prerelease, metadata)
+    version = SemanticVersion(major, minor, patch, prerelease, metadata)
     return version
 
 
