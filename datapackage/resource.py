@@ -3,6 +3,7 @@ import sys
 import urllib
 import hashlib
 import json
+import posixpath
 
 if sys.version_info[0] < 3:
     import urlparse
@@ -14,11 +15,13 @@ if sys.version_info[0] < 3:
 
 from . import sources
 from . import licenses
+from .util import is_url
 
 
 class Resource(object):
 
-    def __init__(self, descriptor):
+    def __init__(self, datapackage_uri, descriptor):
+        self.datapackage_uri = datapackage_uri
         self.descriptor = descriptor
 
     @property
@@ -54,10 +57,40 @@ class Resource(object):
         """
         return self.descriptor.get('path', None)
 
+    @path.setter
+    def path(self, val):
+        if not val and 'path' in self.descriptor:
+            del self.descriptor['path']
+        else:
+            # use posix path since it is supposed to be unix-style
+            self.descriptor['path'] = str(val)
+
+    @property
+    def fullpath(self):
+        path = self.path
+        if path:
+            # use posix path since it is supposed to be unix-style
+            path = posixpath.join(self.datapackage_uri, path)
+        return path
+
+    @fullpath.setter
+    def fullpath(self, val):
+        if val:
+            # use posix path since it is supposed to be unix-style
+            val = posixpath.relpath(val, self.datapackage_uri)
+        self.path = val
+
     @property
     def url(self):
         """The url of this data resource"""
         return self.descriptor.get('url', None)
+
+    @url.setter
+    def url(self, val):
+        if not val and 'url' in self.descriptor:
+            del self.descriptor['url']
+        else:
+            self.descriptor['url'] = is_url(str(val))
 
     @property
     def name(self):
