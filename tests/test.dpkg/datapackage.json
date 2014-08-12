@@ -1,0 +1,19 @@
+{
+  "name": "test.dpkg",
+  "resources": [], 
+  "license": "ODC-BY",
+  "datapackage_version": "1.0-beta.10", 
+  "title": "A simple datapackage for testing", 
+  "description": "A simple, bare datapackage created for testing purposes.", 
+  "homepage": "http://localhost/", 
+  "version": "1.0.0", 
+  "sources": [
+      {
+          "name": "World Bank and OECD",
+          "web": "http://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
+      }
+  ],
+  "keywords": ["testing"], 
+  "image": "test.jpg"
+}
+

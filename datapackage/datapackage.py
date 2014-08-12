@@ -17,12 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import urllib
-import io
 import csv
 import json
 import itertools
 import os
-import datetime, time
+import datetime
+import time
 import base64
 import re
 import sys
@@ -35,6 +35,11 @@ if sys.version_info[0] < 3:
     str = unicode
 else:
     import urllib.request
+
+from .util import verify_semantic_version, get_licenses
+from .util import is_local, is_url, is_email
+
+LICENSES = get_licenses()
 
 
 class DataPackage(object):
@@ -142,19 +147,113 @@ class DataPackage(object):
         # use os.path.join if the path is local, otherwise use urljoin
         # -- we don't want to just use os.path.join because otherwise
         # on Windows it will try to create URLs with backslashes
-        if self._package_is_local():
+        if is_local(self.uri):
             return self.opener(os.path.join(self.uri, path))
         else:
             return self.opener(urllib.parse.urljoin(self.uri, path))
 
     @property
     def name(self):
-        """
-        The name of the dataset as described by its descriptor.
-        Default is an empty string if no name is present
-        """
+        """The name of the dataset as described by its descriptor. This is a
+        required property, described by the datapackage protocol as
+        follows:
 
-        return self.descriptor.get('name', u'')
+        short url-usable (and preferably human-readable) name of the
+        package. This MUST be lower-case and contain only alphanumeric
+        characters along with ".", "_" or "-" characters. It will
+        function as a unique identifier and therefore SHOULD be unique
+        in relation to any registry in which this package will be
+        deposited (and preferably globally unique).
+
+        The name SHOULD be invariant, meaning that it SHOULD NOT
+        change when a data package is updated, unless the new package
+        version should be considered a distinct package, e.g. due to
+        significant changes in structure or interpretation. Version
+        distinction SHOULD be left to the version field. As a
+        corollary, the name also SHOULD NOT include an indication of
+        time range covered.
+
+        """
+        name = self.descriptor.get('name')
+        if not name:
+            raise KeyError("datapackage does not have a name")
+        return name
+
+    @name.setter
+    def name(self, val):
+        if not val:
+            raise ValueError("datapackage name must be non-empty")
+        self.descriptor['name'] = val
+
+    @property
+    def licenses(self):
+        """MUST be an array. Each entry MUST be a hash with a type and a url
+        property linking to the actual text. The type SHOULD be an
+        Open Definition license ID if an ID exists for the license and
+        otherwise may be the general license name or identifier.
+
+        """
+        descriptor_license = self.descriptor.get('license')
+        descriptor_licenses = self.descriptor.get('licenses')
+        if descriptor_license and descriptor_licenses:
+            raise KeyError("datapackage has both license and licenses defined")
+        elif descriptor_license:
+            return [{
+                "type": descriptor_license,
+                "url": LICENSES.get(descriptor_license, None)
+            }]
+        elif descriptor_licenses:
+            return descriptor_licenses
+        else:
+            raise KeyError("datapackage does not have any licenses")
+
+    @licenses.setter
+    def licenses(self, val):
+        if 'license' in self.descriptor:
+            del self.descriptor['license']
+        for descriptor_license in val:
+            if sorted(descriptor_license.keys()) != ["type", "url"]:
+                raise ValueError(
+                    "license should only have keys for 'type' and 'url'")
+            url = descriptor_license["url"]
+            if url and not is_url(url):
+                raise ValueError("not a url: {}".format(url))
+        self.descriptor['licenses'] = val
+
+    def add_license(self, license_type, url=None):
+        """Adds a license to the list of licenses for the datapackage.
+
+        :param string license_type: The name of the license, which
+            should be an Open Definition license ID if an ID exists
+            for the license and otherwise may be the general license
+            name or identifier.
+        :param string url: The URL corresponding to the license. If
+            license_type is a standard Open Definition license, then
+            the URL will try to be inferred automatically.
+
+        """
+        url = url or LICENSES.get(license_type, None)
+        licenses = self.licenses
+        licenses.append({"type": license_type, "url": url})
+        self.licenses = licenses
+
+    @property
+    def datapackage_version(self):
+        """The version of the data package specification this datapackage.json
+        conforms to. It should follow the Semantic Versioning
+        requirements (http://semver.org/).
+
+        """
+        version = self.descriptor.get("datapackage_version")
+        if not version:
+            raise KeyError("datapackage does not have a datapackage version")
+        return version
+
+    @datapackage_version.setter
+    def datapackage_version(self, val):
+        if not val:
+            raise ValueError("datapackage version must be non-empty")
+        self.descriptor['datapackage_version'] = verify_semantic_version(val)
 
     @property
     def title(self):
@@ -165,14 +264,152 @@ class DataPackage(object):
 
         return self.descriptor.get('title', u'')
 
+    @title.setter
+    def title(self, val):
+        if not val:
+            val = ""
+        self.descriptor['title'] = str(val)
+
     @property
     def description(self):
         """
-        The descriptor of the dataset as described by its descriptor.
+        The description of the dataset as described by its descriptor.
         Default is an empty string if no description is present
         """
 
         return self.descriptor.get('description', u'')
+
+    @description.setter
+    def description(self, val):
+        if not val:
+            val = ""
+        self.descriptor['description'] = str(val)
+
+    @property
+    def homepage(self):
+        """
+        URL string for the data packages web site
+        Default is an empty string if no homepage is present
+        """
+        return self.descriptor.get('homepage', u'')
+
+    @homepage.setter
+    def homepage(self, val):
+        if not val:
+            val = ""
+        elif not is_url(val):
+            raise ValueError("not a URL: {}".format(val))
+
+        self.descriptor['homepage'] = str(val)
+
+    @property
+    def version(self):
+        """A version string identifying the version of the package. It should
+        conform to the Semantic Versioning requirements
+        (http://semver.org/).
+
+        Defaults to 0.0.1 if not specified.
+
+        """
+        return self.descriptor.get('version', u'0.0.1')
+
+    @version.setter
+    def version(self, val):
+        self.descriptor['version'] = verify_semantic_version(val)
+
+    @property
+    def sources(self):
+        """An array of source hashes. Each source hash may have name, web and
+        email fields.
+
+        Defaults to an empty list.
+
+        """
+        return self.descriptor.get('sources', [])
+
+    @sources.setter
+    def sources(self, val):
+        if not val:
+            val = []
+
+        sources = []
+        for source in val:
+            keys = set(source.keys())
+            extra_keys = keys - set(["name", "web", "email"])
+            if len(extra_keys) > 0:
+                raise ValueError(
+                    "source has unexpected keys: {}".format(extra_keys))
+            if "name" not in keys:
+                raise ValueError("source is missing a name")
+            if "web" in keys and not is_url(source["web"]):
+                raise ValueError("not a url: {}".format(source["web"]))
+            if "email" in keys and not is_email(source["email"]):
+                raise ValueError("not an email address: {}".format(source["email"]))
+            sources.append({
+                str(key): str(val) for key, val in source.iteritems()})
+
+        names = [source["name"] for source in sources]
+        if len(names) != len(set(names)):
+            raise ValueError("source names are not unique")
+
+        self.descriptor['sources'] = sources
+
+    def add_source(self, name, web=None, email=None):
+        """Adds a source to the list of sources for this datapackage.
+
+        :param string name: The human-readable name of the source.
+        :param string web: A URL pointing to the source.
+        :param string email: An email address for the contact of the
+            source.
+
+        """
+        source = dict(name=str(name))
+        if web:
+            source["web"] = str(web)
+        if email:
+            source["email"] = str(email)
+
+        sources = self.sources
+        sources.append(source)
+        self.sources = sources
+
+    def remove_source(self, name):
+        """Removes the source with the given name."""
+        sources = [s for s in self.sources if s["name"] != name]
+        if len(sources) == len(self.sources):
+            raise KeyError("source with name '{}' does not exist".format(name))
+        self.sources = sources
+
+    @property
+    def keywords(self):
+        """An array of string keywords to assist users searching for the
+        package in catalogs.
+
+        Defaults to an empty list.
+
+        """
+        return self.descriptor.get('keywords', [])
+
+    @keywords.setter
+    def keywords(self, val):
+        if not val:
+            val = []
+        self.descriptor['keywords'] = [str(x) for x in val]
+
+    @property
+    def image(self):
+        """A link to an image to use for this data package.
+
+        Defaults to an empty string.
+
+        """
+        return self.descriptor.get('image', u'')
+
+    @image.setter
+    def image(self, val):
+        if not val:
+            val = u''
+        self.descriptor['image'] = str(val)
 
     @property
     def data(self):
@@ -184,17 +421,6 @@ class DataPackage(object):
         # Get all of the generators for the resources
         data_generators = [self.get_data(k) for k in self.resources.keys()]
         return itertools.chain.from_iterable(data_generators)
-
-    def _package_is_local(self):
-        """
-        Checks to see if the data package is located on the local file system.
-        This simple check just looks if there is a scheme or netloc associated
-        with the data package URI (and will therefore return False when the
-        URI uses the file: scheme)
-        """
-
-        parsed_results = urllib.parse.urlparse(self.uri)
-        return parsed_results.scheme == '' or parsed_results.netloc == ''
 
     def get_descriptor(self):
         """
