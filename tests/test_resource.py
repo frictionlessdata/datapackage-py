@@ -89,7 +89,7 @@ class TestDatapackage(object):
     def test_get_url(self):
         """Try reading the resource url"""
         url = self.resource.url
-        assert url == "http://foobar.com/"
+        assert url == "http://foobar.com/foobar.json"
 
     def test_get_missing_url(self):
         """Try reading the resource url when it is missing"""
@@ -201,3 +201,40 @@ class TestDatapackage(object):
         self.resource.encoding = None
         assert self.resource.encoding == 'utf-8'
         assert self.resource.descriptor['encoding'] == 'utf-8'
+
+    def test_guess_mediatype(self):
+        assert self.resource._guess_mediatype() == 'application/json'
+        self.resource.path = "foo.csv"
+        assert self.resource._guess_mediatype() == 'text/csv'
+        self.resource.path = "foo.jpg"
+        assert self.resource._guess_mediatype() == 'image/jpeg'
+
+        self.resource.path = None
+        assert self.resource._guess_mediatype() == 'application/json'
+        self.resource.url = "http://foobar.com/foo.csv"
+        assert self.resource._guess_mediatype() == 'text/csv'
+        self.resource.url = "http://foobar.com/foo.jpg"
+        assert self.resource._guess_mediatype() == 'image/jpeg'
+
+    def test_guess_format(self):
+        assert self.resource._guess_format() == 'json'
+        self.resource.path = "foo.csv"
+        assert self.resource._guess_format() == 'csv'
+        self.resource.path = "foo.jpg"
+        assert self.resource._guess_format() == 'jpg'
+
+        self.resource.path = None
+        self.resource.url = "http://foobar.com/foo.json"
+        assert self.resource._guess_format() == 'json'
+        self.resource.url = "http://foobar.com/foo.csv"
+        assert self.resource._guess_format() == 'csv'
+        self.resource.url = "http://foobar.com/foo.jpg"
+        assert self.resource._guess_format() == 'jpg'
+
+        self.resource.url = None
+        self.resource.mediatype = "application/json"
+        assert self.resource._guess_format() == 'json'
+        self.resource.mediatype = "text/csv"
+        assert self.resource._guess_format() == 'csv'
+        self.resource.mediatype = "image/jpeg"
+        assert self.resource._guess_format() == 'jpe'

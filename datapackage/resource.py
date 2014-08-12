@@ -5,6 +5,7 @@ import hashlib
 import json
 import posixpath
 import re
+import mimetypes
 
 if sys.version_info[0] < 3:
     import urlparse
@@ -64,9 +65,13 @@ class Resource(object):
     def path(self, val):
         if not val and 'path' in self.descriptor:
             del self.descriptor['path']
-        else:
-            # use posix path since it is supposed to be unix-style
-            self.descriptor['path'] = str(val)
+            return
+
+        # use posix path since it is supposed to be unix-style
+        self.descriptor['path'] = str(val)
+
+        self.mediatype = self._guess_mediatype()
+        self.format = self._guess_format()
 
     @property
     def fullpath(self):
@@ -103,6 +108,45 @@ class Resource(object):
             raise ValueError("not a url: {}".format(val))
 
         self.descriptor['url'] = str(val)
+
+        self.mediatype = self._guess_mediatype()
+        self.format = self._guess_format()
+
+    def _guess_mediatype(self):
+        """Tries to guess the mediatype based off other properties of the
+        resource. First, it will look at the path; if that does not
+        exist, then it will try to guess it from the URL.
+
+        """
+        if self.path:
+            mediatype, encoding = mimetypes.guess_type(self.path)
+        elif self.url:
+            mediatype, encoding = mimetypes.guess_type(self.url)
+        else:
+            mediatype = u''
+
+        return str(mediatype)
+
+    def _guess_format(self):
+        """Tries to guess the format based off other properties of the
+        resource. First, it will look at the path; if that does not
+        exist, it will try to guess it from the URL; and if that does
+        not exist, it will try to guess it from the mediatype.
+
+        """
+        if self.path:
+            format = posixpath.splitext(self.path)[1][1:]
+        elif self.url:
+            path = urllib.parse.urlparse(self.url).path
+            format = posixpath.splitext(path)[1][1:]
+        else:
+            format = mimetypes.guess_extension(self.mediatype)
+            if format:
+                format = format[1:]
+            else:
+                format = u''
+
+        return str(format)
 
     @property
     def name(self):
@@ -156,6 +200,7 @@ class Resource(object):
         elif not is_mimetype(val):
             raise ValueError("not a valid mimetype: {}".format(val))
         self.descriptor['mediatype'] = str(val)
+        self.format = self._guess_format()
 
     @property
     def encoding(self):

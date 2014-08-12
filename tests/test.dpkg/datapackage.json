@@ -4,7 +4,7 @@
       {
           "data": {"foo": "bar"},
           "path": "foobar.json",
-          "url": "http://foobar.com/",
+          "url": "http://foobar.com/foobar.json",
           "name": "foobar",
           "format": "json",
           "mediatype": "application/json",
