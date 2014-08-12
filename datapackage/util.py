@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import urllib
+import re
 
 if sys.version_info[0] < 3:
     import urlparse
@@ -46,3 +47,21 @@ def is_local(path):
     """
     parsed_results = urllib.parse.urlparse(path)
     return parsed_results.scheme == '' or parsed_results.netloc == ''
+
+
+def is_url(path):
+    """Checks whether a path is a valid http or https URL. This simple
+    check just looks if the scheme is HTTP or HTTPS.
+
+    """
+    parsed_results = urllib.parse.urlparse(path)
+    return parsed_results.scheme == 'http' or parsed_results.scheme == 'https'
+
+
+def is_email(val):
+    """Checks to see whether a string is a valid email address.  Email
+    addresses can actually be complicated, so this just performs the
+    minimal check that there is <something>@<something>.<something>
+
+    """
+    return bool(re.match(r"[^@]+@[^@]+\.[^@]+", val))

@@ -36,7 +36,8 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request
 
-from .util import verify_semantic_version, get_licenses, is_local
+from .util import verify_semantic_version, get_licenses
+from .util import is_local, is_url, is_email
 
 LICENSES = get_licenses()
 
@@ -214,6 +215,9 @@ class DataPackage(object):
             if sorted(descriptor_license.keys()) != ["type", "url"]:
                 raise ValueError(
                     "license should only have keys for 'type' and 'url'")
+            url = descriptor_license["url"]
+            if url and not is_url(url):
+                raise ValueError("not a url: {}".format(url))
         self.descriptor['licenses'] = val
 
     def add_license(self, license_type, url=None):
@@ -293,6 +297,9 @@ class DataPackage(object):
     def homepage(self, val):
         if not val:
             val = ""
+        elif not is_url(val):
+            raise ValueError("not a URL: {}".format(val))
+
         self.descriptor['homepage'] = str(val)
 
     @property
@@ -334,6 +341,10 @@ class DataPackage(object):
                     "source has unexpected keys: {}".format(extra_keys))
             if "name" not in keys:
                 raise ValueError("source is missing a name")
+            if "web" in keys and not is_url(source["web"]):
+                raise ValueError("not a url: {}".format(source["web"]))
+            if "email" in keys and not is_email(source["email"]):
+                raise ValueError("not an email address: {}".format(source["email"]))
             sources.append({
                 str(key): str(val) for key, val in source.iteritems()})
 
@@ -352,12 +363,14 @@ class DataPackage(object):
             source.
 
         """
+        source = dict(name=str(name))
+        if web:
+            source["web"] = str(web)
+        if email:
+            source["email"] = str(email)
+
         sources = self.sources
-        sources.append({
-            "name": str(name),
-            "web": web or u'',
-            "email": email or u''
-        })
+        sources.append(source)
         self.sources = sources
 
     def remove_source(self, name):

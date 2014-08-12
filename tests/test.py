@@ -195,10 +195,17 @@ def test_get_default_homepage():
 def test_set_homepage():
     """Test setting the homepage to various values"""
     dpkg = DataPackage("tests/test.dpkg")
-    dpkg.homepage = "foo"
-    assert dpkg.homepage == "foo"
+    dpkg.homepage = "http://foo.com/"
+    assert dpkg.homepage == "http://foo.com/"
     dpkg.homepage = None
     assert dpkg.homepage == ""
+
+
+@raises(ValueError)
+def test_set_invalid_homepage():
+    """Test setting the homepage to an invalid URL"""
+    dpkg = DataPackage("tests/test.dpkg")
+    dpkg.homepage = "foo"
 
 
 def test_get_version():
@@ -249,10 +256,10 @@ def test_set_sources():
     dpkg = DataPackage("tests/test.dpkg")
     dpkg.sources = None
     assert len(dpkg.sources) == 0
-    dpkg.sources = [{"name": "foo", "web": "bar"}]
+    dpkg.sources = [{"name": "foo", "web": "https://bar.com/"}]
     assert len(dpkg.sources) == 1
     assert dpkg.sources[0]["name"] == "foo"
-    assert dpkg.sources[0]["web"] == "bar"
+    assert dpkg.sources[0]["web"] == "https://bar.com/"
 
 
 @raises(ValueError)
@@ -277,15 +284,29 @@ def test_set_sources_duplicate_names():
                     {"name": "foo", "email": "baz"}]
 
 
+@raises(ValueError)
+def test_set_sources_bad_website():
+    """Check that an error occurs when the web URL is invalid"""
+    dpkg = DataPackage("tests/test.dpkg")
+    dpkg.sources = [{"name": "foo", "email": "bar"}]
+
+
+@raises(ValueError)
+def test_set_sources_bad_email():
+    """Check that an error occurs when the email is invalid"""
+    dpkg = DataPackage("tests/test.dpkg")
+    dpkg.sources = [{"name": "foo", "web": "bar"}]
+
+
 def test_add_source():
     """Try adding a new source with add_source"""
     dpkg = DataPackage("tests/test.dpkg")
-    dpkg.add_source("foo", email="bar")
+    dpkg.add_source("foo", email="bar@test.com")
     assert len(dpkg.sources) == 2
     assert dpkg.sources[0]["name"] == "World Bank and OECD"
     assert dpkg.sources[0]["web"] == "http://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
     assert dpkg.sources[1]["name"] == "foo"
-    assert dpkg.sources[1]["email"] == "bar"
+    assert dpkg.sources[1]["email"] == "bar@test.com"
 
 
 def test_remove_source():
