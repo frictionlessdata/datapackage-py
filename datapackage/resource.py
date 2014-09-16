@@ -2,6 +2,7 @@ import os
 import sys
 import urllib
 import hashlib
+import json
 
 if sys.version_info[0] < 3:
     import urlparse
@@ -27,6 +28,20 @@ class Resource(object):
 
         """
         return self.descriptor.get('data', None)
+
+    @data.setter
+    def data(self, val):
+        if not val and 'data' in self.descriptor:
+            del self.descriptor['data']
+            return
+
+        # make sure the value is json serializable
+        try:
+            val = json.loads(json.dumps(val))
+        except TypeError:
+            raise TypeError("'{}' is not json serializable".format(val))
+
+        self.descriptor['data'] = val
 
     @property
     def path(self):
