@@ -36,10 +36,10 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request
 
-from .util import verify_version, parse_version, format_version, get_licenses
-from .util import is_local, is_url, is_email
-
-LICENSES = get_licenses()
+from . import sources
+from . import licenses
+from .util import verify_version, parse_version, format_version
+from .util import is_local, is_url
 
 
 class DataPackage(object):
@@ -188,6 +188,7 @@ class DataPackage(object):
             raise ValueError("datapackage name must be non-empty")
         self.descriptor['name'] = val
 
+
     @property
     def licenses(self):
         """MUST be an array. Each entry MUST be a hash with a type and a url
@@ -196,32 +197,11 @@ class DataPackage(object):
         otherwise may be the general license name or identifier.
 
         """
-        descriptor_license = self.descriptor.get('license')
-        descriptor_licenses = self.descriptor.get('licenses')
-        if descriptor_license and descriptor_licenses:
-            raise KeyError("datapackage has both license and licenses defined")
-        elif descriptor_license:
-            return [{
-                "type": descriptor_license,
-                "url": LICENSES.get(descriptor_license, None)
-            }]
-        elif descriptor_licenses:
-            return descriptor_licenses
-        else:
-            raise KeyError("datapackage does not have any licenses")
+        licenses.get_licenses(self.descriptor)
 
     @licenses.setter
     def licenses(self, val):
-        if 'license' in self.descriptor:
-            del self.descriptor['license']
-        for descriptor_license in val:
-            if sorted(descriptor_license.keys()) != ["type", "url"]:
-                raise ValueError(
-                    "license should only have keys for 'type' and 'url'")
-            url = descriptor_license["url"]
-            if url and not is_url(url):
-                raise ValueError("not a url: {}".format(url))
-        self.descriptor['licenses'] = val
+        licenses.set_licenses(self.descriptor, val)
 
     def add_license(self, license_type, url=None):
         """Adds a license to the list of licenses for the datapackage.
@@ -235,10 +215,7 @@ class DataPackage(object):
             the URL will try to be inferred automatically.
 
         """
-        url = url or LICENSES.get(license_type, None)
-        licenses = self.licenses
-        licenses.append({"type": license_type, "url": url})
-        self.licenses = licenses
+        licenses.add_license(self.descriptor, license_type, url)
 
     @property
     def datapackage_version(self):
@@ -380,35 +357,12 @@ class DataPackage(object):
         Defaults to an empty list.
 
         """
-        return self.descriptor.get('sources', [])
+        return sources.get_sources(self.descriptor)
 
     @sources.setter
     def sources(self, val):
-        if not val:
-            val = []
+        sources.set_sources(self.descriptor, val)
 
-        sources = []
-        for source in val:
-            keys = set(source.keys())
-            extra_keys = keys - set(["name", "web", "email"])
-            if len(extra_keys) > 0:
-                raise ValueError(
-                    "source has unexpected keys: {}".format(extra_keys))
-            if "name" not in keys:
-                raise ValueError("source is missing a name")
-            if "web" in keys and not is_url(source["web"]):
-                raise ValueError("not a url: {}".format(source["web"]))
-            if "email" in keys and not is_email(source["email"]):
-                raise ValueError(
-                    "not an email address: {}".format(source["email"]))
-            sources.append({
-                str(key): str(val) for key, val in source.iteritems()})
-
-        names = [source["name"] for source in sources]
-        if len(names) != len(set(names)):
-            raise ValueError("source names are not unique")
-
-        self.descriptor['sources'] = sources
 
     def add_source(self, name, web=None, email=None):
         """Adds a source to the list of sources for this datapackage.
@@ -419,22 +373,11 @@ class DataPackage(object):
             source.
 
         """
-        source = dict(name=str(name))
-        if web:
-            source["web"] = str(web)
-        if email:
-            source["email"] = str(email)
-
-        sources = self.sources
-        sources.append(source)
-        self.sources = sources
+        sources.add_source(self.descriptor, name, web, email)
 
     def remove_source(self, name):
         """Removes the source with the given name."""
-        sources = [s for s in self.sources if s["name"] != name]
-        if len(sources) == len(self.sources):
-            raise KeyError("source with name '{}' does not exist".format(name))
-        self.sources = sources
+        sources.remove_source(self.descriptor, name)
 
     @property
     def keywords(self):

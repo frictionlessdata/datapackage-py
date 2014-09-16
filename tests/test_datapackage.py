@@ -49,50 +49,6 @@ class TestDatapackage(object):
         """Check than an error is thrown when name is set to None"""
         self.dpkg.name = None
 
-    def test_get_licenses(self):
-        """Check that the licenses are successfully read"""
-        licenses = self.dpkg.licenses
-        assert len(licenses) == 1
-        assert licenses[0]["type"] == "ODC-BY"
-        assert licenses[0]["url"] == "http://opendefinition.org/licenses/odc-by"
-
-    @raises(KeyError)
-    def test_get_missing_licenses(self):
-        """Check than an error is thrown when there are no licenses"""
-        del self.dpkg.descriptor['license']
-        self.dpkg.licenses
-
-    @raises(KeyError)
-    def test_get_license_and_licenses(self):
-        """Check that an error is thrown when both 'license' and 'licenses'
-        are defined in the datapackage, because the datapackage
-        standard says that exactly one of them should be defined (not
-        both).
-
-        """
-        self.dpkg.descriptor['licenses'] = [
-            {"type": "ODC-BY",
-             "url": "http://opendefinition.org/licenses/odc-by"}]
-        self.dpkg.licenses
-
-    def test_set_licenses(self):
-        """Test setting the licenses"""
-        self.dpkg.licenses = [
-            {"type": "PDDL",
-             "url": "http://opendefinition.org/licenses/odc-pddl"}]
-        assert len(self.dpkg.licenses) == 1
-        assert self.dpkg.licenses[0]["type"] == "PDDL"
-        assert self.dpkg.licenses[0]["url"] == "http://opendefinition.org/licenses/odc-pddl"
-
-    def test_add_license(self):
-        """Test adding another license"""
-        self.dpkg.add_license("PDDL")
-        assert len(self.dpkg.licenses) == 2
-        assert self.dpkg.licenses[0]["type"] == "ODC-BY"
-        assert self.dpkg.licenses[0]["url"] == "http://opendefinition.org/licenses/odc-by"
-        assert self.dpkg.licenses[1]["type"] == "PDDL"
-        assert self.dpkg.licenses[1]["url"] == "http://opendefinition.org/licenses/odc-pddl"
-
     def test_get_datapackage_version(self):
         """Test getting the datapackage version"""
         assert self.dpkg.datapackage_version == "1.0-beta.10"
@@ -198,72 +154,6 @@ class TestDatapackage(object):
 
         """
         self.dpkg.version = "foo"
-
-    def test_get_sources(self):
-        """Try reading the sources"""
-        assert len(self.dpkg.sources) == 1
-        assert self.dpkg.sources[0]["name"] == "World Bank and OECD"
-        assert self.dpkg.sources[0]["web"] == "http://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
-
-    def test_get_default_sources(self):
-        """Check that the default sources are correct"""
-        del self.dpkg.descriptor['sources']
-        assert self.dpkg.sources == []
-
-    def test_set_sources(self):
-        """Check that setting the sources works"""
-        self.dpkg.sources = None
-        assert len(self.dpkg.sources) == 0
-        self.dpkg.sources = [{"name": "foo", "web": "https://bar.com/"}]
-        assert len(self.dpkg.sources) == 1
-        assert self.dpkg.sources[0]["name"] == "foo"
-        assert self.dpkg.sources[0]["web"] == "https://bar.com/"
-
-    @raises(ValueError)
-    def test_set_sources_bad_keys(self):
-        """Check that an error occurs when the source keys are invalid"""
-        self.dpkg.sources = [{"foo": "foo", "bar": "bar"}]
-
-    @raises(ValueError)
-    def test_set_sources_missing_name(self):
-        """Check that an error occurs when the source name is missing"""
-        self.dpkg.sources = [{"web": "foo", "email": "bar"}]
-
-    @raises(ValueError)
-    def test_set_sources_duplicate_names(self):
-        """Check that an error occurs when there are duplicate sources"""
-        self.dpkg.sources = [
-            {"name": "foo", "email": "bar"},
-            {"name": "foo", "email": "baz"}]
-
-    @raises(ValueError)
-    def test_set_sources_bad_website(self):
-        """Check that an error occurs when the web URL is invalid"""
-        self.dpkg.sources = [{"name": "foo", "web": "bar"}]
-
-    @raises(ValueError)
-    def test_set_sources_bad_email(self):
-        """Check that an error occurs when the email is invalid"""
-        self.dpkg.sources = [{"name": "foo", "email": "bar"}]
-
-    def test_add_source(self):
-        """Try adding a new source with add_source"""
-        self.dpkg.add_source("foo", email="bar@test.com")
-        assert len(self.dpkg.sources) == 2
-        assert self.dpkg.sources[0]["name"] == "World Bank and OECD"
-        assert self.dpkg.sources[0]["web"] == "http://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
-        assert self.dpkg.sources[1]["name"] == "foo"
-        assert self.dpkg.sources[1]["email"] == "bar@test.com"
-
-    def test_remove_source(self):
-        """Try removing a source with remove_source"""
-        self.dpkg.remove_source("World Bank and OECD")
-        assert len(self.dpkg.sources) == 0
-
-    @raises(KeyError)
-    def test_remove_bad_source(self):
-        """Check that an error occurs when removing a non-existant source"""
-        self.dpkg.remove_source("foo")
 
     def test_get_keywords(self):
         """Try reading the keywords"""

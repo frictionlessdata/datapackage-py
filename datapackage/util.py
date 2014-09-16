@@ -118,7 +118,7 @@ def verify_version(version):
     return format_version(parse_version(version))
 
 
-def get_licenses():
+def load_licenses():
     """Reads a dictionary of licenses, and their corresponding URLs, out
     of a JSON file."""
     # figure out the real directory name relative to this file, so we
