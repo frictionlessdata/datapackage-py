@@ -15,8 +15,8 @@ def get_licenses(descriptor):
     otherwise may be the general license name or identifier.
 
     """
-    descriptor_license = descriptor.get('license')
-    descriptor_licenses = descriptor.get('licenses')
+    descriptor_license = dict.get(descriptor, 'license')
+    descriptor_licenses = dict.get(descriptor, 'licenses')
     if descriptor_license and descriptor_licenses:
         raise KeyError("datapackage has both license and licenses defined")
     elif descriptor_license:
@@ -40,7 +40,7 @@ def set_licenses(descriptor, val):
         url = descriptor_license["url"]
         if url and not is_url(url):
             raise ValueError("not a url: {}".format(url))
-    descriptor['licenses'] = val
+    dict.__setitem__(descriptor, 'licenses', val)
 
 
 def add_license(descriptor, license_type, url=None):

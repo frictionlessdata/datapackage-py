@@ -18,18 +18,20 @@ if sys.version_info[0] < 3:
 from . import sources
 from . import licenses
 from .schema import Schema
-from .util import is_local, is_url, is_mimetype
-from .util import get_size_from_url
+from .util import (Specification, is_local, is_url, is_mimetype,
+                   get_size_from_url)
 
 name_regex = re.compile(r"^[0-9A-Za-z-_\.]+$")
 
 
-class Resource(object):
+class Resource(dict):
 
-    def __init__(self, datapackage_uri, descriptor, opener=None):
+
+    def __init__(self, datapackage_uri, descriptor, *args, **kwargs):
         self.datapackage_uri = datapackage_uri
-        self.descriptor = descriptor
         self.is_local = is_local(self.datapackage_uri)
+        for key, value in descriptor.iteritems():
+            dict.__setitem__(self, key, value)
 
     def _open(self, mode):
         if self.is_local:
@@ -40,17 +42,21 @@ class Resource(object):
             return urllib.urlopen(self.fullpath)
 
     @property
+    def descriptor(self):
+        return self
+
+    @property
     def data(self):
         """A field containing the data directly inline in the datapackage.json
         file.
 
         """
-        return self.descriptor.get('data', None)
+        return dict.get(self, 'data', None)
 
     @data.setter
     def data(self, val):
-        if not val and 'data' in self.descriptor:
-            del self.descriptor['data']
+        if not val and dict.__contains__(self, 'data'):
+            dict.__delitem__(self, 'data')
             return
 
         # make sure the value is json serializable
@@ -59,7 +65,7 @@ class Resource(object):
         except TypeError:
             raise TypeError("'{}' is not json serializable".format(val))
 
-        self.descriptor['data'] = val
+        dict.__setitem__(self, 'data', val)
 
     @property
     def path(self):
@@ -70,16 +76,16 @@ class Resource(object):
         (if it is defined).
 
         """
-        return self.descriptor.get('path', None)
+        return dict.get(self, 'path', None)
 
     @path.setter
     def path(self, val):
-        if not val and 'path' in self.descriptor:
-            del self.descriptor['path']
+        if not val and dict.__contains__(self, 'path'):
+            dict.__delitem__(self, 'path')
             return
 
         # use posix path since it is supposed to be unix-style
-        self.descriptor['path'] = str(val)
+        dict.__setitem__(self, 'path', str(val))
 
         self.mediatype = self._guess_mediatype()
         self.format = self._guess_format()
@@ -103,18 +109,18 @@ class Resource(object):
     @property
     def url(self):
         """The url of this data resource"""
-        return self.descriptor.get('url', None)
+        return dict.get(self, 'url', None)
 
     @url.setter
     def url(self, val):
-        if not val and 'url' in self.descriptor:
-            del self.descriptor['url']
+        if not val and dict.__contains__(self, 'url'):
+            dict.__delitem__(self, 'url')
             return
 
         if not is_url(val):
             raise ValueError("not a url: {}".format(val))
 
-        self.descriptor['url'] = str(val)
+        dict.__setitem__(self, 'url', str(val))
 
         self.mediatype = self._guess_mediatype()
         self.format = self._guess_format()
@@ -167,7 +173,7 @@ class Resource(object):
         (minus the extension) of the data file the resource describes.
 
         """
-        return self.descriptor.get('name', u'')
+        return dict.get(self, 'name', str(''))
 
     @name.setter
     def name(self, val):
@@ -176,7 +182,7 @@ class Resource(object):
         elif not name_regex.match(val):
             raise ValueError(
                 "name '{}' contains invalid characters".format(val))
-        self.descriptor['name'] = val
+        dict.__setitem__(self, 'name', val)
 
     @property
     def format(self):
@@ -184,13 +190,13 @@ class Resource(object):
         the the standard file extension for this type of resource.
 
         """
-        return self.descriptor.get('format', '')
+        return dict.get(self, 'format', str(''))
 
     @format.setter
     def format(self, val):
         if not val:
             val = u''
-        self.descriptor['format'] = str(val)
+        dict.__setitem__(self, 'format', str(val))
 
     @property
     def mediatype(self):
@@ -198,7 +204,7 @@ class Resource(object):
         'application/vnd.ms-excel'.
 
         """
-        return self.descriptor.get('mediatype', '')
+        return dict.get(self, 'mediatype', str(''))
 
     @mediatype.setter
     def mediatype(self, val):
@@ -206,7 +212,7 @@ class Resource(object):
             val = u''
         elif not is_mimetype(val):
             raise ValueError("not a valid mimetype: {}".format(val))
-        self.descriptor['mediatype'] = str(val)
+        dict.__setitem__(self, 'mediatype', str(val))
         self.format = self._guess_format()
 
     @property
@@ -217,18 +223,18 @@ class Resource(object):
         specified then the default is UTF-8.
 
         """
-        return self.descriptor.get('encoding', u'utf-8')
+        return dict.get(self, 'encoding', str('utf-8'))
 
     @encoding.setter
     def encoding(self, val):
         if not val:
             val = u'utf-8'
-        self.descriptor['encoding'] = str(val)
+        dict.__setitem__(self, 'encoding', str(val))
 
     @property
     def bytes(self):
         """The size of the file in bytes."""
-        return self.descriptor.get('bytes', None)
+        return dict.get(self, 'bytes', None)
 
     def _data_bytes(self):
         """Compute the size of the inline data"""
@@ -277,12 +283,12 @@ class Resource(object):
                 "size of file has changed! (was: {}, is now: {})".format(
                     old_size, new_size))
 
-        self.descriptor['bytes'] = new_size
+        dict.__setitem__(self, 'bytes', new_size)
 
     @property
     def hash(self):
         """The MD5 hash for this resource."""
-        return self.descriptor.get('hash', None)
+        return dict.get(self, 'hash', None)
 
     def _data_hash(self):
         """Computes the md5 checksum of the inline data."""
@@ -332,20 +338,20 @@ class Resource(object):
                 "hash of file has changed! (was: {}, is now: {})".format(
                     old_hash, new_hash))
 
-        self.descriptor['hash'] = new_hash
+        dict.__setitem__(self, 'hash', new_hash)
 
     @property
     def schema(self):
         """A schema for the resource, e.g. in the case of tabular data.
 
         """
-        return self.descriptor.get('schema', u'')
+        return dict.get(self, 'schema', str(''))
 
     @schema.setter
     def schema(self, val):
         if not isinstance(val, (Schema, dict)):
             raise TypeError("Schema type invalid")
-        self.descriptor['schema'] = val
+        dict.__setitem__(self, 'schema', val)
 
     @property
     def sources(self):
@@ -355,11 +361,11 @@ class Resource(object):
         Defaults to an empty list.
 
         """
-        return sources.get_sources(self.descriptor)
+        return sources.get_sources(self)
 
     @sources.setter
     def sources(self, val):
-        sources.set_sources(self.descriptor, val)
+        sources.set_sources(self, val)
 
     def add_source(self, name, web=None, email=None):
         """Adds a source to the list of sources for this datapackage.
@@ -370,11 +376,11 @@ class Resource(object):
             source.
 
         """
-        sources.add_source(self.descriptor, name, web, email)
+        sources.add_source(self, name, web, email)
 
     def remove_source(self, name):
         """Removes the source with the given name."""
-        sources.remove_source(self.descriptor, name)
+        sources.remove_source(self, name)
 
     @property
     def licenses(self):
@@ -384,11 +390,11 @@ class Resource(object):
         otherwise may be the general license name or identifier.
 
         """
-        licenses.get_licenses(self.descriptor)
+        licenses.get_licenses(self)
 
     @licenses.setter
     def licenses(self, val):
-        licenses.set_licenses(self.descriptor, val)
+        licenses.set_licenses(self, val)
 
     def add_license(self, license_type, url=None):
         """Adds a license to the list of licenses for the datapackage.
@@ -402,4 +408,4 @@ class Resource(object):
             the URL will try to be inferred automatically.
 
         """
-        licenses.add_license(self.descriptor, license_type, url)
+        licenses.add_license(self, license_type, url)
