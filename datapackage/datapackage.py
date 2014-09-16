@@ -188,7 +188,6 @@ class DataPackage(object):
             raise ValueError("datapackage name must be non-empty")
         self.descriptor['name'] = val
 
-
     @property
     def licenses(self):
         """MUST be an array. Each entry MUST be a hash with a type and a url
@@ -362,7 +361,6 @@ class DataPackage(object):
     @sources.setter
     def sources(self, val):
         sources.set_sources(self.descriptor, val)
-
 
     def add_source(self, name, web=None, email=None):
         """Adds a source to the list of sources for this datapackage.

@@ -14,6 +14,57 @@ if sys.version_info[0] < 3:
     str = unicode
 
 
+class Specification(dict):
+
+    # Allowed keys in the specification object and their types.
+    # These are the currently allowed data package keys
+    # and should preferably be parsed from a data package
+    # specification representation (instead of being hardcoded).
+    SPECIFICATION = {}
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize a new Specification object.
+
+        Keyword arguments can set attributes/values on instance creation
+        """
+        dict.__init__(self, args)
+        for (key, value) in kwargs.iteritems():
+            self.__setattr__(key, value)
+
+    def __getattr__(self, attribute):
+        if attribute in self.SPECIFICATION.keys():
+            return dict.get(self, attribute, None)
+        else:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(
+                self.__class__.__name__, attribute))
+
+    def __setattr__(self, attribute, value):
+        # The specification does not expect any value for a key to be
+        # None (null) so we skip it instead of adding a None value
+        if value is None:
+            return
+        # Attribute must exist in the specification keys
+        if attribute in self.SPECIFICATION.keys():
+            spec_type = self.SPECIFICATION[attribute]
+            # If spec_type is None we don't do any validation of type
+            if spec_type is not None:
+                # To accommodate for multiple types we cast non-tuples into
+                # a tuple to make later processing easier
+                if type(spec_type) != tuple:
+                    spec_type = (spec_type,)
+                if not isinstance(value, spec_type):
+                    raise TypeError(
+                        "Attribute '{0}' ({1}) should be {2}".format(
+                            attribute, type(value),
+                            ' or '.join([str(s) for s in spec_type])))
+            dict.__setitem__(self, attribute, value)
+        else:
+            raise AttributeError(
+                "Attribute '{0}' is not allowed in a '{1}' object".format(
+                    attribute, self.__class__.__name__))
+
+
 # This is a named tuple for representing semantic versions (see
 # http://semver.org/). Semantic versions look like this:
 #

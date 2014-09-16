@@ -17,6 +17,7 @@ if sys.version_info[0] < 3:
 
 from . import sources
 from . import licenses
+from .schema import Schema
 from .util import is_local, is_url, is_mimetype
 from .util import get_size_from_url
 
@@ -339,6 +340,12 @@ class Resource(object):
 
         """
         return self.descriptor.get('schema', u'')
+
+    @schema.setter
+    def schema(self, val):
+        if not isinstance(val, (Schema, dict)):
+            raise TypeError("Schema type invalid")
+        self.descriptor['schema'] = val
 
     @property
     def sources(self):

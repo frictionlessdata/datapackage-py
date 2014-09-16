@@ -2,6 +2,12 @@ import datapackage
 import posixpath
 from nose.tools import raises
 from mock import Mock, patch
+import sys
+
+if sys.version_info[0] < 3:
+    next = lambda x: x.next()
+    bytes = str
+    str = unicode
 
 
 class TestDatapackage(object):
@@ -392,3 +398,134 @@ class TestDatapackage(object):
         self.resource.update_bytes(verify=False)
         assert self.resource.bytes == 14
         assert self.resource.descriptor['bytes'] == 14
+
+    def test_resource_schema_valid(self):
+        required = datapackage.schema.Constraints(required=True)
+
+        title = datapackage.schema.Field(
+            name=str('title'), title=str('Title of Batman movie'),
+            type=str('string'), constraints=required)
+        actor = datapackage.schema.Field(
+            name=str('actor'), title=str('Actor portraying Batman'))
+        villain = datapackage.schema.Field(
+            name=str('villain'), title=str('Movie villain'))
+
+        schema = datapackage.schema.Schema(
+            fields=[title, actor, villain],
+            primaryKey=[title, villain])
+
+        reference = datapackage.schema.Reference(
+            datapackage=str('http://gotham.us/datapackages'),
+            resource=str('villains'),
+            fields=[str('name')])
+        foreign_key = datapackage.schema.ForeignKey(fields=[villain],
+                                                    reference=reference)
+
+        schema.add_foreign_key(foreign_key)
+
+        # In the assertions we will access the schema as a dictionary because
+        # that's how it should get serialized
+        assert 'fields' in schema, 'Fields not found in schema'
+        expected_field_order = [str('title'), str('actor'), str('villain')]
+        assert [f.name for f in schema['fields']] == expected_field_order, \
+            'Field order is incorrect'
+        # Constraints for first field should be required == True
+        assert schema['fields'][0]['constraints']['required'] == True, \
+            'Required constraint changes'
+        assert schema['fields'][0]['type'] == title.type, \
+            'Field type changes'
+        assert schema['fields'][1]['title'] == actor.title, \
+            'Field title changes'
+
+        assert 'primaryKey' in schema, 'primaryKey not found in schema'
+        assert schema.primaryKey == [u'title', u'villain'], \
+            'primaryKey is incorrect in schema'
+
+        assert 'foreignKeys' in schema, 'foreignKeys not found in schema'
+        assert len(schema['foreignKeys']) == 1, \
+            'foreignKeys does not hold a single foreignKey'
+        assert schema['foreignKeys'][0]['fields'] == [str('villain')]
+        schema_reference = schema['foreignKeys'][0]['reference']
+        assert schema_reference['datapackage'] == reference.datapackage, \
+            'Datapackage in reference changess'
+        assert schema_reference['resource'] == reference.resource, \
+            'Resource in reference changes'
+        assert schema_reference['fields'] == [str('name')], \
+            'Fields in reference changes'
+
+    @raises(AttributeError)
+    def test_resource_schema_field_constraint_invalid_constraint(self):
+        datapackage.schema.Constraints(awesome=True)
+
+    @raises(AttributeError)
+    def test_resource_schema_field_missing_name(self):
+        datapackage.schema.Field(title=str('Movie villain'))
+
+    @raises(AttributeError)
+    def test_resource_schema_field_invalid_attribute(self):
+        datapackage.schema.Field(
+            name=str('villain'), joker=str('Movie villain'))
+
+    @raises(AttributeError)
+    def test_resource_schema_invalid_attribute(self):
+        title = datapackage.schema.Field(
+            name=str('title'), title=str('Title of Batman movie'))
+        actor = datapackage.schema.Field(
+            name=str('actor'), title=str('Actor portraying Batman'))
+        villain = datapackage.schema.Field(
+            name=str('villain'), title=str('Movie villain'))
+        datapackage.schema.Schema(
+            fields=[title, actor, villain],
+            description='This dataset resource shows all the Batman movies')
+
+    @raises(AttributeError)
+    def test_resource_schema_bad_primaryKey(self):
+        title = datapackage.schema.Field(
+            name=str('title'), title=str('Title of Batman movie'))
+        actor = datapackage.schema.Field(
+            name=str('actor'), title=str('Actor portraying Batman'))
+        villain = datapackage.schema.Field(
+            name=str('villain'), title=str('Movie villain'))
+        penguin = datapackage.schema.Field(
+            name=str('penguin'), title=str('Oswald Chesterfield Cobblepot'))
+        schema = datapackage.schema.Schema(
+            fields=[title, actor, villain],
+            primaryKey=[title, penguin])
+
+    @raises(AttributeError)
+    def test_resource_schema_foreign_key_bad_attribute(self):
+        villain = datapackage.schema.Field(
+            name=str('villain'), title=str('Movie villain'))
+        datapackage.schema.ForeignKey(
+            fields=[villain], villain='Dr. Hugo Strange')
+
+    def test_resource_schema_foreign_key_Field_field(self):
+        villain = datapackage.schema.Field(
+            name=str('villain'), title=str('Movie villain'))
+        foreign_key = datapackage.schema.ForeignKey(fields=villain)
+        assert foreign_key['fields'] == villain.name, \
+            'Foreign key could not receive a Field object'
+
+    def test_resource_schema_foreign_key_str_field(self):
+        foreign_key = datapackage.schema.ForeignKey(fields=str('villain'))
+        assert foreign_key['fields'] == str('villain'), \
+            'Foreign key could not receive a string field representation'
+
+
+    @raises(AttributeError)
+    def test_resource_schema_reference_bad_attribute(self):
+        reference = datapackage.schema.Reference(
+            datapackage=str('http://gotham.us/datapackages'),
+            badpeople=str('villains'),
+            fields=[str('name')])
+
+    @raises(ValueError)
+    def test_ressource_schema_foreign_key_field_inconsistency(self):
+        reference = datapackage.schema.Reference(
+            datapackage=str('http://gotham.us/datapackages'),
+            resource=str('villains'),
+            fields=[str('name'), str('catwoman')])
+        villain = datapackage.schema.Field(
+            name=str('villain'), title=str('Movie villain'))
+        foreign_key = datapackage.schema.ForeignKey(fields=[villain],
+                                                    reference=reference)
