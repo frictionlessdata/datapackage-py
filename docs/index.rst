@@ -1,16 +1,43 @@
-.. DataPackage documentation master file, created by
-   sphinx-quickstart on Tue Sep 16 15:36:24 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+DataPackage
+===========
 
-Welcome to DataPackage's documentation!
-=======================================
+**datapackage** provides means to work with DataPackages as defined on
+`dataprotocols.org <http://www.dataprotocols.org/en/latest/data-packages.html>`__.
+
+::
+
+    >> import datapackage
+    >>
+    >> # Note trailing slash is important for data.okfn.org
+    >> datapkg = datapackage.DataPackage('http://data.okfn.org/data/cpi/')
+    >>
+    >> print datapkg.title
+    Annual Consumer Price Index (CPI)
+    >> print datapkg.description
+    Annual Consumer Price Index (CPI) for most countries in the world. Reference year is 2005.
+    >> # Weird example just to show how to work with data rows
+    >> print sum([row['CPI'] for row in datapkg.data])
+    668134.635662
+
+Python support
+--------------
+
+**datapackage** supports both Python 2 and 3.
+
+License
+-------
+
+datapackage is available under the GNU General Public License, version
+3. See LICENCE for more details.
+
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
+   hacking
+   code
 
 
 Indices and tables
