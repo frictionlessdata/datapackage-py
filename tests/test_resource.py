@@ -11,12 +11,11 @@ if sys.version_info[0] < 3:
 
 
 class TestDatapackage(object):
-
     def setup(self):
         self.dpkg = datapackage.DataPackage("tests/test.dpkg")
-        self.resource = datapackage.Resource(
-            self.dpkg.uri,
-            self.dpkg.descriptor['resources'][0])
+        kwargs = self.dpkg.descriptor['resources'][0]
+        kwargs['datapackage_uri'] = str(self.dpkg.uri)
+        self.resource = datapackage.Resource(**kwargs)
 
     def teardown(self):
         pass
@@ -37,21 +36,24 @@ class TestDatapackage(object):
 
     def test_get_missing_data(self):
         """Try reading missing resource data"""
-        del self.resource.descriptor['data']
+        del self.resource['data']
         data = self.resource.data
         assert data is None
 
     def test_clear_data(self):
         """Check that setting data to none removes it from the descriptor"""
         self.resource.data = None
-        assert 'data' not in self.resource.descriptor
+        assert 'data' not in self.resource
 
     def test_set_data(self):
         """Check that setting the data works"""
         # 1 will get converted to "1" because it gets translated into
         # a json object, and json keys are always strings
         self.resource.data = {"foo": "bar", 1: 2}
-        assert self.resource.data == {"foo": "bar", "1": 2}
+        assert "foo" in self.resource.data
+        assert self.resource.data["foo"] == "bar"
+        assert 1 in self.resource.data, self.resource.data
+        assert self.resource.data[1] == 2
 
     def test_get_path(self):
         """Try reading the resource path"""
@@ -61,31 +63,33 @@ class TestDatapackage(object):
     def test_get_fullpath(self):
         """Try reading the full resource path"""
         path = self.resource.fullpath
-        assert path == posixpath.join(self.dpkg.uri, "foobar.json")
+        assert path == posixpath.join(self.dpkg.uri, "foobar.json"),\
+            path
         assert posixpath.exists(path)
 
     def test_get_missing_path(self):
         """Try reading the path when it is missing"""
-        del self.resource.descriptor['path']
+        del self.resource['path']
         path = self.resource.path
         assert path is None
 
     def test_get_missing_fullpath(self):
         """Try reading the full path when it is missing"""
-        del self.resource.descriptor['path']
+        del self.resource['path']
         path = self.resource.fullpath
         assert path is None
 
     def test_clear_path(self):
         """Check that setting path to none removes it from the descriptor"""
         self.resource.path = None
-        assert 'path' not in self.resource.descriptor
+        assert 'path' not in self.resource
 
     def test_set_path(self):
         """Check that setting the path works"""
-        self.resource.path = "barfoo.json"
+        self.resource.path = str("barfoo.json")
         assert self.resource.path == "barfoo.json"
-        assert self.resource.fullpath == posixpath.join(self.dpkg.uri, "barfoo.json")
+        assert self.resource.fullpath == posixpath.join(self.dpkg.uri,
+                                                        "barfoo.json")
 
     def test_get_url(self):
         """Try reading the resource url"""
@@ -94,24 +98,25 @@ class TestDatapackage(object):
 
     def test_get_missing_url(self):
         """Try reading the resource url when it is missing"""
-        del self.resource.descriptor['url']
+        del self.resource['url']
         url = self.resource.url
         assert url is None
 
     def test_clear_url(self):
         """Check that setting the url to none removes it from the descriptor"""
         self.resource.url = None
-        assert 'url' not in self.resource.descriptor
+        assert 'url' not in self.resource
 
     def test_set_url(self):
         """Try setting the resource url"""
-        self.resource.url = "https://www.google.com"
-        assert self.resource.url == "https://www.google.com"
+        self.resource.url = str("https://www.google.com")
+        assert self.resource.url == "https://www.google.com",\
+            self.resource.url
 
     @raises(ValueError)
     def test_set_bad_url(self):
         """Try setting the resource url to an invalid url"""
-        self.resource.url = "google"
+        self.resource.url = str("google")
 
     def test_get_name(self):
         """Try reading the resource name"""
@@ -119,44 +124,43 @@ class TestDatapackage(object):
 
     def test_get_default_name(self):
         """Try reading the default resource name"""
-        del self.resource.descriptor['name']
-        assert self.resource.name == ''
+        del self.resource['name']
+        assert self.resource.name == str('')
 
     def test_set_name(self):
         """Try setting the resource name"""
-        self.resource.name = "barfoo"
+        self.resource.name = str("barfoo")
         assert self.resource.name == "barfoo"
 
     def test_set_name_to_none(self):
         """Try setting the resource name to none"""
         self.resource.name = None
-        assert self.resource.name == ''
-        assert self.resource.descriptor['name'] == ''
+        assert self.resource.name == '', self.resource.name
 
     @raises(ValueError)
     def test_set_invalid_name(self):
         """Try setting the resource name to an invalid name"""
-        self.resource.name = "foo bar"
+        self.resource.name = str("foo bar")
 
     def test_get_format(self):
         """Try reading the resource format"""
-        assert self.resource.format == "json"
+        assert self.resource.format == str("json")
 
     def test_get_default_format(self):
         """Try reading the default resource format"""
-        del self.resource.descriptor['format']
+        del self.resource['format']
         assert self.resource.format == ''
 
     def test_set_format(self):
         """Try setting the resource format"""
-        self.resource.format = 'csv'
+        self.resource.format = str('csv')
         assert self.resource.format == 'csv'
 
     def test_set_format_to_none(self):
         """Try setting the resource format to none"""
         self.resource.format = None
         assert self.resource.format == ''
-        assert self.resource.descriptor['format'] == ''
+        assert self.resource['format'] == ''
 
     def test_get_mediatype(self):
         """Try reading the resource mediatype"""
@@ -164,24 +168,24 @@ class TestDatapackage(object):
 
     def test_get_default_mediatype(self):
         """Try reading the default mediatype"""
-        del self.resource.descriptor['mediatype']
+        del self.resource['mediatype']
         assert self.resource.mediatype == ''
 
     def test_set_mediatype(self):
         """Try setting the resource mediatype"""
-        self.resource.mediatype = 'text/csv'
+        self.resource.mediatype = str('text/csv')
         assert self.resource.mediatype == 'text/csv'
 
     def test_set_mediatype_to_none(self):
         """Try setting the resource mediatype to none"""
         self.resource.mediatype = None
         assert self.resource.mediatype == ''
-        assert self.resource.descriptor['mediatype'] == ''
+        assert self.resource['mediatype'] == ''
 
     @raises(ValueError)
     def test_set_invalid_mediatype(self):
         """Try setting the resource mediatype to an invalid mimetype"""
-        self.resource.mediatype = "foo"
+        self.resource.mediatype = str("foo")
 
     def test_get_encoding(self):
         """Try reading the resource encoding"""
@@ -189,55 +193,55 @@ class TestDatapackage(object):
 
     def test_get_default_encoding(self):
         """Try reading the default encoding"""
-        del self.resource.descriptor['encoding']
+        del self.resource['encoding']
         assert self.resource.encoding == 'utf-8'
 
     def test_set_encoding(self):
         """Try setting the resource encoding"""
-        self.resource.encoding = 'latin1'
+        self.resource.encoding = str('latin1')
         assert self.resource.encoding == 'latin1'
 
     def test_set_encoding_to_none(self):
         """Try setting the resource encoding to none"""
         self.resource.encoding = None
         assert self.resource.encoding == 'utf-8'
-        assert self.resource.descriptor['encoding'] == 'utf-8'
+        assert self.resource['encoding'] == 'utf-8'
 
     def test_guess_mediatype(self):
         assert self.resource._guess_mediatype() == 'application/json'
-        self.resource.path = "foo.csv"
+        self.resource.path = str("foo.csv")
         assert self.resource._guess_mediatype() == 'text/csv'
-        self.resource.path = "foo.jpg"
+        self.resource.path = str("foo.jpg")
         assert self.resource._guess_mediatype() == 'image/jpeg'
 
         self.resource.path = None
         assert self.resource._guess_mediatype() == 'application/json'
-        self.resource.url = "http://foobar.com/foo.csv"
+        self.resource.url = str("http://foobar.com/foo.csv")
         assert self.resource._guess_mediatype() == 'text/csv'
-        self.resource.url = "http://foobar.com/foo.jpg"
+        self.resource.url = str("http://foobar.com/foo.jpg")
         assert self.resource._guess_mediatype() == 'image/jpeg'
 
     def test_guess_format(self):
         assert self.resource._guess_format() == 'json'
-        self.resource.path = "foo.csv"
+        self.resource.path = str("foo.csv")
         assert self.resource._guess_format() == 'csv'
-        self.resource.path = "foo.jpg"
+        self.resource.path = str("foo.jpg")
         assert self.resource._guess_format() == 'jpg'
 
         self.resource.path = None
-        self.resource.url = "http://foobar.com/foo.json"
+        self.resource.url = str("http://foobar.com/foo.json")
         assert self.resource._guess_format() == 'json'
-        self.resource.url = "http://foobar.com/foo.csv"
+        self.resource.url = str("http://foobar.com/foo.csv")
         assert self.resource._guess_format() == 'csv'
-        self.resource.url = "http://foobar.com/foo.jpg"
+        self.resource.url = str("http://foobar.com/foo.jpg")
         assert self.resource._guess_format() == 'jpg'
 
         self.resource.url = None
-        self.resource.mediatype = "application/json"
+        self.resource.mediatype = str("application/json")
         assert self.resource._guess_format() == 'json'
-        self.resource.mediatype = "text/csv"
+        self.resource.mediatype = str("text/csv")
         assert self.resource._guess_format() == 'csv'
-        self.resource.mediatype = "image/jpeg"
+        self.resource.mediatype = str("image/jpeg")
         assert self.resource._guess_format() == 'jpe'
 
     def test_data_bytes(self):
@@ -283,7 +287,7 @@ class TestDatapackage(object):
 
     def test_compute_bytes_from_data(self):
         """Test computing the size from inline data"""
-        del self.resource.descriptor['bytes']
+        del self.resource['bytes']
         self.resource.update_bytes()
         assert self.resource.bytes == 14
 
@@ -298,7 +302,7 @@ class TestDatapackage(object):
     def test_compute_bytes_from_path(self):
         """Test computing the size from the file given by the path"""
         self.resource.data = None
-        del self.resource.descriptor['bytes']
+        del self.resource['bytes']
         self.resource.update_bytes()
         assert self.resource.bytes == 14
 
@@ -317,7 +321,7 @@ class TestDatapackage(object):
         self.patch_urlopen_size(mock_urlopen, '14')
         self.resource.data = None
         self.resource.path = None
-        del self.resource.descriptor['bytes']
+        del self.resource['bytes']
         self.resource.update_bytes()
         assert self.resource.bytes == 14
 
@@ -339,7 +343,7 @@ class TestDatapackage(object):
         when the size has changed.
 
         """
-        self.resource.descriptor['bytes'] = 15
+        self.resource['bytes'] = 15
         self.resource.update_bytes()
 
     @raises(RuntimeError)
@@ -349,7 +353,7 @@ class TestDatapackage(object):
 
         """
         self.resource.data = None
-        self.resource.descriptor['bytes'] = 15
+        self.resource['bytes'] = 15
         self.resource.update_bytes()
 
     @raises(RuntimeError)
@@ -362,7 +366,7 @@ class TestDatapackage(object):
         self.patch_urlopen_size(mock_urlopen, '14')
         self.resource.data = None
         self.resource.path = None
-        self.resource.descriptor['bytes'] = 15
+        self.resource['bytes'] = 15
         self.resource.update_bytes()
 
     def test_update_bytes_data_changed_unverified(self):
@@ -370,10 +374,10 @@ class TestDatapackage(object):
         size has changed but the size is not being verified.
 
         """
-        self.resource.descriptor['bytes'] = 15
+        self.resource['bytes'] = 15
         self.resource.update_bytes(verify=False)
         assert self.resource.bytes == 14
-        assert self.resource.descriptor['bytes'] == 14
+        assert self.resource['bytes'] == 14
 
     def test_update_bytes_path_changed_unverified(self):
         """Check that updating the bytes from the path works, when the size
@@ -381,10 +385,10 @@ class TestDatapackage(object):
 
         """
         self.resource.data = None
-        self.resource.descriptor['bytes'] = 15
+        self.resource['bytes'] = 15
         self.resource.update_bytes(verify=False)
         assert self.resource.bytes == 14
-        assert self.resource.descriptor['bytes'] == 14
+        assert self.resource['bytes'] == 14
 
     @patch('urllib.urlopen')
     def test_update_bytes_url_changed_unverified(self, mock_urlopen):
@@ -394,10 +398,10 @@ class TestDatapackage(object):
         """
         self.patch_urlopen_size(mock_urlopen, '14')
         self.resource.data = None
-        self.resource.descriptor['bytes'] = 15
+        self.resource['bytes'] = 15
         self.resource.update_bytes(verify=False)
         assert self.resource.bytes == 14
-        assert self.resource.descriptor['bytes'] == 14
+        assert self.resource['bytes'] == 14
 
     def test_resource_schema_valid(self):
         required = datapackage.schema.Constraints(required=True)

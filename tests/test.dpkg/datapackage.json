@@ -13,7 +13,12 @@
           "hash": "94232c5b8fc9272f6f73a1e36eb68fcf",
           "schema": {},
           "sources": [],
-          "license": "CC-BY"
+          "licenses": [
+              {
+		  "type":"CC-BY",
+		  "url": "http://creativecommons.org/licenses/by/4.0/"
+	      }
+          ]
       }
   ], 
   "license": "ODC-BY",

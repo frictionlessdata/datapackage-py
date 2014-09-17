@@ -24,17 +24,28 @@ from .util import (Specification, is_local, is_url, is_mimetype,
 name_regex = re.compile(r"^[0-9A-Za-z-_\.]+$")
 
 
-class Resource(dict):
+class Resource(Specification):
 
+    SPECIFICATION = {'url': str,
+                     'path': str,
+                     'data': None,
+                     'name': str,
+                     'format': str,
+                     'mediatype': str,
+                     'encoding': str,
+                     'bytes': int,
+                     'hash': str,
+                     'schema': (dict, Schema),
+                     'sources': list,
+                     'licenses': list}
 
-    def __init__(self, datapackage_uri, descriptor, *args, **kwargs):
-        self.datapackage_uri = datapackage_uri
+    def __init__(self, *args, **kwargs):
+        self.datapackage_uri = kwargs.pop('datapackage_uri', None)
         self.is_local = is_local(self.datapackage_uri)
-        for key, value in descriptor.iteritems():
-            dict.__setitem__(self, key, value)
+        super(Resource, self).__init__(self, *args, **kwargs)
 
     def _open(self, mode):
-        if self.is_local:
+        if dict.__getitem__(self, 'is_local'):
             return open(self.fullpath, mode)
         else:
             if mode not in ('r', 'rb'):
@@ -42,8 +53,25 @@ class Resource(dict):
             return urllib.urlopen(self.fullpath)
 
     @property
-    def descriptor(self):
-        return self
+    def datapackage_uri(self):
+        """URI for the data package which holds this resource.
+        """
+        return dict.__getitem__(self, 'datapackage_uri')
+
+    @datapackage_uri.setter
+    def datapackage_uri(self, val):
+        dict.__setitem__(self, 'datapackage_uri', val)
+
+    @property
+    def is_local(self):
+        """Boolean indicating whether the data package is a local package or
+        not. This is automatically computed based on the datapackage_uri
+        """
+        return dict.__getitem__(self, 'is_local')
+
+    @is_local.setter
+    def is_local(self, val):
+        dict.__setitem__(self, 'is_local', val)
 
     @property
     def data(self):
@@ -61,7 +89,7 @@ class Resource(dict):
 
         # make sure the value is json serializable
         try:
-            val = json.loads(json.dumps(val))
+            json.loads(json.dumps(val))
         except TypeError:
             raise TypeError("'{}' is not json serializable".format(val))
 
@@ -99,11 +127,13 @@ class Resource(dict):
         """
         path = self.path
         if path:
-            if self.is_local:
+            if dict.__getitem__(self, 'is_local'):
                 # use posix path since it is supposed to be unix-style
-                path = posixpath.join(self.datapackage_uri, path)
+                path = posixpath.join(
+                    dict.__getitem__(self, 'datapackage_uri'), path)
             else:
-                path = urllib.parse.urljoin(self.datapackage_uri, path)
+                path = urllib.parse.urljoin(
+                    dict.__getitem__(self, 'datapackage_uri'), path)
         return path
 
     @property
@@ -231,11 +261,6 @@ class Resource(dict):
             val = u'utf-8'
         dict.__setitem__(self, 'encoding', str(val))
 
-    @property
-    def bytes(self):
-        """The size of the file in bytes."""
-        return dict.get(self, 'bytes', None)
-
     def _data_bytes(self):
         """Compute the size of the inline data"""
         if not self.data:
@@ -247,7 +272,7 @@ class Resource(dict):
         """Compute the size of the file specified by the path"""
         if not self.path:
             raise ValueError("path to file is not specified")
-        if self.is_local:
+        if dict.__getitem__(self, 'is_local'):
             size = os.path.getsize(self.fullpath)
         else:
             size = get_size_from_url(self.fullpath)
@@ -284,11 +309,6 @@ class Resource(dict):
                     old_size, new_size))
 
         dict.__setitem__(self, 'bytes', new_size)
-
-    @property
-    def hash(self):
-        """The MD5 hash for this resource."""
-        return dict.get(self, 'hash', None)
 
     def _data_hash(self):
         """Computes the md5 checksum of the inline data."""

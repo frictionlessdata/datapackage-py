@@ -23,16 +23,28 @@ class Specification(dict):
     SPECIFICATION = {}
 
     def __init__(self, *args, **kwargs):
+
         """
         Initialize a new Specification object.
 
         Keyword arguments can set attributes/values on instance creation
         """
-        dict.__init__(self, args)
         for (key, value) in kwargs.iteritems():
-            self.__setattr__(key, value)
+            # If the attribute has been defined as a real attribute
+            # e.g. as a property, we use the object setter, if not then
+            # we use our custom one.
+            if hasattr(self.__class__, key):
+                object.__setattr__(self, key, value)
+            else:
+                self.__setattr__(key, value)
 
     def __getattr__(self, attribute):
+        # If the attribute has been defined as a real attribute
+        # e.g. as a property, we use the object getter instead of
+        # our own
+        if hasattr(self.__class__, attribute):
+            object.__getattr__(self, attribute)
+
         if attribute in self.SPECIFICATION.keys():
             return dict.get(self, attribute, None)
         else:
@@ -40,9 +52,19 @@ class Specification(dict):
                 self.__class__.__name__, attribute))
 
     def __setattr__(self, attribute, value):
+        # If the attribute has been defined as a real attribute
+        # e.g. as a property with its own setter, we use the object
+        # setter instead of our custom one
+        if hasattr(self.__class__, attribute):
+            object.__setattr__(self, attribute, value)
+            return
+
         # The specification does not expect any value for a key to be
         # None (null) so we skip it instead of adding a None value
         if value is None:
+            # If the attribute exists we delete it when the value is None
+            if dict.__contains__(self, attribute):
+                dict.__delitem__(self, attribute)
             return
         # Attribute must exist in the specification keys
         if attribute in self.SPECIFICATION.keys():
