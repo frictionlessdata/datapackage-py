@@ -45,7 +45,7 @@ class Resource(Specification):
         super(Resource, self).__init__(self, *args, **kwargs)
 
     def _open(self, mode):
-        if dict.__getitem__(self, 'is_local'):
+        if self.is_local:
             return open(self.fullpath, mode)
         else:
             if mode not in ('r', 'rb'):
@@ -56,22 +56,22 @@ class Resource(Specification):
     def datapackage_uri(self):
         """URI for the data package which holds this resource.
         """
-        return dict.__getitem__(self, 'datapackage_uri')
+        return self['datapackage_uri']
 
     @datapackage_uri.setter
     def datapackage_uri(self, val):
-        dict.__setitem__(self, 'datapackage_uri', val)
+        self['datapackage_uri'] = val
 
     @property
     def is_local(self):
         """Boolean indicating whether the data package is a local package or
         not. This is automatically computed based on the datapackage_uri
         """
-        return dict.__getitem__(self, 'is_local')
+        return self['is_local']
 
     @is_local.setter
     def is_local(self, val):
-        dict.__setitem__(self, 'is_local', val)
+        self['is_local'] = val
 
     @property
     def data(self):
@@ -79,12 +79,12 @@ class Resource(Specification):
         file.
 
         """
-        return dict.get(self, 'data', None)
+        return self.get('data', None)
 
     @data.setter
     def data(self, val):
-        if not val and dict.__contains__(self, 'data'):
-            dict.__delitem__(self, 'data')
+        if not val and 'data' in self:
+            del self['data']
             return
 
         # make sure the value is json serializable
@@ -93,7 +93,7 @@ class Resource(Specification):
         except TypeError:
             raise TypeError("'{}' is not json serializable".format(val))
 
-        dict.__setitem__(self, 'data', val)
+        self['data'] = val
 
     @property
     def path(self):
@@ -104,16 +104,16 @@ class Resource(Specification):
         (if it is defined).
 
         """
-        return dict.get(self, 'path', None)
+        return self.get('path', None)
 
     @path.setter
     def path(self, val):
-        if not val and dict.__contains__(self, 'path'):
-            dict.__delitem__(self, 'path')
+        if not val and 'path' in self:
+            del self['path']
             return
 
         # use posix path since it is supposed to be unix-style
-        dict.__setitem__(self, 'path', str(val))
+        self['path'] = str(val)
 
         self.mediatype = self._guess_mediatype()
         self.format = self._guess_format()
@@ -127,30 +127,28 @@ class Resource(Specification):
         """
         path = self.path
         if path:
-            if dict.__getitem__(self, 'is_local'):
+            if self['is_local']:
                 # use posix path since it is supposed to be unix-style
-                path = posixpath.join(
-                    dict.__getitem__(self, 'datapackage_uri'), path)
+                path = posixpath.join(self['datapackage_uri'], path)
             else:
-                path = urllib.parse.urljoin(
-                    dict.__getitem__(self, 'datapackage_uri'), path)
+                path = urllib.parse.urljoin(self['datapackage_uri'], path)
         return path
 
     @property
     def url(self):
         """The url of this data resource"""
-        return dict.get(self, 'url', None)
+        return self.get('url', None)
 
     @url.setter
     def url(self, val):
-        if not val and dict.__contains__(self, 'url'):
-            dict.__delitem__(self, 'url')
+        if not val and 'url' in self:
+            del self['url']
             return
 
         if not is_url(val):
             raise ValueError("not a url: {}".format(val))
 
-        dict.__setitem__(self, 'url', str(val))
+        self['url'] = str(val)
 
         self.mediatype = self._guess_mediatype()
         self.format = self._guess_format()
@@ -166,7 +164,7 @@ class Resource(Specification):
         elif self.url:
             mediatype, encoding = mimetypes.guess_type(self.url)
         else:
-            mediatype = u''
+            mediatype = ''
 
         return str(mediatype)
 
@@ -187,7 +185,7 @@ class Resource(Specification):
             if format:
                 format = format[1:]
             else:
-                format = u''
+                format = ''
 
         return str(format)
 
@@ -203,16 +201,16 @@ class Resource(Specification):
         (minus the extension) of the data file the resource describes.
 
         """
-        return dict.get(self, 'name', str(''))
+        return self.get('name', str(''))
 
     @name.setter
     def name(self, val):
         if not val:
-            val = u''
+            val = str('')
         elif not name_regex.match(val):
             raise ValueError(
                 "name '{}' contains invalid characters".format(val))
-        dict.__setitem__(self, 'name', val)
+        self['name'] = val
 
     @property
     def format(self):
@@ -220,13 +218,13 @@ class Resource(Specification):
         the the standard file extension for this type of resource.
 
         """
-        return dict.get(self, 'format', str(''))
+        return self.get('format', str(''))
 
     @format.setter
     def format(self, val):
         if not val:
-            val = u''
-        dict.__setitem__(self, 'format', str(val))
+            val = ''
+        self['format'] = str(val)
 
     @property
     def mediatype(self):
@@ -234,15 +232,15 @@ class Resource(Specification):
         'application/vnd.ms-excel'.
 
         """
-        return dict.get(self, 'mediatype', str(''))
+        return self.get('mediatype', str(''))
 
     @mediatype.setter
     def mediatype(self, val):
         if not val:
-            val = u''
+            val = str('')
         elif not is_mimetype(val):
             raise ValueError("not a valid mimetype: {}".format(val))
-        dict.__setitem__(self, 'mediatype', str(val))
+        self['mediatype'] = str(val)
         self.format = self._guess_format()
 
     @property
@@ -253,13 +251,13 @@ class Resource(Specification):
         specified then the default is UTF-8.
 
         """
-        return dict.get(self, 'encoding', str('utf-8'))
+        return self.get('encoding', str('utf-8'))
 
     @encoding.setter
     def encoding(self, val):
         if not val:
-            val = u'utf-8'
-        dict.__setitem__(self, 'encoding', str(val))
+            val = str('utf-8')
+        self['encoding'] = str(val)
 
     def _data_bytes(self):
         """Compute the size of the inline data"""
@@ -272,7 +270,7 @@ class Resource(Specification):
         """Compute the size of the file specified by the path"""
         if not self.path:
             raise ValueError("path to file is not specified")
-        if dict.__getitem__(self, 'is_local'):
+        if self.is_local:
             size = os.path.getsize(self.fullpath)
         else:
             size = get_size_from_url(self.fullpath)
@@ -308,7 +306,7 @@ class Resource(Specification):
                 "size of file has changed! (was: {}, is now: {})".format(
                     old_size, new_size))
 
-        dict.__setitem__(self, 'bytes', new_size)
+        self['bytes'] = new_size
 
     def _data_hash(self):
         """Computes the md5 checksum of the inline data."""
@@ -358,20 +356,20 @@ class Resource(Specification):
                 "hash of file has changed! (was: {}, is now: {})".format(
                     old_hash, new_hash))
 
-        dict.__setitem__(self, 'hash', new_hash)
+        self['hash'] = new_hash
 
     @property
     def schema(self):
         """A schema for the resource, e.g. in the case of tabular data.
 
         """
-        return dict.get(self, 'schema', str(''))
+        return self.get('schema', {})
 
     @schema.setter
     def schema(self, val):
         if not isinstance(val, (Schema, dict)):
             raise TypeError("Schema type invalid")
-        dict.__setitem__(self, 'schema', val)
+        self['schema'] = val
 
     @property
     def sources(self):

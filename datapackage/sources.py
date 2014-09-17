@@ -14,7 +14,7 @@ def get_sources(descriptor):
     Defaults to an empty list.
 
     """
-    return dict.get(descriptor, 'sources', [])
+    return descriptor.get('sources', [])
 
 
 def set_sources(descriptor, val):
@@ -42,7 +42,7 @@ def set_sources(descriptor, val):
     if len(names) != len(set(names)):
         raise ValueError("source names are not unique")
 
-    dict.__setitem__(descriptor, 'sources', sources)
+    descriptor['sources'] = sources
 
 
 def add_source(descriptor, name, web=None, email=None):

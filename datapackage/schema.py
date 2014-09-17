@@ -96,8 +96,8 @@ class ForeignKey(Specification):
         # If the attribute is 'reference' we need to check if there is a
         # fields attribute and do some checks to see if they are inconsistent
         # because they shouldn't be
-        if attribute == 'reference' and dict.__contains__(self, 'fields'):
-            fields = dict.__getitem__(self, 'fields')
+        if attribute == 'reference' and 'fields' in self:
+            fields = self['fields']
             if type(fields) != type(value.fields):
                     raise TypeError(
                         'Reference fields must have the same type as fields')
@@ -134,8 +134,8 @@ class ForeignKey(Specification):
 
             # Same check as before about inconsistencies but just the other
             # way around
-            if dict.__contains__(self, 'reference'):
-                reference_fields = dict.__getitem__(self, 'reference').fields
+            if 'reference' in self:
+                reference_fields = self['reference'].fields
                 if type(reference_fields) != value_type:
                     raise TypeError(
                         'Fields must have the same type as Reference fields')
@@ -161,21 +161,20 @@ class Schema(Specification):
                      'foreignKeys': list}
 
     def __init__(self, *args, **kwargs):
-        dict.__init__(self, args)
-
         # We need to initialize an empty fields array
-        dict.__setitem__(self, 'fields', [])
+        self['fields'] = []
+
         # We add the fields using the internal method so we can do
         # validation of each field
         self.add_fields(kwargs.pop('fields', []))
-        for (key, value) in kwargs.iteritems():
-            self.__setattr__(key, value)
+
+        super(Schema, self).__init__(self, *args, **kwargs)
 
     def __setattr__(self, attribute, value):
         if attribute == 'primaryKey' and value is not None:
             # Primary Keys must be a reference to existing fields so we
             # need to check if the primary key is in the fields array
-            field_names = [f.name for f in dict.get(self, 'fields', [])]
+            field_names = [f.name for f in self.get('fields', [])]
             if type(value) == list:
                 modified_value = []
                 for single_value in value:
@@ -224,9 +223,9 @@ class Schema(Specification):
             appended to the schema.
         """
         if isinstance(field, Field):
-            dict.__getitem__(self, 'fields').append(field)
+            self['fields'].append(field)
         elif type(field) == dict:
-            self.data['fields'].append(Field(field))
+            self['fields'].append(Field(field))
         else:
             raise TypeError("Type of parameter field is not supported.")
 
@@ -254,7 +253,7 @@ class Schema(Specification):
             raise TypeError("Foreign Key type is not supported")
 
         # ForeignKey fields must be a schema field
-        field_names = [f.name for f in dict.get(self, 'fields', [])]
+        field_names = [f.name for f in self.get('fields', [])]
         for field in foreign_key.fields:
             if field not in field_names:
                 raise ValueError(
@@ -265,7 +264,7 @@ class Schema(Specification):
         # doesn't exist
         foreign_keys = dict.get(self, 'foreignKeys', [])
         foreign_keys.append(foreign_key)
-        dict.__setitem__(self, 'foreignKeys', foreign_keys)
+        self['foreignKeys'] = foreign_keys
 
     def add_foreign_keys(self, foreign_keys):
         """
