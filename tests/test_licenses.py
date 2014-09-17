@@ -1,58 +1,38 @@
 from nose.tools import raises
-from datapackage import licenses as l
+from datapackage.licenses import License
 
 
 class TestLicenses(object):
 
     def setup(self):
-        self.descriptor = {
-            "license": "ODC-BY"
-        }
+        self.license ="ODC-BY"
+        self.license_url = "http://opendefinition.org/licenses/odc-by"
 
     def teardown(self):
         pass
 
-    def test_get_licenses(self):
+    def test_add_opendefinition_licenses(self):
         """Check that the licenses are successfully read"""
-        licenses = l.get_licenses(self.descriptor)
-        assert len(licenses) == 1
-        assert licenses[0]["type"] == "ODC-BY"
-        assert licenses[0]["url"] == "http://opendefinition.org/licenses/odc-by"
+        license_obj = License(type=self.license)
+        assert license_obj.type == self.license
+        # For Open Definition license IDs we don't need url
+        assert 'url' not in license_obj
 
-    def test_get_missing_licenses(self):
-        """Check than an empty list is return when there are no licenses"""
-        del self.descriptor['license']
-        assert l.get_licenses(self.descriptor) == []
+    def test_add_opendefinition_license_url(self):
+        """Check to see if it's ok to add OD license as well as type"""
+        license_obj = License(type=self.license, url=self.license_url)
+        assert license_obj.type == self.license
+        assert license_obj.url == self.license_url
 
-    @raises(KeyError)
-    def test_get_license_and_licenses(self):
-        """Check that an error is thrown when both 'license' and 'licenses'
-        are defined in the datapackage, because the datapackage
-        standard says that exactly one of them should be defined (not
-        both).
+    @raises(AttributeError)
+    def test_no_url_for_unknown_type(self):
+        """Check that a url is required when the type is unknown"""
+        License(type="batman")
 
-        """
-        self.descriptor['licenses'] = [
-            {"type": "ODC-BY",
-             "url": "http://opendefinition.org/licenses/odc-by"}]
-        l.get_licenses(self.descriptor)
-
-    def test_set_licenses(self):
-        """Test setting the licenses"""
-        l.set_licenses(self.descriptor, [
-            {"type": "PDDL",
-             "url": "http://opendefinition.org/licenses/odc-pddl"}])
-        licenses = l.get_licenses(self.descriptor)
-        assert len(licenses) == 1
-        assert licenses[0]["type"] == "PDDL"
-        assert licenses[0]["url"] == "http://opendefinition.org/licenses/odc-pddl"
-
-    def test_add_license(self):
-        """Test adding another license"""
-        l.add_license(self.descriptor, "PDDL")
-        licenses = l.get_licenses(self.descriptor)
-        assert len(licenses) == 2
-        assert licenses[0]["type"] == "ODC-BY"
-        assert licenses[0]["url"] == "http://opendefinition.org/licenses/odc-by"
-        assert licenses[1]["type"] == "PDDL"
-        assert licenses[1]["url"] == "http://opendefinition.org/licenses/odc-pddl"
+    def test_add_ignore_case_of_type(self):
+        """Check to see if not uppercase string works for license type"""
+        # The Open Definition license should still be recognized even if
+        # it's not uppercase. If it wouldn't, skipping the url should
+        # result in an attribute error.
+        license_obj = License(type=self.license.lower())
+        assert license_obj.type == self.license

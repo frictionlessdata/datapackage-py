@@ -16,7 +16,7 @@ if sys.version_info[0] < 3:
     str = unicode
 
 from . import sources
-from . import licenses
+from .licenses import License
 from .schema import Schema
 from .util import (Specification, is_local, is_url, is_mimetype,
                    get_size_from_url)
@@ -408,11 +408,37 @@ class Resource(Specification):
         otherwise may be the general license name or identifier.
 
         """
-        licenses.get_licenses(self)
+        return self.get('licenses')
 
     @licenses.setter
-    def licenses(self, val):
-        licenses.set_licenses(self, val)
+    def licenses(self, value):
+        if not value:
+            if 'licenses' in self:
+                del self['licenses']
+            return
+
+        if type(value) != list:
+            raise TypeError(
+                'Licenses must be a list, not {0}'.format(type(value)))
+
+        # We loop through the list and create License objects from dicts
+        # or throw errors if the type is invalid
+        modified_value = []
+        for single_value in value:
+            if isinstance(single_value, License):
+                # We don't need to do anything if it already
+                # is a License
+                pass
+            elif type(single_value) == dict:
+                # We turn the single_value into kwargs and pass it into
+                # the License constructor
+                single_value = License(**single_value)
+            else:
+                raise TypeError('License type {0} is invalid'.format(
+                    type(single_value)))
+            modified_value.append(single_value)
+
+        self['licenses'] = modified_value
 
     def add_license(self, license_type, url=None):
         """Adds a license to the list of licenses for the datapackage.
@@ -426,4 +452,10 @@ class Resource(Specification):
             the URL will try to be inferred automatically.
 
         """
-        licenses.add_license(self, license_type, url)
+        # Create a new License object and add it to a list (or create a
+        # new list if none exists
+        added_license = License(type=license_type, url=url)
+        if self.licenses:
+            self.licenses.append(added_license)
+        else:
+            self.licenses = [added_license]

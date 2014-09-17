@@ -1,5 +1,6 @@
 import datapackage
 from nose.tools import raises
+import unittest
 from mock import Mock, patch
 
 
@@ -277,3 +278,18 @@ class TestDatapackage(object):
         self.dpkg.version = "1.0.1-foo+bar"
         self.dpkg.bump_patch_version(True)
         assert self.dpkg.version == "1.0.2+bar"
+
+    @unittest.skip("Data package has not been updated to Specification")
+    @raises(KeyError)
+    def test_get_license_and_licenses(self):
+        """Check that an error is thrown when both 'license' and 'licenses'
+        are defined in the datapackage, because the datapackage
+        standard says that exactly one of them should be defined (not
+        both).
+
+        """
+        self.datapackage.descriptor['licenses'] = [
+            {"type": "ODC-BY",
+             "url": "http://opendefinition.org/licenses/odc-by"}]
+        self.datapackage.descriptor['licenses']
+
