@@ -15,7 +15,7 @@ if sys.version_info[0] < 3:
     bytes = str
     str = unicode
 
-from . import sources
+from .sources import Source
 from .licenses import License
 from .schema import Schema
 from .util import (Specification, is_local, is_url, is_mimetype,
@@ -379,11 +379,37 @@ class Resource(Specification):
         Defaults to an empty list.
 
         """
-        return sources.get_sources(self)
+        return self.get('sources')
 
     @sources.setter
-    def sources(self, val):
-        sources.set_sources(self, val)
+    def sources(self, value):
+        if not value:
+            if 'sources' in self:
+                del self['sources']
+            return
+
+        if type(value) != list:
+            raise TypeError(
+                'Sources must be a list, not {0}'.format(type(value)))
+
+        # We loop through the list and create Source objects from dicts
+        # or throw errors if the type is invalid
+        modified_value = []
+        for single_value in value:
+            if isinstance(single_value, Source):
+                # We don't need to do anything if it already
+                # is a Source
+                pass
+            elif type(single_value) == dict:
+                # We turn the single_value into kwargs and pass it into
+                # the Source constructor
+                single_value = Source(**single_value)
+            else:
+                raise TypeError('Source type {0} is invalid'.format(
+                    type(single_value)))
+            modified_value.append(single_value)
+
+        self['sources'] = modified_value
 
     def add_source(self, name, web=None, email=None):
         """Adds a source to the list of sources for this datapackage.
@@ -394,11 +420,13 @@ class Resource(Specification):
             source.
 
         """
-        sources.add_source(self, name, web, email)
-
-    def remove_source(self, name):
-        """Removes the source with the given name."""
-        sources.remove_source(self, name)
+        # Create a new Source object and add it to a list (or create a
+        # new list if none exists
+        added_source = Source(name=name, web=web, email=email)
+        if self.sources:
+            self.sources.append(added_source)
+        else:
+            self.sources = [added_source]
 
     @property
     def licenses(self):

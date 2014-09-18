@@ -431,6 +431,42 @@ class TestDatapackage(object):
         del self.resource['licenses']
         assert 'licenses' not in self.resource
 
+    def test_get_sources(self):
+        """Try reading the sources"""
+        sources = self.resource.sources
+        assert len(sources) == 1
+        assert sources[0]["name"] == "World Bank and OECD"
+        assert sources[0]["web"] == \
+            "http://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
+        assert 'email' not in sources[0]
+
+    def test_get_default_sources(self):
+        """Check that the default sources are removed"""
+        del self.resource['sources']
+        assert 'sources' not in self.resource
+
+    def test_set_sources(self):
+        """Check that setting the sources works"""
+        self.resource.sources = None
+        assert 'sources' not in self.resource
+        self.resource.sources = [
+            {"name": str("foo"), "web": str("https://bar.com/")}]
+        sources = self.resource.sources
+        assert len(sources) == 1
+        assert sources[0]["name"] == "foo"
+        assert sources[0]["web"] == "https://bar.com/"
+
+    def test_add_source(self):
+        """Try adding a new source with add_source"""
+        self.resource.add_source(str("foo"), email=str("bar@test.com"))
+        sources = self.resource.sources
+        assert len(sources) == 2
+        assert sources[0]["name"] == "World Bank and OECD"
+        assert sources[0]["web"] == \
+            "http://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
+        assert sources[1]["name"] == "foo"
+        assert sources[1]["email"] == "bar@test.com"
+
     def test_resource_schema_valid(self):
         required = datapackage.schema.Constraints(required=True)
 
