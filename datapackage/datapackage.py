@@ -25,6 +25,7 @@ import datetime
 import time
 import base64
 import re
+import warnings
 import sys
 if sys.version_info[0] < 3:
     import urlparse
@@ -36,17 +37,40 @@ if sys.version_info[0] < 3:
 else:
     import urllib.request
 
-from . import sources
-from . import licenses
-from .util import verify_version, parse_version, format_version
-from .util import is_local, is_url
+from .resource import Resource
+from .schema import Schema
+from .sources import Source
+from .licenses import License, LICENSES
+from .persons import Person
+from .util import (Specification, verify_version, parse_version,
+                   format_version, is_local, is_url)
 
 
-class DataPackage(object):
+class DataPackage(Specification):
     """
     Package for loading and managing a data package as defined by:
     http://www.dataprotocols.org/en/latest/data-packages.html
     """
+
+    DATAPACKAGE_VERSION = "1.0-beta.10"
+    EXTENDABLE = True
+    SPECIFICATION = {'name': str,
+                     'resource': list,
+                     'license': str,
+                     'licenses': list,
+                     'datapackage_version': str,
+                     'title': str,
+                     'description': str,
+                     'homepage': str,
+                     'version': str,
+                     'sources': list,
+                     'keywords': list,
+                     'image': str,
+                     'maintainers': list,
+                     'contributors': list,
+                     'publishers': list,
+                     'base': str,
+                     'dataDependencies': dict}
 
     FIELD_PARSERS = {
         'number': float,
@@ -63,6 +87,28 @@ class DataPackage(object):
         'geojson': json.loads,
         'array': list,
         }
+
+    def __init__(self, *args, **kwargs):
+        """
+        Create or load an existing DataPackage.
+
+        :param basestring uri: Optional argument. Provide URI or file path
+            to a data package to be loaded. ``datapackage.json`` should exist
+            under this URI. If not provided keyword arguments can be used to
+            create a new DataPackage
+        """
+
+        # URI to an existing Data Package can be provided as an argument
+        # If that's the case then we start off by loading that data package
+        if not args:
+            super(DataPackage, self).__init__(*args, **kwargs)
+        elif len(args) == 1:
+            self.base = str(args[0])
+            descriptor = self.get_descriptor()
+            for (key, value) in descriptor.iteritems():
+                self.__setattr__(key, value)
+        else:
+            raise TypeError('DataPackage takes 0 or 1 arguments')
 
     def _field_parser(self, field):
         """
@@ -128,32 +174,20 @@ class DataPackage(object):
         # back on unicode type if no parser is found
         return self.FIELD_PARSERS.get(field['type'], str)
 
-    def __init__(self, uri, opener=None):
-        """
-        Construct a DataPackage.
-
-        :param basestring uri: URI or file path to the data package.
-            ``datapackage.json`` should exist under this URI.
-        :param function opener: optional function instead of ``urllib.urlopen``
-            to read data; e.g. ``opener=zf.open`` where ``zf = ZipFS('a.zip')``
-        :type opener: function
-        """
-        self.opener = opener or urllib.request.urlopen
-        # Bind the URI to this instance
-        self.uri = uri
-        # Load the descriptor as a dictionary into a variable
-        self.descriptor = self.get_descriptor()
-        # Load the resources as a dictionary into a variable
-        self.resources = self.get_resources()
-
     def open_resource(self, path):
+        # If base hasn't been set we use the current directory as the base
+        if self.base:
+            base = self.base
+        else:
+            base = os.path.curdir
         # use os.path.join if the path is local, otherwise use urljoin
         # -- we don't want to just use os.path.join because otherwise
         # on Windows it will try to create URLs with backslashes
-        if is_local(self.uri):
-            return self.opener(os.path.join(self.uri, path))
+        if is_local(base):
+            resource_path = os.path.join(base, path)
         else:
-            return self.opener(urllib.parse.urljoin(self.uri, path))
+            resource_path = urllib.parse.urljoin(base, path)
+        return urllib.request.urlopen(resource_path)
 
     @property
     def name(self):
@@ -177,7 +211,7 @@ class DataPackage(object):
         time range covered.
 
         """
-        name = self.descriptor.get('name')
+        name = self.get('name')
         if not name:
             raise KeyError("datapackage does not have a name")
         return name
@@ -186,7 +220,26 @@ class DataPackage(object):
     def name(self, val):
         if not val:
             raise ValueError("datapackage name must be non-empty")
-        self.descriptor['name'] = val
+
+        self['name'] = val
+
+    @property
+    def license(self):
+        """
+        MUST be a string and its value SHOULD be an Open Definition license
+        ID (preferably one that is Open Definition approved).
+        """
+        return self['license']
+
+    @license.setter
+    def license(self, value):
+        if value not in LICENSES:
+            raise ValueError(
+                "License string must be an Open Definition License ID")
+        self['license'] = value
+        # If there were licenses already we remove them
+        if 'licenses' in self:
+            del self['licenses']
 
     @property
     def licenses(self):
@@ -196,11 +249,23 @@ class DataPackage(object):
         otherwise may be the general license name or identifier.
 
         """
-        licenses.get_licenses(self.descriptor)
+        return self.get('license', self['licenses'])
 
     @licenses.setter
-    def licenses(self, val):
-        licenses.set_licenses(self.descriptor, val)
+    def licenses(self, value):
+        if value is None:
+            raise ValueError('Data package must have a license')
+
+        if type(value) == list:
+            # If there was a license already we remove it
+            if 'license' in self:
+                del self['license']
+            self['licenses'] = self.process_object_array(value, License)
+        else:
+            if value not in LICENSES:
+                raise ValueError(
+                    "License string must be an Open Definition License ID")
+            self['license'] = value
 
     def add_license(self, license_type, url=None):
         """Adds a license to the list of licenses for the datapackage.
@@ -214,7 +279,26 @@ class DataPackage(object):
             the URL will try to be inferred automatically.
 
         """
-        licenses.add_license(self.descriptor, license_type, url)
+        # Create a new License object and add it to a list (or create a
+        # new list if none exists). Depending on the resulting amount of
+        # licenses key 'license' or 'licenses' will be used.
+        added_license = License(type=license_type, url=url)
+        if 'license' in self:
+            # If license is present that's just a string but licenses are
+            # a list of License objects so we need to convert it and delete
+            # the license property since we cannot have both license and
+            # licenses
+            self.licenses = [License(type=self['license']), added_license]
+            del self['license']
+        elif 'licenses' in self:
+            self.licenses.append(added_license)
+        else:
+            # No licenses added previously (should not happen since
+            # licenses are required but we still implement this logic)
+            if license_type in LICENSES:
+                self['license'] = license_type
+            else:
+                self['licenses'] = [added_license]
 
     @property
     def datapackage_version(self):
@@ -223,63 +307,72 @@ class DataPackage(object):
         requirements (http://semver.org/).
 
         """
-        version = self.descriptor.get("datapackage_version")
-        if not version:
-            raise KeyError("datapackage does not have a datapackage version")
-        return version
+        return self.get('datapackage_version', self.DATAPACKAGE_VERSION)
 
     @datapackage_version.setter
-    def datapackage_version(self, val):
-        if not val:
-            raise ValueError("datapackage version must be non-empty")
-        self.descriptor['datapackage_version'] = verify_version(val)
+    def datapackage_version(self, value):
+        if not value:
+            raise ValueError('datapackage_version is required')
+
+        if value == self.DATAPACKAGE_VERSION:
+            return
+
+        warnings.warn(
+            "DataPackage currently does not support multiple versions")
+
+        self['datapackage_version'] = verify_version(value)
 
     @property
     def title(self):
         """
         The title of the dataset as described by its descriptor.
-        Default is an empty string if no title is present
         """
-
-        return self.descriptor.get('title', u'')
+        return self.get('title', None)
 
     @title.setter
-    def title(self, val):
-        if not val:
-            val = ""
-        self.descriptor['title'] = str(val)
+    def title(self, value):
+        if not value:
+            if 'title' in self:
+                del self['title']
+            return
+
+        self['title'] = str(value)
 
     @property
     def description(self):
         """
         The description of the dataset as described by its descriptor.
-        Default is an empty string if no description is present
         """
 
-        return self.descriptor.get('description', u'')
+        return self.get('description', None)
 
     @description.setter
-    def description(self, val):
-        if not val:
-            val = ""
-        self.descriptor['description'] = str(val)
+    def description(self, value):
+        if not value:
+            if 'description' in self:
+                del self['description']
+            return
+
+        self['description'] = str(value)
 
     @property
     def homepage(self):
         """
         URL string for the data packages web site
-        Default is an empty string if no homepage is present
         """
-        return self.descriptor.get('homepage', u'')
+        return self.get('homepage', None)
 
     @homepage.setter
-    def homepage(self, val):
-        if not val:
-            val = ""
-        elif not is_url(val):
-            raise ValueError("not a URL: {}".format(val))
+    def homepage(self, value):
+        if not value:
+            if 'homepage' in self:
+                del self['homepage']
+            return
 
-        self.descriptor['homepage'] = str(val)
+        if not is_url(value):
+            raise ValueError("not a URL: {}".format(value))
+
+        self['homepage'] = str(value)
 
     @property
     def version(self):
@@ -290,11 +383,11 @@ class DataPackage(object):
         Defaults to 0.0.1 if not specified.
 
         """
-        return self.descriptor.get('version', u'0.0.1')
+        return self.get('version', u'0.0.1')
 
     @version.setter
     def version(self, val):
-        self.descriptor['version'] = verify_version(val)
+        self['version'] = verify_version(val)
 
     def bump_major_version(self, keep_metadata=False):
         """Increases the major version by one, e.g. 1.0.0 --> 2.0.0
@@ -356,11 +449,16 @@ class DataPackage(object):
         Defaults to an empty list.
 
         """
-        return sources.get_sources(self.descriptor)
+        return self.get('sources', None)
 
     @sources.setter
-    def sources(self, val):
-        sources.set_sources(self.descriptor, val)
+    def sources(self, value):
+        if not value:
+            if 'sources' in self:
+                del self['sources']
+            return
+
+        self['sources'] = self.process_object_array(value, Source)
 
     def add_source(self, name, web=None, email=None):
         """Adds a source to the list of sources for this datapackage.
@@ -371,42 +469,104 @@ class DataPackage(object):
             source.
 
         """
-        sources.add_source(self.descriptor, name, web, email)
-
-    def remove_source(self, name):
-        """Removes the source with the given name."""
-        sources.remove_source(self.descriptor, name)
+        # Create a new Source object and add it to a list (or create a
+        # new list if none exists
+        added_source = Source(name=name, web=web, email=email)
+        if self.sources:
+            self.sources.append(added_source)
+        else:
+            self.sources = [added_source]
 
     @property
     def keywords(self):
         """An array of string keywords to assist users searching for the
         package in catalogs.
-
-        Defaults to an empty list.
-
         """
-        return self.descriptor.get('keywords', [])
+        return self.get('keywords', None)
 
     @keywords.setter
-    def keywords(self, val):
-        if not val:
-            val = []
-        self.descriptor['keywords'] = [str(x) for x in val]
+    def keywords(self, value):
+        if not value:
+            if 'keywords' in self:
+                del self['keywords']
+            return
+
+        self['keywords'] = [str(x) for x in value]
 
     @property
     def image(self):
         """A link to an image to use for this data package.
-
-        Defaults to an empty string.
-
         """
-        return self.descriptor.get('image', u'')
+        return self.get('image', None)
 
     @image.setter
-    def image(self, val):
-        if not val:
-            val = u''
-        self.descriptor['image'] = str(val)
+    def image(self, value):
+        if not value:
+            if 'image' in self:
+                del self['image']
+            return
+
+        self['image'] = str(value)
+
+    @property
+    def maintainers(self):
+        """
+        List of maintainers as a Person object
+
+        From specification:
+        Array of maintainers of the package. Each maintainer is a hash
+        which must have a "name" property and may optionally provide
+        "email" and "web" properties.
+        """
+        return self.get('maintainers', None)
+
+    @maintainers.setter
+    def maintainers(self, value):
+        if not value:
+            if 'maintainers' in self:
+                del self['maintainers']
+            return
+
+        self['maintainers'] = self.process_object_array(value, Person)
+
+    @property
+    def contributors(self):
+        """
+        List of contributors as a Person object
+
+        From specification:
+        Array of hashes each containing the details of a contributor.
+        Must contain a "name" property and MAY contain an email and web
+        property. By convention, the first contributor is the original
+        author of the package.
+        """
+        return self.get('contributors', None)
+
+    @contributors.setter
+    def contributors(self, value):
+        if not value:
+            if 'contributors' in self:
+                del self['contributors']
+            return
+
+        self['contributors'] = self.process_object_array(value, Person)
+
+    @property
+    def publisher(self):
+        """
+        List of publishers as a Person object which behaves just like
+        ``contributors``.
+        """
+        return self.get('publisher', None)
+
+    @publisher.setter
+    def publisher(self, value):
+        if not value:
+            if 'publisher' in self:
+                del self['publisher']
+            return
+
+        self['publisher'] = self.process_object_array(value, Person)
 
     @property
     def data(self):
@@ -437,6 +597,48 @@ class DataPackage(object):
         # Return the descriptor json contents (as the dict json.load returns
         return json_descriptor
 
+    @property
+    def resources(self):
+        """
+        List of Resource instances representing the contents of the package
+
+        From the specification:
+        [A] JSON array of hashes that describe the contents of the package.
+        """
+        return self['resources']
+
+    @resources.setter
+    def resources(self, value):
+        if not value:
+            raise ValueError("resources is a required field")
+
+        # Check if array is a list
+        if type(value) != list:
+            raise TypeError(
+                '{0} must be a list not {1}'.format(
+                    Resource.__name__, type(value)))
+
+        # We loop through the list and create Resource objects from dicts
+        # or throw errors if the type is invalid
+        modified_array = []
+        for single_value in value:
+            if isinstance(single_value, Resource):
+                # We don't need to do anything if it already
+                # is of the correct class
+                pass
+            elif type(single_value) == dict:
+                # We turn the single_value into kwargs and pass it into
+                # the License constructor
+                base = os.path.curdir if 'base' not in self else self.base
+                single_value = Resource(datapackage_uri=base,
+                                        **single_value)
+            else:
+                raise TypeError('{0} type {1} is invalid'.format(
+                    Resource.__name__, type(single_value)))
+            modified_array.append(single_value)
+
+        self['resources'] = modified_array
+
     def get_resources(self):
         """
         Get the data package's resources as a dictionary. The key for each
@@ -446,23 +648,23 @@ class DataPackage(object):
         """
 
         # Initialise the empty dictionary
-        sources = {}
+        resources = {}
         # Loop through the resources
-        for resource in self.descriptor['resources']:
+        for resource in self['resources']:
             # Create a resource dictionary
-            source = {
+            rsource = {
                 # Location is url path or None (in that order)
                 'location': resource.get('url', resource.get('path', None)),
                 # The encoding of the file - defaults to utf-8
                 'encoding': resource.get('encoding', 'utf-8'),
                 # Fields are found in schema.fields
-                'fields': resource.get('schema', {}).get('fields', [])
+                'fields': resource.get('schema', Schema()).get('fields', [])
             }
             # Add the resource to the resource dictionary collection
-            sources[resource.get('name', resource.get('id', u''))] = source
+            resources[resource.get('name', resource.get('id', u''))] = rsource
 
         # Return the resource collection
-        return sources
+        return resources
 
     def get_data(self, name='', id=''):
         """

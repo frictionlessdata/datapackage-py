@@ -13,8 +13,8 @@ if sys.version_info[0] < 3:
 class TestDatapackage(object):
     def setup(self):
         self.dpkg = datapackage.DataPackage("tests/test.dpkg")
-        kwargs = self.dpkg.descriptor['resources'][0]
-        kwargs['datapackage_uri'] = str(self.dpkg.uri)
+        kwargs = self.dpkg['resources'][0]
+        kwargs['datapackage_uri'] = str(self.dpkg.base)
         self.resource = datapackage.Resource(**kwargs)
 
     def teardown(self):
@@ -63,7 +63,7 @@ class TestDatapackage(object):
     def test_get_fullpath(self):
         """Try reading the full resource path"""
         path = self.resource.fullpath
-        assert path == posixpath.join(self.dpkg.uri, "foobar.json"),\
+        assert path == posixpath.join(self.dpkg.base, "foobar.json"),\
             path
         assert posixpath.exists(path)
 
@@ -88,7 +88,7 @@ class TestDatapackage(object):
         """Check that setting the path works"""
         self.resource.path = str("barfoo.json")
         assert self.resource.path == "barfoo.json"
-        assert self.resource.fullpath == posixpath.join(self.dpkg.uri,
+        assert self.resource.fullpath == posixpath.join(self.dpkg.base,
                                                         "barfoo.json")
 
     def test_get_url(self):

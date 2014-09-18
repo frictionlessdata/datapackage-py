@@ -16,22 +16,32 @@ class TestDatapackage(object):
         """Check that the datapackage name is correctly read"""
         assert self.dpkg.name == "test.dpkg"
 
+    def test_create_new_datapackage(self):
+        """Checks if it's possible to create a new datapackage"""
+        joker = datapackage.Resource(datapackage_uri='http://gotham.us/',
+            name="joker", url="http://gotham.us/villains.csv")
+        villains = datapackage.DataPackage(
+            name="villains", license="PDDL", resources=[joker])
+        assert villains.name == "villains"
+        assert len(villains.resources) == 1
+        assert villains.resources[0].name == "joker"
+
     @raises(KeyError)
     def test_get_missing_name(self):
         """Check that an error is raised when the name is missing"""
-        del self.dpkg.descriptor['name']
+        del self.dpkg['name']
         self.dpkg.name
 
     @raises(KeyError)
     def test_get_empty_name(self):
         """Check that an error is raised when the name is an empty string"""
-        self.dpkg.descriptor['name'] = ""
+        self.dpkg['name'] = ""
         self.dpkg.name
 
     @raises(KeyError)
     def test_get_name_when_none(self):
         """Check that an error is raised when the name is None"""
-        self.dpkg.descriptor['name'] = None
+        self.dpkg['name'] = None
         self.dpkg.name
 
     def test_set_name(self):
@@ -53,81 +63,68 @@ class TestDatapackage(object):
     def test_get_datapackage_version(self):
         """Test getting the datapackage version"""
         assert self.dpkg.datapackage_version == "1.0-beta.10"
-
-    @raises(KeyError)
-    def test_get_missing_datapackage_version(self):
-        """Check than an error is thrown when the datapackage version is
-        missing
-
-        """
-        del self.dpkg.descriptor['datapackage_version']
-        self.dpkg.datapackage_version
-
-    @raises(KeyError)
+ 
+    @raises(ValueError)
     def test_get_empty_datapackage_version(self):
         """Check that an error is thrown then the datapackage version is an
         empty string
-
         """
-        self.dpkg.descriptor['datapackage_version'] = ""
-        self.dpkg.datapackage_version
+        self.dpkg.datapackage_version = ""
 
-    @raises(KeyError)
+    @raises(ValueError)
     def test_get_datapackage_version_when_none(self):
         """Check that an error is thrown when the datapackage version is
         None
-
         """
-        self.dpkg.descriptor['datapackage_version'] = None
-        self.dpkg.datapackage_version
+        self.dpkg.datapackage_version = None
 
     def test_get_title(self):
         """Check that the title is successfully read"""
         assert self.dpkg.title == "A simple datapackage for testing"
 
-    def test_get_default_title(self):
-        """Check that the default title is correct"""
-        del self.dpkg.descriptor['title']
-        assert self.dpkg.title == ""
+    def test_remove_title(self):
+        """Check that the title is removed"""
+        del self.dpkg['title']
+        assert 'title' not in self.dpkg
 
     def test_set_title(self):
         """Test setting the title to various values"""
         self.dpkg.title = "foo"
         assert self.dpkg.title == "foo"
         self.dpkg.title = None
-        assert self.dpkg.title == ""
+        assert 'title' not in self.dpkg
 
     def test_get_description(self):
         """Test reading the description"""
         assert self.dpkg.description == "A simple, bare datapackage created for testing purposes."
 
-    def test_get_default_description(self):
-        """Check that the default description is correct"""
-        del self.dpkg.descriptor['description']
-        assert self.dpkg.description == ""
+    def test_remove_description(self):
+        """Check that the description is removed"""
+        del self.dpkg['description']
+        assert 'description' not in self.dpkg
 
     def test_set_description(self):
         """Test setting the description to various values"""
         self.dpkg.description = "foo"
         assert self.dpkg.description == "foo"
         self.dpkg.description = None
-        assert self.dpkg.description == ""
+        assert 'description' not in self.dpkg
 
     def test_get_homepage(self):
         """Test reading the homepage"""
         assert self.dpkg.homepage == "http://localhost/"
 
-    def test_get_default_homepage(self):
-        """Check that the default homepage is correct"""
-        del self.dpkg.descriptor['homepage']
-        assert self.dpkg.homepage == ""
+    def test_remove_homepage(self):
+        """Check that the homepage is removed"""
+        del self.dpkg['homepage']
+        assert 'homepage' not in self.dpkg
 
     def test_set_homepage(self):
         """Test setting the homepage to various values"""
         self.dpkg.homepage = "http://foo.com/"
         assert self.dpkg.homepage == "http://foo.com/"
         self.dpkg.homepage = None
-        assert self.dpkg.homepage == ""
+        assert 'homepage' not in self.dpkg
 
     @raises(ValueError)
     def test_set_invalid_homepage(self):
@@ -140,7 +137,7 @@ class TestDatapackage(object):
 
     def test_get_default_version(self):
         """Check that the default version is correct"""
-        del self.dpkg.descriptor['version']
+        del self.dpkg['version']
         assert self.dpkg.version == "0.0.1"
 
     def test_set_version(self):
@@ -160,10 +157,10 @@ class TestDatapackage(object):
         """Try reading the keywords"""
         assert self.dpkg.keywords == ["testing"]
 
-    def test_get_default_keywords(self):
-        """Check that the default keywords are correct"""
-        del self.dpkg.descriptor['keywords']
-        assert self.dpkg.keywords == []
+    def test_remove_keywords(self):
+        """Check that the keywords are removed"""
+        del self.dpkg['keywords']
+        assert 'keywords' not in self.dpkg
 
     def test_set_keywords(self):
         """Try setting keywords to something else"""
@@ -174,15 +171,15 @@ class TestDatapackage(object):
         """Try reading the image name"""
         assert self.dpkg.image == "test.jpg"
 
-    def test_get_default_image(self):
-        """Check that the default image is correct"""
-        del self.dpkg.descriptor['image']
-        assert self.dpkg.image == ''
+    def test_remove_image(self):
+        """Check that the image is removed"""
+        del self.dpkg['image']
+        assert 'image' not in self.dpkg
 
     def test_set_image(self):
         """Try setting the image to other values"""
         self.dpkg.image = None
-        assert self.dpkg.image == ''
+        assert 'image' not in self.dpkg
         self.dpkg.image = "bar.jpg"
         assert self.dpkg.image == "bar.jpg"
 
@@ -279,17 +276,17 @@ class TestDatapackage(object):
         self.dpkg.bump_patch_version(True)
         assert self.dpkg.version == "1.0.2+bar"
 
-    @unittest.skip("Data package has not been updated to Specification")
-    @raises(KeyError)
     def test_get_license_and_licenses(self):
-        """Check that an error is thrown when both 'license' and 'licenses'
-        are defined in the datapackage, because the datapackage
+        """Check that when setting licenses in a data package with
+        a license the license value is removed because the datapackage
         standard says that exactly one of them should be defined (not
         both).
 
         """
-        self.datapackage.descriptor['licenses'] = [
+        assert 'license' in self.dpkg
+        assert 'licenses' not in self.dpkg
+        self.dpkg.licenses = [
             {"type": "ODC-BY",
              "url": "http://opendefinition.org/licenses/odc-by"}]
-        self.datapackage.descriptor['licenses']
-
+        assert 'license' not in self.dpkg
+        assert 'licenses' in self.dpkg

@@ -7,13 +7,15 @@ if sys.version_info[0] < 3:
 from .util import Specification, is_url, is_email
 
 
-class Source(Specification):
+class Person(Specification):
     """
-    Source object which can be added to a DataPackage object or a Resource
-    object to represent where the data comes from.
+    Person object which can be added to a DataPackage object, e.g. as
+    maintainers, contributors or publishers. Person could in theory also
+    be an organisation but is left here as a Person.
 
     From the specification:
-    Each source hash may have name, web and email fields.
+    [A] hash which must have a "name" property and may optionally provide
+    "email" and "web" properties.
     """
 
     SPECIFICATION = {'name': str,
@@ -21,9 +23,22 @@ class Source(Specification):
                      'email': str}
 
     @property
+    def name(self):
+        """
+        Name of the person or organisation
+        """
+        return self['name']
+
+    @name.setter
+    def name(self, value):
+        if not value:
+            raise ValueError('A person must have a name')
+        self['name'] = str(value)
+
+    @property
     def web(self):
         """
-        Link to the source of the data on the web
+        Link to the person's or organisation's website
         """
         return self['web']
 
@@ -37,12 +52,12 @@ class Source(Specification):
         if not is_url(value):
             raise ValueError("not a url: {}".format(value))
 
-        self['web'] = value
+        self['web'] = str(value)
 
     @property
     def email(self):
         """
-        Email address to the source of the data (person, organisation etc.)
+        Email address of the person or organisation.
         """
         return self['email']
 
@@ -56,4 +71,4 @@ class Source(Specification):
         if not is_email(value):
             raise ValueError("not an email address: {}".format(value))
 
-        self['email'] = value
+        self['email'] = str(value)

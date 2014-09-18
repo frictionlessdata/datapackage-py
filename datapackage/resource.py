@@ -40,7 +40,7 @@ class Resource(Specification):
                      'licenses': list}
 
     def __init__(self, *args, **kwargs):
-        self.datapackage_uri = kwargs.pop('datapackage_uri', None)
+        self.datapackage_uri = kwargs.pop('datapackage_uri', os.path.curdir)
         self.is_local = is_local(self.datapackage_uri)
         super(Resource, self).__init__(self, *args, **kwargs)
 
@@ -388,28 +388,7 @@ class Resource(Specification):
                 del self['sources']
             return
 
-        if type(value) != list:
-            raise TypeError(
-                'Sources must be a list, not {0}'.format(type(value)))
-
-        # We loop through the list and create Source objects from dicts
-        # or throw errors if the type is invalid
-        modified_value = []
-        for single_value in value:
-            if isinstance(single_value, Source):
-                # We don't need to do anything if it already
-                # is a Source
-                pass
-            elif type(single_value) == dict:
-                # We turn the single_value into kwargs and pass it into
-                # the Source constructor
-                single_value = Source(**single_value)
-            else:
-                raise TypeError('Source type {0} is invalid'.format(
-                    type(single_value)))
-            modified_value.append(single_value)
-
-        self['sources'] = modified_value
+        self['sources'] = self.process_object_array(value, Source)
 
     def add_source(self, name, web=None, email=None):
         """Adds a source to the list of sources for this datapackage.
@@ -445,28 +424,7 @@ class Resource(Specification):
                 del self['licenses']
             return
 
-        if type(value) != list:
-            raise TypeError(
-                'Licenses must be a list, not {0}'.format(type(value)))
-
-        # We loop through the list and create License objects from dicts
-        # or throw errors if the type is invalid
-        modified_value = []
-        for single_value in value:
-            if isinstance(single_value, License):
-                # We don't need to do anything if it already
-                # is a License
-                pass
-            elif type(single_value) == dict:
-                # We turn the single_value into kwargs and pass it into
-                # the License constructor
-                single_value = License(**single_value)
-            else:
-                raise TypeError('License type {0} is invalid'.format(
-                    type(single_value)))
-            modified_value.append(single_value)
-
-        self['licenses'] = modified_value
+        self['licenses'] = self.process_object_array(value, License)
 
     def add_license(self, license_type, url=None):
         """Adds a license to the list of licenses for the datapackage.

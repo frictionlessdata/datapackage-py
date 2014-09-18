@@ -21,6 +21,7 @@ class Specification(dict):
     # and should preferably be parsed from a data package
     # specification representation (instead of being hardcoded).
     SPECIFICATION = {}
+    EXTENDABLE = False
 
     def __init__(self, *args, **kwargs):
 
@@ -30,13 +31,7 @@ class Specification(dict):
         Keyword arguments can set attributes/values on instance creation
         """
         for (key, value) in kwargs.iteritems():
-            # If the attribute has been defined as a real attribute
-            # e.g. as a property, we use the object setter, if not then
-            # we use our custom one.
-            if hasattr(self.__class__, key):
-                object.__setattr__(self, key, value)
-            else:
-                self.__setattr__(key, value)
+            self.__setattr__(key, value)
 
     def __getattr__(self, attribute):
         # If the attribute has been defined as a real attribute
@@ -80,12 +75,46 @@ class Specification(dict):
                         "Attribute '{0}' ({1}) should be {2}".format(
                             attribute, type(value),
                             ' or '.join([str(s) for s in spec_type])))
-            dict.__setitem__(self, attribute, value)
-        else:
+        elif not self.EXTENDABLE:
             raise AttributeError(
                 "Attribute '{0}' is not allowed in a '{1}' object".format(
                     attribute, self.__class__.__name__))
 
+        dict.__setitem__(self, attribute, value)
+
+    def process_object_array(self, array, object_class):
+        """
+        Method for processing an array of dict object which should be cast
+        into a specific class (array of that class' instances). The dict
+        objects could already be of that class and if so they are left intact.
+
+        :param array: List to process
+        :param object_class: Class to cast objects into
+        """
+        # Check if array is a list
+        if type(array) != list:
+            raise TypeError(
+                '{0} must be a list not {1}'.format(
+                    object_class.__name__, type(array)))
+
+        # We loop through the list and create object_class instances from
+        # dicts or throw errors if the type is invalid
+        modified_array = []
+        for value in array:
+            if isinstance(value, object_class):
+                # We don't need to do anything if it already
+                # is of the correct class
+                pass
+            elif type(value) == dict:
+                # We turn the single_value into kwargs and pass it into
+                # the object_class constructor
+                value = object_class(**value)
+            else:
+                raise TypeError('{0} type {1} is invalid'.format(
+                    object_class.__name__, type(value)))
+            modified_array.append(value)
+
+        return modified_array
 
 # This is a named tuple for representing semantic versions (see
 # http://semver.org/). Semantic versions look like this:
