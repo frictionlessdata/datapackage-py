@@ -21,6 +21,7 @@ setup(
     maintainer_email = 'tryggvi.bjorgvinsson@okfn.org',
     packages = ['datapackage'],
     package_dir={'datapackage': 'datapackage'},
+    package_data={'datapackage': ['data/*.json']},
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
