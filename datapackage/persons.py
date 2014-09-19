@@ -21,6 +21,7 @@ class Person(Specification):
     SPECIFICATION = {'name': str,
                      'web': str,
                      'email': str}
+    REQUIRED = ('name',)
 
     @property
     def name(self):

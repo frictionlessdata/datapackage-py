@@ -19,14 +19,7 @@ class Field(Specification):
                      'type': str,
                      'format': str,
                      'constraints': dict}
-
-    def __init__(self, *args, **kwargs):
-        # Name is a required field
-        if 'name' not in kwargs:
-            raise AttributeError(
-                "'{0}' must be instantiated with attribute 'name'".format(
-                    self.__class__.__name__))
-        super(Field, self).__init__(*args, **kwargs)
+    REQUIRED = ('name',)
 
 
 class Constraints(Specification):
@@ -53,6 +46,7 @@ class Reference(Specification):
     SPECIFICATION = {'datapackage': str,
                      'resource': str,
                      'fields': (str, list)}
+    REQUIRED = ('fields',)
 
     def __setattr__(self, attribute, value):
         if attribute == 'fields':
@@ -91,6 +85,7 @@ class ForeignKey(Specification):
 
     SPECIFICATION = {'fields': (str, list),
                      'reference': Reference}
+    REQUIRED = ('fields', 'reference')
 
     def __setattr__(self, attribute, value):
         # If the attribute is 'reference' we need to check if there is a
@@ -161,7 +156,8 @@ class Schema(Specification):
                      'foreignKeys': list}
 
     def __init__(self, *args, **kwargs):
-        # We need to initialize an empty fields array
+        # We need to initialize an empty fields array (this is a required
+        # field but we don't require it, we create it)
         self['fields'] = []
 
         # We add the fields using the internal method so we can do

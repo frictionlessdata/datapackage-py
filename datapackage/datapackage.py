@@ -55,7 +55,7 @@ class DataPackage(Specification):
     DATAPACKAGE_VERSION = "1.0-beta.10"
     EXTENDABLE = True
     SPECIFICATION = {'name': str,
-                     'resource': list,
+                     'resources': list,
                      'license': str,
                      'licenses': list,
                      'datapackage_version': str,
@@ -71,6 +71,7 @@ class DataPackage(Specification):
                      'publishers': list,
                      'base': str,
                      'dataDependencies': dict}
+    REQUIRED = ('name', 'resources', ('license', 'licenses'))
 
     FIELD_PARSERS = {
         'number': float,
@@ -105,8 +106,7 @@ class DataPackage(Specification):
         elif len(args) == 1:
             self.base = str(args[0])
             descriptor = self.get_descriptor()
-            for (key, value) in descriptor.iteritems():
-                self.__setattr__(key, value)
+            super(DataPackage, self).__init__(**descriptor)
         else:
             raise TypeError('DataPackage takes 0 or 1 arguments')
 

@@ -26,6 +26,15 @@ class TestDatapackage(object):
         assert len(villains.resources) == 1
         assert villains.resources[0].name == "joker"
 
+    @raises(ValueError)
+    def test_create_datapackage_missing_required_field(self):
+        """Checks if DataPackage creation fails if a required field
+        is missing"""
+        joker = datapackage.Resource(
+            datapackage_uri='http://gotham.us', name='joker',
+            url="http://gotham.us/villains.csv")
+        villains = datapackage.DataPackage(name="villains")
+
     @raises(KeyError)
     def test_get_missing_name(self):
         """Check that an error is raised when the name is missing"""

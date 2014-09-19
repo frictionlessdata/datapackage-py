@@ -38,6 +38,7 @@ class Resource(Specification):
                      'schema': (dict, Schema),
                      'sources': list,
                      'licenses': list}
+    REQUIRED = (('url', 'path', 'data'),)
 
     def __init__(self, *args, **kwargs):
         self.datapackage_uri = kwargs.pop('datapackage_uri', os.path.curdir)

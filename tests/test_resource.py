@@ -34,6 +34,10 @@ class TestDatapackage(object):
         data = self.resource.data
         assert data == {"foo": "bar"}
 
+    @raises(ValueError)
+    def test_create_resource_missing_required_field(self):
+        datapackage.Resource()
+
     def test_get_missing_data(self):
         """Try reading missing resource data"""
         del self.resource['data']
@@ -525,7 +529,7 @@ class TestDatapackage(object):
     def test_resource_schema_field_constraint_invalid_constraint(self):
         datapackage.schema.Constraints(awesome=True)
 
-    @raises(AttributeError)
+    @raises(ValueError)
     def test_resource_schema_field_missing_name(self):
         datapackage.schema.Field(title=str('Movie villain'))
 
@@ -560,22 +564,46 @@ class TestDatapackage(object):
             fields=[title, actor, villain],
             primaryKey=[title, penguin])
 
+    @raises(ValueError)
+    def test_field_missing_name(self):
+        """Check if error is raised when name is missing from field"""
+        datapackage.schema.Field(title="Everything is not awesome")
+
+    @raises(ValueError)
+    def test_foreign_key_missing_required_reference(self):
+        """Check if error is raised when required foreign key values are
+        missing"""
+        datapackage.schema.ForeignKey(fields=str("where-is-my-reference"))
+
+    @raises(ValueError)
+    def test_reference_missing_required_fields(self):
+        """Check if error is raised when required fields is missing from
+        references"""
+        datapackage.schema.Reference(datapackage="gotham-characters")
+
     @raises(AttributeError)
     def test_resource_schema_foreign_key_bad_attribute(self):
         villain = datapackage.schema.Field(
             name=str('villain'), title=str('Movie villain'))
+        villain_name = datapackage.schema.Field(name=str('name'))
+        villains = datapackage.schema.Reference(fields=[villain_name])
         datapackage.schema.ForeignKey(
-            fields=[villain], villain='Dr. Hugo Strange')
+            fields=[villain], reference=villains, villain='Dr. Hugo Strange')
 
     def test_resource_schema_foreign_key_Field_field(self):
         villain = datapackage.schema.Field(
             name=str('villain'), title=str('Movie villain'))
-        foreign_key = datapackage.schema.ForeignKey(fields=villain)
+        villain_name = datapackage.schema.Field(name=str('name'))
+        villains = datapackage.schema.Reference(fields=villain_name)
+        foreign_key = datapackage.schema.ForeignKey(
+            fields=villain, reference=villains)
         assert foreign_key['fields'] == villain.name, \
             'Foreign key could not receive a Field object'
 
     def test_resource_schema_foreign_key_str_field(self):
-        foreign_key = datapackage.schema.ForeignKey(fields=str('villain'))
+        villains = datapackage.schema.Reference(fields=str("name"))
+        foreign_key = datapackage.schema.ForeignKey(
+            fields=str('villain'), reference=villains)
         assert foreign_key['fields'] == str('villain'), \
             'Foreign key could not receive a string field representation'
 

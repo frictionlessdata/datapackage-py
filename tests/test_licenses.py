@@ -24,6 +24,10 @@ class TestLicenses(object):
         assert license_obj.type == self.license
         assert license_obj.url == self.license_url
 
+    @raises(ValueError)
+    def test_create_license_missing_type(self):
+        License(url=self.license_url)
+
     @raises(AttributeError)
     def test_no_url_for_unknown_type(self):
         """Check that a url is required when the type is unknown"""

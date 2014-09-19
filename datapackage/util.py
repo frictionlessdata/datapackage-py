@@ -21,15 +21,33 @@ class Specification(dict):
     # and should preferably be parsed from a data package
     # specification representation (instead of being hardcoded).
     SPECIFICATION = {}
+    REQUIRED = ()
     EXTENDABLE = False
 
     def __init__(self, *args, **kwargs):
-
         """
         Initialize a new Specification object.
 
         Keyword arguments can set attributes/values on instance creation
         """
+        # Check if required fields are missing
+        missing_fields = []
+        for field in self.REQUIRED:
+            if type(field) == list or type(field) == tuple:
+                found = False
+                for field_choice in field:
+                    if field_choice in kwargs:
+                        found = True
+                if not found:
+                    missing_fields.append(str(' or ').join(field))
+            else:
+                if field not in kwargs:
+                    missing_fields.append(field)
+        if missing_fields:
+            raise ValueError('Required fields for {0} missing: {1}'.format(
+                self.__class__.__name__,
+                str(' AND ').join(missing_fields)))
+
         for (key, value) in kwargs.iteritems():
             self.__setattr__(key, value)
 

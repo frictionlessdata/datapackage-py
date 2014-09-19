@@ -11,7 +11,16 @@
           "encoding": "utf-8",
           "bytes": 14,
           "hash": "94232c5b8fc9272f6f73a1e36eb68fcf",
-          "schema": {},
+          "schema": {
+	      "fields": [
+		  {
+		      "name": "foo"
+		  },
+		  {
+		      "name": "bar"
+		  }
+	      ]
+	  },
           "sources": [
               {
 		  "name": "World Bank and OECD",
