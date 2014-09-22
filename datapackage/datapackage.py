@@ -71,7 +71,7 @@ class DataPackage(Specification):
                      'publishers': list,
                      'base': str,
                      'dataDependencies': dict}
-    REQUIRED = ('name', 'resources', ('license', 'licenses'))
+    REQUIRED = ('name',)
 
     FIELD_PARSERS = {
         'number': float,
