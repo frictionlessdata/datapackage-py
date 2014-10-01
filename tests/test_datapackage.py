@@ -31,8 +31,7 @@ class TestDatapackage(object):
         """Checks if DataPackage creation fails if a required field
         is missing"""
         joker = datapackage.Resource(
-            datapackage_uri='http://gotham.us', name='joker',
-            url="http://gotham.us/villains.csv")
+            datapackage_uri='http://gotham.us', name='joker')
         villains = datapackage.DataPackage(name="villains")
 
     @raises(KeyError)

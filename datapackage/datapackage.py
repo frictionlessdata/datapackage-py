@@ -576,7 +576,7 @@ class DataPackage(Specification):
         """
 
         # Get all of the generators for the resources
-        data_generators = [self.get_data(k) for k in self.resources.keys()]
+        data_generators = [self.get_data(k) for k in self.resources]
         return itertools.chain.from_iterable(data_generators)
 
     def get_descriptor(self):
@@ -666,27 +666,22 @@ class DataPackage(Specification):
         # Return the resource collection
         return resources
 
-    def get_data(self, name='', id=''):
+    def get_data(self, resource):
         """
         Generator that yields the data for a given resource.
-        The resource defaults to a resource identified by the empty string
-        (no name attribute in descriptor)
         """
-        # We support both name and id (id is an old deprecated field in the
-        # data package standard). If user has used id and not name we assign
-        # the id to the name.
-        if not name and id:
-            name = id
-
-        # Check if the id can be found in the resources or throw a KeyError
-        if name not in self.resources:
-            raise KeyError("Source not found")
-
-        # Get the resource dictionary representation
-        resource_dict = self.resources[name]
         # Open the resource location
-        resource_file = self.open_resource(resource_dict['location'])
-        resource_file = (line.decode(resource_dict.get('encoding'))
+        resource_path = None
+        for location_type in ('url', 'path'):
+            if location_type in resource:
+                resource_path = resource[location_type]
+                break
+        if resource_path is None:
+            raise NotImplementedError(
+                'Datapackage currently only supports resource url and path')
+
+        resource_file = self.open_resource(resource_path)
+        resource_file = (line.decode(resource.get('encoding', 'utf-8'))
                          for line in resource_file)
         # We assume CSV so we create the csv file
         reader = csv.reader(resource_file)
@@ -699,7 +694,7 @@ class DataPackage(Specification):
             # the field id
             row_dict = {}
             # Loop over fields in the schema and parse the values
-            for field_idx, field in enumerate(resource_dict['fields']):
+            for field_idx, field in enumerate(resource.schema['fields']):
                 # Again, id is an old deprecated word from the standard and
                 # we use the name (but support the old id).
                 field_name = field.get('name', field.get('id', ''))

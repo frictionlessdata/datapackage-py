@@ -56,7 +56,7 @@ class Specification(dict):
         # e.g. as a property, we use the object getter instead of
         # our own
         if hasattr(self.__class__, attribute):
-            object.__getattr__(self, attribute)
+            return object.__getattribute__(self, attribute)
 
         if attribute in self.SPECIFICATION.keys():
             return dict.get(self, attribute, None)
