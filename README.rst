@@ -2,7 +2,7 @@ datapackage
 ===========
 
 **datapackage** provides means to work with DataPackages as defined on
-`dataprotocols.org <http://www.dataprotocols.org/en/latest/data-packages.html>`__.
+`dataprotocols.org <http://dataprotocols.org/data-packages/>`__.
 
 ::
 
