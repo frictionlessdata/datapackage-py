@@ -76,5 +76,5 @@ class License(Specification):
             return
 
         if not is_url(value):
-            raise ValueError("not a url: {}".format(value))
+            raise ValueError("not a url: {0}".format(value))
         self['url'] = value

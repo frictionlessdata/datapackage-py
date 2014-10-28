@@ -51,7 +51,7 @@ class Person(Specification):
             return
 
         if not is_url(value):
-            raise ValueError("not a url: {}".format(value))
+            raise ValueError("not a url: {0}".format(value))
 
         self['web'] = str(value)
 
@@ -70,6 +70,6 @@ class Person(Specification):
             return
 
         if not is_email(value):
-            raise ValueError("not an email address: {}".format(value))
+            raise ValueError("not an email address: {0}".format(value))
 
         self['email'] = str(value)

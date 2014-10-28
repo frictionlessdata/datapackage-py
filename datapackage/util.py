@@ -161,20 +161,20 @@ def parse_version(version):
     parts = version.split('.', 2)
     if len(parts) != 3:
         raise ValueError(
-            "version '{}' does not follow semantic versioning".format(version))
+            "version '{0}' does not follow semantic versioning".format(version))
     major, minor, patch = parts
 
     # check that the major version is valid
     try:
         major = int(major)
     except ValueError:
-        raise ValueError("major version is not an integer: {}".format(major))
+        raise ValueError("major version is not an integer: {0}".format(major))
 
     # check that the minor version is valid
     try:
         minor = int(minor)
     except ValueError:
-        raise ValueError("minor version is not an integer: {}".format(major))
+        raise ValueError("minor version is not an integer: {0}".format(major))
 
     # check for metadata
     if "+" in patch:
@@ -192,21 +192,21 @@ def parse_version(version):
     try:
         patch = int(patch)
     except ValueError:
-        raise ValueError("patch version is not an integer: {}".format(patch))
+        raise ValueError("patch version is not an integer: {0}".format(patch))
 
     # check that prerelease is valid
     if prerelease:
         match = valid_version_regex.match(prerelease)
         if not match:
             raise ValueError(
-                "invalid pre-release version: {}".format(prerelease))
+                "invalid pre-release version: {0}".format(prerelease))
 
     # check that metadata is valid
     if metadata:
         match = valid_version_regex.match(metadata)
         if not match:
             raise ValueError(
-                "invalid metadata: {}".format(metadata))
+                "invalid metadata: {0}".format(metadata))
 
     version = SemanticVersion(major, minor, patch, prerelease, metadata)
     return version
@@ -223,9 +223,9 @@ def format_version(version):
     major, minor, patch, prerelease, metadata = version
     version = u".".join([str(major), str(minor), str(patch)])
     if prerelease:
-        version = u"{}-{}".format(version, prerelease)
+        version = u"{0}-{1}".format(version, prerelease)
     if metadata:
-        version = u"{}+{}".format(version, metadata)
+        version = u"{0}+{1}".format(version, metadata)
     return version
 
 

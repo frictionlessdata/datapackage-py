@@ -370,7 +370,7 @@ class DataPackage(Specification):
             return
 
         if not is_url(value):
-            raise ValueError("not a URL: {}".format(value))
+            raise ValueError("not a URL: {0}".format(value))
 
         self['homepage'] = str(value)
 

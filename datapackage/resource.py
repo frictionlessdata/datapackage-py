@@ -92,7 +92,7 @@ class Resource(Specification):
         try:
             json.loads(json.dumps(val))
         except TypeError:
-            raise TypeError("'{}' is not json serializable".format(val))
+            raise TypeError("'{0}' is not json serializable".format(val))
 
         self['data'] = val
 
@@ -147,7 +147,7 @@ class Resource(Specification):
             return
 
         if not is_url(val):
-            raise ValueError("not a url: {}".format(val))
+            raise ValueError("not a url: {0}".format(val))
 
         self['url'] = str(val)
 
@@ -210,7 +210,7 @@ class Resource(Specification):
             val = str('')
         elif not name_regex.match(val):
             raise ValueError(
-                "name '{}' contains invalid characters".format(val))
+                "name '{0}' contains invalid characters".format(val))
         self['name'] = val
 
     @property
@@ -240,7 +240,7 @@ class Resource(Specification):
         if not val:
             val = str('')
         elif not is_mimetype(val):
-            raise ValueError("not a valid mimetype: {}".format(val))
+            raise ValueError("not a valid mimetype: {0}".format(val))
         self['mediatype'] = str(val)
         self.format = self._guess_format()
 
@@ -304,7 +304,7 @@ class Resource(Specification):
 
         if verify and old_size and (old_size != new_size):
             raise RuntimeError(
-                "size of file has changed! (was: {}, is now: {})".format(
+                "size of file has changed! (was: {0}, is now: {1})".format(
                     old_size, new_size))
 
         self['bytes'] = new_size
@@ -354,7 +354,7 @@ class Resource(Specification):
 
         if verify and old_hash and (old_hash != new_hash):
             raise RuntimeError(
-                "hash of file has changed! (was: {}, is now: {})".format(
+                "hash of file has changed! (was: {0}, is now: {1})".format(
                     old_hash, new_hash))
 
         self['hash'] = new_hash
