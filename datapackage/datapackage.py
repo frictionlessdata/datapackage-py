@@ -591,7 +591,7 @@ class DataPackage(Specification):
         descriptor = self.open_resource('datapackage.json')
 
         # Load the descriptor json contents
-        str_descriptor = descriptor.read().decode()
+        str_descriptor = descriptor.read()
         json_descriptor = json.loads(str_descriptor)
 
         # Return the descriptor json contents (as the dict json.load returns
