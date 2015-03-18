@@ -72,6 +72,7 @@ class DataPackage(Specification):
                      'base': str,
                      'dataDependencies': dict}
     REQUIRED = ('name',)
+    RESOURCE_CLASS = Resource
 
     FIELD_PARSERS = {
         'number': float,
@@ -605,7 +606,7 @@ class DataPackage(Specification):
         From the specification:
         [A] JSON array of hashes that describe the contents of the package.
         """
-        return self['resources']
+        return self.get('resources', [])
 
     @resources.setter
     def resources(self, value):
@@ -616,13 +617,13 @@ class DataPackage(Specification):
         if type(value) != list:
             raise TypeError(
                 '{0} must be a list not {1}'.format(
-                    Resource.__name__, type(value)))
+                    self.RESOURCE_CLASS.__name__, type(value)))
 
         # We loop through the list and create Resource objects from dicts
         # or throw errors if the type is invalid
         modified_array = []
         for single_value in value:
-            if isinstance(single_value, Resource):
+            if isinstance(single_value, self.RESOURCE_CLASS):
                 # We don't need to do anything if it already
                 # is of the correct class
                 pass
@@ -630,11 +631,11 @@ class DataPackage(Specification):
                 # We turn the single_value into kwargs and pass it into
                 # the License constructor
                 base = os.path.curdir if 'base' not in self else self.base
-                single_value = Resource(datapackage_uri=base,
-                                        **single_value)
+                single_value = self.RESOURCE_CLASS(datapackage_uri=base,
+                                                   **single_value)
             else:
                 raise TypeError('{0} type {1} is invalid'.format(
-                    Resource.__name__, type(single_value)))
+                    self.RESOURCE_CLASS.__name__, type(single_value)))
             modified_array.append(single_value)
 
         self['resources'] = modified_array
