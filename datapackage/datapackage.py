@@ -606,7 +606,7 @@ class DataPackage(Specification):
         From the specification:
         [A] JSON array of hashes that describe the contents of the package.
         """
-        return self.get('resources', [])
+        return self['resources']
 
     @resources.setter
     def resources(self, value):
