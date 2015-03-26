@@ -161,7 +161,8 @@ def parse_version(version):
     parts = version.split('.', 2)
     if len(parts) != 3:
         raise ValueError(
-            "version '{0}' does not follow semantic versioning".format(version))
+            "version '{0}' does not follow semantic versioning".format(version)
+        )
     major, minor, patch = parts
 
     # check that the major version is valid
