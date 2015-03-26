@@ -12,9 +12,9 @@ from datapackage import compat
 class TestSources(object):
 
     def setup(self):
-        self.name = str("World Bank and OECD")
-        self.web = str("http://data.worldbank.org/indicator/NY.GDP.MKTP.CD")
-        self.email = str("info@worldbank.org")
+        self.name = "World Bank and OECD"
+        self.web = "http://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
+        self.email = "info@worldbank.org"
 
     def teardown(self):
         pass

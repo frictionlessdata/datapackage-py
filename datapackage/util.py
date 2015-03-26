@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import sys
 import os
+import io
 import json
 import re
 from collections import namedtuple
@@ -90,7 +91,7 @@ class Specification(dict):
                     raise TypeError(
                         "Attribute '{0}' ({1}) should be {2}".format(
                             attribute, type(value),
-                            ' or '.join([s for s in spec_type])))
+                            ' or '.join([compat.str(s) for s in spec_type])))
         elif not self.EXTENDABLE:
             raise AttributeError(
                 "Attribute '{0}' is not allowed in a '{1}' object".format(
@@ -243,7 +244,7 @@ def load_licenses():
     # can read in the licenses file
     dirname = os.path.split(os.path.realpath(__file__))[0]
     filename = os.path.join(dirname, "data", "licenses.json")
-    with open(filename, "r") as fh:
+    with io.open(filename, "r") as fh:
         licenses = json.load(fh)
     return licenses
 

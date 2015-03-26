@@ -19,6 +19,7 @@ is_py27 = (is_py2 and _ver[1] == 7)
 if is_py2:
     import urlparse as parse
     from urllib2 import urlopen, HTTPError
+    import mock
     builtin_str = str
     bytes = str
     str = unicode
@@ -40,6 +41,7 @@ elif is_py3:
     from urllib import parse
     from urllib.request import urlopen
     from urllib.error import HTTPError
+    from unittest import mock
     csv_reader = csv.reader
     builtin_str = str
     str = str

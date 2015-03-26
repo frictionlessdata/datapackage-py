@@ -27,6 +27,7 @@ import datetime
 import time
 import base64
 import re
+import io
 import warnings
 from .resource import Resource
 from .schema import Schema
@@ -178,9 +179,10 @@ class DataPackage(Specification):
         # on Windows it will try to create URLs with backslashes
         if is_local(base):
             resource_path = os.path.join(base, path)
+            return io.open(resource_path)
         else:
             resource_path = compat.parse.urljoin(base, path)
-        return compat.urlopen(resource_path)
+            return compat.urlopen(resource_path)
 
     @property
     def name(self):
@@ -700,7 +702,7 @@ class DataPackage(Specification):
                 try:
                     row_dict[field_name] = self._field_parser(field)(value)
                 except:
-                    msg = u'Field "{field}" in row {row} could not be parsed.'
+                    msg = 'Field "{field}" in row {row} could not be parsed.'
                     raise ValueError(msg.format(field=field_name, row=row_idx))
 
             yield row_dict

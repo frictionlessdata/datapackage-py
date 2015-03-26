@@ -4,10 +4,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import io
 import datapackage
 from nose.tools import raises
 import unittest
-from mock import Mock, patch
+from datapackage.compat import mock as mocklib
 
 
 class TestDatapackage(object):
@@ -197,14 +198,14 @@ class TestDatapackage(object):
         self.dpkg.image = "bar.jpg"
         assert self.dpkg.image == "bar.jpg"
 
-    @patch('urllib.urlopen')
+    @mocklib.patch('datapackage.compat.urlopen')
     def test_web_url(self, mock_urlopen):
         """Try reading a datapackage from the web"""
 
         # setup the mock for url read
-        with open("tests/cpi/datapackage.json", "r") as fh:
+        with io.open("tests/cpi/datapackage.json", "r") as fh:
             metadata = fh.read()
-        mock = Mock()
+        mock = mocklib.Mock()
         mock.read.side_effect = [metadata]
         mock_urlopen.return_value = mock
 

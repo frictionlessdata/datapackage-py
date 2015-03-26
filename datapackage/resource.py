@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 import sys
+import io
 import hashlib
 import json
 import posixpath
@@ -45,7 +46,7 @@ class Resource(Specification):
 
     def _open(self, mode):
         if self.is_local:
-            return open(self.fullpath, mode)
+            return io.open(self.fullpath, mode)
         else:
             if mode not in ('r', 'rb'):
                 raise ValueError('urls can only be opened read-only')
@@ -262,7 +263,7 @@ class Resource(Specification):
         """Compute the size of the inline data"""
         if not self.data:
             raise ValueError("data is not specified")
-        bytestr = compat.bytes(json.dumps(self.data), encoding=self.encoding)
+        bytestr = compat.to_bytes(json.dumps(self.data), encoding=self.encoding)
         return len(bytestr)
 
     def _path_bytes(self):
