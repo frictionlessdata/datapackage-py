@@ -9,3 +9,4 @@ install:
   - pip install -r requirements.dev.txt
 script:
   - nosetests
+  - flake8 datapackage
