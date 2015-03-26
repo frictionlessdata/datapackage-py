@@ -1,10 +1,13 @@
-import sys
-if sys.version_info[0] < 3:
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from .util import Specification, is_url, load_licenses
+from . import compat
+
+
 LICENSES = load_licenses()
 
 
@@ -22,8 +25,8 @@ class License(Specification):
     **Open Definition license ID**.
     """
 
-    SPECIFICATION = {'type': str,
-                     'url': str}
+    SPECIFICATION = {'type': compat.str,
+                     'url': compat.str}
 
     def __init__(self, *args, **kwargs):
         # We need to pick them out in a specific order to make sure that

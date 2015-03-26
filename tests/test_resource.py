@@ -1,20 +1,21 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import datapackage
+from datapackage import compat
 import posixpath
 from nose.tools import raises
 from mock import Mock, patch
-import sys
-
-if sys.version_info[0] < 3:
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
 
 
 class TestDatapackage(object):
     def setup(self):
         self.dpkg = datapackage.DataPackage("tests/test.dpkg")
         kwargs = self.dpkg['resources'][0]
-        kwargs['datapackage_uri'] = str(self.dpkg.base)
+        kwargs['datapackage_uri'] = compat.str(self.dpkg.base)
         self.resource = datapackage.Resource(**kwargs)
 
     def teardown(self):
@@ -90,7 +91,7 @@ class TestDatapackage(object):
 
     def test_set_path(self):
         """Check that setting the path works"""
-        self.resource.path = str("barfoo.json")
+        self.resource.path = compat.str("barfoo.json")
         assert self.resource.path == "barfoo.json"
         assert self.resource.fullpath == posixpath.join(self.dpkg.base,
                                                         "barfoo.json")
@@ -113,14 +114,14 @@ class TestDatapackage(object):
 
     def test_set_url(self):
         """Try setting the resource url"""
-        self.resource.url = str("https://www.google.com")
+        self.resource.url = compat.str("https://www.google.com")
         assert self.resource.url == "https://www.google.com",\
             self.resource.url
 
     @raises(ValueError)
     def test_set_bad_url(self):
         """Try setting the resource url to an invalid url"""
-        self.resource.url = str("google")
+        self.resource.url = compat.str("google")
 
     def test_get_name(self):
         """Try reading the resource name"""
@@ -129,11 +130,11 @@ class TestDatapackage(object):
     def test_get_default_name(self):
         """Try reading the default resource name"""
         del self.resource['name']
-        assert self.resource.name == str('')
+        assert self.resource.name == compat.str('')
 
     def test_set_name(self):
         """Try setting the resource name"""
-        self.resource.name = str("barfoo")
+        self.resource.name = compat.str("barfoo")
         assert self.resource.name == "barfoo"
 
     def test_set_name_to_none(self):

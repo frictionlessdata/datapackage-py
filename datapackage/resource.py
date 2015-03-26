@@ -1,40 +1,38 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import os
 import sys
-import urllib
 import hashlib
 import json
 import posixpath
 import re
 import mimetypes
-
-if sys.version_info[0] < 3:
-    import urlparse
-    urllib.parse = urlparse
-    urllib.request = urllib
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
-
 from .sources import Source
 from .licenses import License
 from .schema import Schema
 from .util import (Specification, is_local, is_url, is_mimetype,
                    get_size_from_url)
+from . import compat
+
 
 name_regex = re.compile(r"^[0-9A-Za-z-_\.]+$")
 
 
 class Resource(Specification):
 
-    SPECIFICATION = {'url': str,
-                     'path': str,
+    SPECIFICATION = {'url': compat.str,
+                     'path': compat.str,
                      'data': None,
-                     'name': str,
-                     'format': str,
-                     'mediatype': str,
-                     'encoding': str,
+                     'name': compat.str,
+                     'format': compat.str,
+                     'mediatype': compat.str,
+                     'encoding': compat.str,
                      'bytes': int,
-                     'hash': str,
+                     'hash': compat.str,
                      'schema': (dict, Schema),
                      'sources': list,
                      'licenses': list}
@@ -51,7 +49,7 @@ class Resource(Specification):
         else:
             if mode not in ('r', 'rb'):
                 raise ValueError('urls can only be opened read-only')
-            return urllib.urlopen(self.fullpath)
+            return compat.urlopen(self.fullpath)
 
     @property
     def datapackage_uri(self):
@@ -114,7 +112,7 @@ class Resource(Specification):
             return
 
         # use posix path since it is supposed to be unix-style
-        self['path'] = str(val)
+        self['path'] = compat.str(val)
 
         self.mediatype = self._guess_mediatype()
         self.format = self._guess_format()
@@ -132,7 +130,7 @@ class Resource(Specification):
                 # use posix path since it is supposed to be unix-style
                 path = posixpath.join(self['datapackage_uri'], path)
             else:
-                path = urllib.parse.urljoin(self['datapackage_uri'], path)
+                path = compat.parse.urljoin(self['datapackage_uri'], path)
         return path
 
     @property
@@ -167,7 +165,7 @@ class Resource(Specification):
         else:
             mediatype = ''
 
-        return str(mediatype)
+        return compat.str(mediatype)
 
     def _guess_format(self):
         """Tries to guess the format based off other properties of the
@@ -179,7 +177,7 @@ class Resource(Specification):
         if self.path:
             format = posixpath.splitext(self.path)[1][1:]
         elif self.url:
-            path = urllib.parse.urlparse(self.url).path
+            path = compat.parse.urlparse(self.url).path
             format = posixpath.splitext(path)[1][1:]
         else:
             format = mimetypes.guess_extension(self.mediatype)
@@ -188,7 +186,7 @@ class Resource(Specification):
             else:
                 format = ''
 
-        return str(format)
+        return compat.str(format)
 
     @property
     def name(self):
@@ -202,12 +200,12 @@ class Resource(Specification):
         (minus the extension) of the data file the resource describes.
 
         """
-        return self.get('name', str(''))
+        return self.get('name', '')
 
     @name.setter
     def name(self, val):
         if not val:
-            val = str('')
+            val = ''
         elif not name_regex.match(val):
             raise ValueError(
                 "name '{0}' contains invalid characters".format(val))
@@ -219,13 +217,13 @@ class Resource(Specification):
         the the standard file extension for this type of resource.
 
         """
-        return self.get('format', str(''))
+        return self.get('format', '')
 
     @format.setter
     def format(self, val):
         if not val:
             val = ''
-        self['format'] = str(val)
+        self['format'] = compat.str(val)
 
     @property
     def mediatype(self):
@@ -233,15 +231,15 @@ class Resource(Specification):
         'application/vnd.ms-excel'.
 
         """
-        return self.get('mediatype', str(''))
+        return self.get('mediatype', '')
 
     @mediatype.setter
     def mediatype(self, val):
         if not val:
-            val = str('')
+            val = compat.str('')
         elif not is_mimetype(val):
             raise ValueError("not a valid mimetype: {0}".format(val))
-        self['mediatype'] = str(val)
+        self['mediatype'] = compat.str(val)
         self.format = self._guess_format()
 
     @property
@@ -252,19 +250,19 @@ class Resource(Specification):
         specified then the default is UTF-8.
 
         """
-        return self.get('encoding', str('utf-8'))
+        return self.get('encoding', 'utf-8')
 
     @encoding.setter
     def encoding(self, val):
         if not val:
-            val = str('utf-8')
-        self['encoding'] = str(val)
+            val = 'utf-8'
+        self['encoding'] = compat.str(val)
 
     def _data_bytes(self):
         """Compute the size of the inline data"""
         if not self.data:
             raise ValueError("data is not specified")
-        bytestr = str(json.dumps(self.data)).encode(self.encoding)
+        bytestr = compat.bytes(json.dumps(self.data), encoding=self.encoding)
         return len(bytestr)
 
     def _path_bytes(self):
@@ -311,7 +309,7 @@ class Resource(Specification):
 
     def _data_hash(self):
         """Computes the md5 checksum of the inline data."""
-        bytestr = str(json.dumps(self.data)).encode(self.encoding)
+        bytestr = compat.to_bytes(json.dumps(self.data), encoding=self.encoding)
         md5 = hashlib.md5()
         md5.update(bytestr)
         hash = md5.hexdigest()

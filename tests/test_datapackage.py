@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import datapackage
 from nose.tools import raises
 import unittest
@@ -71,7 +77,7 @@ class TestDatapackage(object):
     def test_get_datapackage_version(self):
         """Test getting the datapackage version"""
         assert self.dpkg.datapackage_version == "1.0-beta.10"
- 
+
     @raises(ValueError)
     def test_get_empty_datapackage_version(self):
         """Check that an error is thrown then the datapackage version is an
