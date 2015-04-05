@@ -247,7 +247,7 @@ class TestDatapackage(object):
         self.resource.mediatype = "text/csv"
         assert self.resource._guess_format() == 'csv'
         self.resource.mediatype = "image/jpeg"
-        assert self.resource._guess_format() == 'jpeg'
+        assert self.resource._guess_format() == 'jpg'
 
     def test_data_bytes(self):
         """Checks that the size is computed correctly from the data"""

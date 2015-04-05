@@ -184,6 +184,9 @@ class Resource(Specification):
             format = mimetypes.guess_extension(self.mediatype)
             if format:
                 format = format[1:]
+                # Bug in Python: http://bugs.python.org/issue4963
+                if format in ('jpe', 'jpeg'):
+                    format = 'jpg'
             else:
                 format = ''
 
