@@ -11,6 +11,7 @@ import csv
 _ver = sys.version_info
 is_py2 = (_ver[0] == 2)
 is_py3 = (_ver[0] == 3)
+is_py32 = (is_py3 and _ver[1] == 2)
 is_py33 = (is_py3 and _ver[1] == 3)
 is_py34 = (is_py3 and _ver[1] == 4)
 is_py27 = (is_py2 and _ver[1] == 7)
@@ -38,10 +39,13 @@ if is_py2:
             yield [str(cell, 'utf-8') for cell in row]
 
 elif is_py3:
+    if is_py32:
+        import mock
+    else:
+        from unittest import mock
     from urllib import parse
     from urllib.request import urlopen
     from urllib.error import HTTPError
-    from unittest import mock
     csv_reader = csv.reader
     builtin_str = str
     str = str
@@ -54,4 +58,3 @@ elif is_py3:
 def to_bytes(textstring, encoding='utf-8'):
     """Convert a text string to a byte string"""
     return textstring.encode(encoding)
-
