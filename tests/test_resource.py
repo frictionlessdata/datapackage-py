@@ -1,30 +1,31 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import datapackage
+from datapackage import compat
 import posixpath
 from nose.tools import raises
-from mock import Mock, patch
-import sys
-
-if sys.version_info[0] < 3:
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
+from datapackage.compat import mock as mocklib
 
 
 class TestDatapackage(object):
     def setup(self):
         self.dpkg = datapackage.DataPackage("tests/test.dpkg")
         kwargs = self.dpkg['resources'][0]
-        kwargs['datapackage_uri'] = str(self.dpkg.base)
+        kwargs['datapackage_uri'] = compat.str(self.dpkg.base)
         self.resource = datapackage.Resource(**kwargs)
 
     def teardown(self):
         pass
 
     def patch_urlopen_size(self, mock_urlopen, size):
-        mock_meta = Mock()
+        mock_meta = mocklib.Mock()
         mock_meta.getheaders.side_effect = [[size]]
 
-        mock_site = Mock()
+        mock_site = mocklib.Mock()
         mock_site.info.return_value = mock_meta
 
         mock_urlopen.return_value = mock_site
@@ -90,7 +91,7 @@ class TestDatapackage(object):
 
     def test_set_path(self):
         """Check that setting the path works"""
-        self.resource.path = str("barfoo.json")
+        self.resource.path = compat.str("barfoo.json")
         assert self.resource.path == "barfoo.json"
         assert self.resource.fullpath == posixpath.join(self.dpkg.base,
                                                         "barfoo.json")
@@ -113,14 +114,14 @@ class TestDatapackage(object):
 
     def test_set_url(self):
         """Try setting the resource url"""
-        self.resource.url = str("https://www.google.com")
+        self.resource.url = compat.str("https://www.google.com")
         assert self.resource.url == "https://www.google.com",\
             self.resource.url
 
     @raises(ValueError)
     def test_set_bad_url(self):
         """Try setting the resource url to an invalid url"""
-        self.resource.url = str("google")
+        self.resource.url = compat.str("google")
 
     def test_get_name(self):
         """Try reading the resource name"""
@@ -129,11 +130,11 @@ class TestDatapackage(object):
     def test_get_default_name(self):
         """Try reading the default resource name"""
         del self.resource['name']
-        assert self.resource.name == str('')
+        assert self.resource.name == compat.str('')
 
     def test_set_name(self):
         """Try setting the resource name"""
-        self.resource.name = str("barfoo")
+        self.resource.name = compat.str("barfoo")
         assert self.resource.name == "barfoo"
 
     def test_set_name_to_none(self):
@@ -144,11 +145,11 @@ class TestDatapackage(object):
     @raises(ValueError)
     def test_set_invalid_name(self):
         """Try setting the resource name to an invalid name"""
-        self.resource.name = str("foo bar")
+        self.resource.name = "foo bar"
 
     def test_get_format(self):
         """Try reading the resource format"""
-        assert self.resource.format == str("json")
+        assert self.resource.format == "json"
 
     def test_get_default_format(self):
         """Try reading the default resource format"""
@@ -157,7 +158,7 @@ class TestDatapackage(object):
 
     def test_set_format(self):
         """Try setting the resource format"""
-        self.resource.format = str('csv')
+        self.resource.format = 'csv'
         assert self.resource.format == 'csv'
 
     def test_set_format_to_none(self):
@@ -177,7 +178,7 @@ class TestDatapackage(object):
 
     def test_set_mediatype(self):
         """Try setting the resource mediatype"""
-        self.resource.mediatype = str('text/csv')
+        self.resource.mediatype = 'text/csv'
         assert self.resource.mediatype == 'text/csv'
 
     def test_set_mediatype_to_none(self):
@@ -189,7 +190,7 @@ class TestDatapackage(object):
     @raises(ValueError)
     def test_set_invalid_mediatype(self):
         """Try setting the resource mediatype to an invalid mimetype"""
-        self.resource.mediatype = str("foo")
+        self.resource.mediatype = "foo"
 
     def test_get_encoding(self):
         """Try reading the resource encoding"""
@@ -202,7 +203,7 @@ class TestDatapackage(object):
 
     def test_set_encoding(self):
         """Try setting the resource encoding"""
-        self.resource.encoding = str('latin1')
+        self.resource.encoding = 'latin1'
         assert self.resource.encoding == 'latin1'
 
     def test_set_encoding_to_none(self):
@@ -213,40 +214,40 @@ class TestDatapackage(object):
 
     def test_guess_mediatype(self):
         assert self.resource._guess_mediatype() == 'application/json'
-        self.resource.path = str("foo.csv")
+        self.resource.path = "foo.csv"
         assert self.resource._guess_mediatype() == 'text/csv'
-        self.resource.path = str("foo.jpg")
+        self.resource.path = "foo.jpg"
         assert self.resource._guess_mediatype() == 'image/jpeg'
 
         self.resource.path = None
         assert self.resource._guess_mediatype() == 'application/json'
-        self.resource.url = str("http://foobar.com/foo.csv")
+        self.resource.url = "http://foobar.com/foo.csv"
         assert self.resource._guess_mediatype() == 'text/csv'
-        self.resource.url = str("http://foobar.com/foo.jpg")
+        self.resource.url = "http://foobar.com/foo.jpg"
         assert self.resource._guess_mediatype() == 'image/jpeg'
 
     def test_guess_format(self):
         assert self.resource._guess_format() == 'json'
-        self.resource.path = str("foo.csv")
+        self.resource.path = "foo.csv"
         assert self.resource._guess_format() == 'csv'
-        self.resource.path = str("foo.jpg")
+        self.resource.path = "foo.jpg"
         assert self.resource._guess_format() == 'jpg'
 
         self.resource.path = None
-        self.resource.url = str("http://foobar.com/foo.json")
+        self.resource.url = "http://foobar.com/foo.json"
         assert self.resource._guess_format() == 'json'
-        self.resource.url = str("http://foobar.com/foo.csv")
+        self.resource.url = "http://foobar.com/foo.csv"
         assert self.resource._guess_format() == 'csv'
-        self.resource.url = str("http://foobar.com/foo.jpg")
+        self.resource.url = "http://foobar.com/foo.jpg"
         assert self.resource._guess_format() == 'jpg'
 
         self.resource.url = None
-        self.resource.mediatype = str("application/json")
+        self.resource.mediatype = "application/json"
         assert self.resource._guess_format() == 'json'
-        self.resource.mediatype = str("text/csv")
+        self.resource.mediatype = "text/csv"
         assert self.resource._guess_format() == 'csv'
-        self.resource.mediatype = str("image/jpeg")
-        assert self.resource._guess_format() == 'jpe'
+        self.resource.mediatype = "image/jpeg"
+        assert self.resource._guess_format() == 'jpg'
 
     def test_data_bytes(self):
         """Checks that the size is computed correctly from the data"""
@@ -274,7 +275,7 @@ class TestDatapackage(object):
         self.resource.path = None
         self.resource._path_bytes()
 
-    @patch('urllib.urlopen')
+    @mocklib.patch('datapackage.compat.urlopen')
     def test_url_bytes(self, mock_urlopen):
         """Checks that the size is computed correctly from the url"""
         self.patch_urlopen_size(mock_urlopen, '14')
@@ -319,7 +320,7 @@ class TestDatapackage(object):
         self.resource.update_bytes()
         assert self.resource.bytes == 14
 
-    @patch('urllib.urlopen')
+    @mocklib.patch('datapackage.compat.urlopen')
     def test_compute_bytes_from_url(self, mock_urlopen):
         """Test computing the size from the url"""
         self.patch_urlopen_size(mock_urlopen, '14')
@@ -329,7 +330,7 @@ class TestDatapackage(object):
         self.resource.update_bytes()
         assert self.resource.bytes == 14
 
-    @patch('urllib.urlopen')
+    @mocklib.patch('datapackage.compat.urlopen')
     def test_update_bytes_url_unchanged(self, mock_urlopen):
         """Test that updating the size from the url does not throw an
         error when the size has not changed.
@@ -361,7 +362,7 @@ class TestDatapackage(object):
         self.resource.update_bytes()
 
     @raises(RuntimeError)
-    @patch('urllib.urlopen')
+    @mocklib.patch('datapackage.compat.urlopen')
     def test_update_bytes_url_changed(self, mock_urlopen):
         """Check that updating the bytes from the url throws an error when the
         size has changed.
@@ -394,7 +395,7 @@ class TestDatapackage(object):
         assert self.resource.bytes == 14
         assert self.resource['bytes'] == 14
 
-    @patch('urllib.urlopen')
+    @mocklib.patch('datapackage.compat.urlopen')
     def test_update_bytes_url_changed_unverified(self, mock_urlopen):
         """Check that updating the bytes from the url works, when the size has
         changed but the size is not being verified.
@@ -454,7 +455,7 @@ class TestDatapackage(object):
         self.resource.sources = None
         assert 'sources' not in self.resource
         self.resource.sources = [
-            {"name": str("foo"), "web": str("https://bar.com/")}]
+            {"name": "foo", "web": "https://bar.com/"}]
         sources = self.resource.sources
         assert len(sources) == 1
         assert sources[0]["name"] == "foo"
@@ -462,7 +463,7 @@ class TestDatapackage(object):
 
     def test_add_source(self):
         """Try adding a new source with add_source"""
-        self.resource.add_source(str("foo"), email=str("bar@test.com"))
+        self.resource.add_source("foo", email="bar@test.com")
         sources = self.resource.sources
         assert len(sources) == 2
         assert sources[0]["name"] == "World Bank and OECD"
@@ -475,21 +476,21 @@ class TestDatapackage(object):
         required = datapackage.schema.Constraints(required=True)
 
         title = datapackage.schema.Field(
-            name=str('title'), title=str('Title of Batman movie'),
-            type=str('string'), constraints=required)
+            name='title', title='Title of Batman movie',
+            type='string', constraints=required)
         actor = datapackage.schema.Field(
-            name=str('actor'), title=str('Actor portraying Batman'))
+            name='actor', title='Actor portraying Batman')
         villain = datapackage.schema.Field(
-            name=str('villain'), title=str('Movie villain'))
+            name='villain', title='Movie villain')
 
         schema = datapackage.schema.Schema(
             fields=[title, actor, villain],
             primaryKey=[title, villain])
 
         reference = datapackage.schema.Reference(
-            datapackage=str('http://gotham.us/datapackages'),
-            resource=str('villains'),
-            fields=[str('name')])
+            datapackage='http://gotham.us/datapackages',
+            resource='villains',
+            fields=['name'])
         foreign_key = datapackage.schema.ForeignKey(fields=[villain],
                                                     reference=reference)
 
@@ -498,7 +499,7 @@ class TestDatapackage(object):
         # In the assertions we will access the schema as a dictionary because
         # that's how it should get serialized
         assert 'fields' in schema, 'Fields not found in schema'
-        expected_field_order = [str('title'), str('actor'), str('villain')]
+        expected_field_order = ['title', 'actor', 'villain']
         assert [f.name for f in schema['fields']] == expected_field_order, \
             'Field order is incorrect'
         # Constraints for first field should be required == True
@@ -510,19 +511,19 @@ class TestDatapackage(object):
             'Field title changes'
 
         assert 'primaryKey' in schema, 'primaryKey not found in schema'
-        assert schema.primaryKey == [u'title', u'villain'], \
+        assert schema.primaryKey == ['title', 'villain'], \
             'primaryKey is incorrect in schema'
 
         assert 'foreignKeys' in schema, 'foreignKeys not found in schema'
         assert len(schema['foreignKeys']) == 1, \
             'foreignKeys does not hold a single foreignKey'
-        assert schema['foreignKeys'][0]['fields'] == [str('villain')]
+        assert schema['foreignKeys'][0]['fields'] == ['villain']
         schema_reference = schema['foreignKeys'][0]['reference']
         assert schema_reference['datapackage'] == reference.datapackage, \
             'Datapackage in reference changess'
         assert schema_reference['resource'] == reference.resource, \
             'Resource in reference changes'
-        assert schema_reference['fields'] == [str('name')], \
+        assert schema_reference['fields'] == ['name'], \
             'Fields in reference changes'
 
     @raises(AttributeError)
@@ -531,21 +532,21 @@ class TestDatapackage(object):
 
     @raises(ValueError)
     def test_resource_schema_field_missing_name(self):
-        datapackage.schema.Field(title=str('Movie villain'))
+        datapackage.schema.Field(title='Movie villain')
 
     @raises(AttributeError)
     def test_resource_schema_field_invalid_attribute(self):
         datapackage.schema.Field(
-            name=str('villain'), joker=str('Movie villain'))
+            name='villain', joker='Movie villain')
 
     @raises(AttributeError)
     def test_resource_schema_invalid_attribute(self):
         title = datapackage.schema.Field(
-            name=str('title'), title=str('Title of Batman movie'))
+            name='title', title='Title of Batman movie')
         actor = datapackage.schema.Field(
-            name=str('actor'), title=str('Actor portraying Batman'))
+            name='actor', title='Actor portraying Batman')
         villain = datapackage.schema.Field(
-            name=str('villain'), title=str('Movie villain'))
+            name='villain', title='Movie villain')
         datapackage.schema.Schema(
             fields=[title, actor, villain],
             description='This dataset resource shows all the Batman movies')
@@ -553,13 +554,13 @@ class TestDatapackage(object):
     @raises(AttributeError)
     def test_resource_schema_bad_primaryKey(self):
         title = datapackage.schema.Field(
-            name=str('title'), title=str('Title of Batman movie'))
+            name='title', title='Title of Batman movie')
         actor = datapackage.schema.Field(
-            name=str('actor'), title=str('Actor portraying Batman'))
+            name='actor', title='Actor portraying Batman')
         villain = datapackage.schema.Field(
-            name=str('villain'), title=str('Movie villain'))
+            name='villain', title='Movie villain')
         penguin = datapackage.schema.Field(
-            name=str('penguin'), title=str('Oswald Chesterfield Cobblepot'))
+            name='penguin', title='Oswald Chesterfield Cobblepot')
         schema = datapackage.schema.Schema(
             fields=[title, actor, villain],
             primaryKey=[title, penguin])
@@ -573,7 +574,7 @@ class TestDatapackage(object):
     def test_foreign_key_missing_required_reference(self):
         """Check if error is raised when required foreign key values are
         missing"""
-        datapackage.schema.ForeignKey(fields=str("where-is-my-reference"))
+        datapackage.schema.ForeignKey(fields="where-is-my-reference")
 
     @raises(ValueError)
     def test_reference_missing_required_fields(self):
@@ -584,16 +585,16 @@ class TestDatapackage(object):
     @raises(AttributeError)
     def test_resource_schema_foreign_key_bad_attribute(self):
         villain = datapackage.schema.Field(
-            name=str('villain'), title=str('Movie villain'))
-        villain_name = datapackage.schema.Field(name=str('name'))
+            name='villain', title='Movie villain')
+        villain_name = datapackage.schema.Field(name='name')
         villains = datapackage.schema.Reference(fields=[villain_name])
         datapackage.schema.ForeignKey(
             fields=[villain], reference=villains, villain='Dr. Hugo Strange')
 
     def test_resource_schema_foreign_key_Field_field(self):
         villain = datapackage.schema.Field(
-            name=str('villain'), title=str('Movie villain'))
-        villain_name = datapackage.schema.Field(name=str('name'))
+            name='villain', title='Movie villain')
+        villain_name = datapackage.schema.Field(name='name')
         villains = datapackage.schema.Reference(fields=villain_name)
         foreign_key = datapackage.schema.ForeignKey(
             fields=villain, reference=villains)
@@ -601,27 +602,27 @@ class TestDatapackage(object):
             'Foreign key could not receive a Field object'
 
     def test_resource_schema_foreign_key_str_field(self):
-        villains = datapackage.schema.Reference(fields=str("name"))
+        villains = datapackage.schema.Reference(fields="name")
         foreign_key = datapackage.schema.ForeignKey(
-            fields=str('villain'), reference=villains)
-        assert foreign_key['fields'] == str('villain'), \
+            fields='villain', reference=villains)
+        assert foreign_key['fields'] == 'villain', \
             'Foreign key could not receive a string field representation'
 
 
     @raises(AttributeError)
     def test_resource_schema_reference_bad_attribute(self):
         reference = datapackage.schema.Reference(
-            datapackage=str('http://gotham.us/datapackages'),
-            badpeople=str('villains'),
-            fields=[str('name')])
+            datapackage='http://gotham.us/datapackages',
+            badpeople='villains',
+            fields=['name'])
 
     @raises(ValueError)
     def test_ressource_schema_foreign_key_field_inconsistency(self):
         reference = datapackage.schema.Reference(
-            datapackage=str('http://gotham.us/datapackages'),
-            resource=str('villains'),
-            fields=[str('name'), str('catwoman')])
+            datapackage='http://gotham.us/datapackages',
+            resource='villains',
+            fields=['name', 'catwoman'])
         villain = datapackage.schema.Field(
-            name=str('villain'), title=str('Movie villain'))
+            name='villain', title='Movie villain')
         foreign_key = datapackage.schema.ForeignKey(fields=[villain],
                                                     reference=reference)

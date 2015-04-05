@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import io
 
 try:
     from setuptools import setup
@@ -7,7 +13,7 @@ except ImportError:
     from distutils.core import setup
 
 description = "Manage and load dataprotocols.org Data Packages"
-with open('README.rst') as readme:
+with io.open('README.rst') as readme:
     long_description = readme.read()
 
 setup(
