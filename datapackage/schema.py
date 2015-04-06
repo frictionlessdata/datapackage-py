@@ -1,10 +1,11 @@
-from .util import Specification
-import sys
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
-if sys.version_info[0] < 3:
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
+from .util import Specification
+from . import compat
 
 
 class Field(Specification):
@@ -14,10 +15,10 @@ class Field(Specification):
     Currently this is built around the Tabular Data Package.
     """
 
-    SPECIFICATION = {'name': str,
-                     'title': str,
-                     'type': str,
-                     'format': str,
+    SPECIFICATION = {'name': compat.str,
+                     'title': compat.str,
+                     'type': compat.str,
+                     'format': compat.str,
                      'constraints': dict}
     REQUIRED = ('name',)
 
@@ -32,7 +33,7 @@ class Constraints(Specification):
                      'minLength': int,
                      'maxLength': int,
                      'unique': bool,
-                     'pattern': str,
+                     'pattern': compat.str,
                      'minimum': None,
                      'maximum': None}
 
@@ -43,9 +44,9 @@ class Reference(Specification):
     the reference to the other datapackage.
     """
 
-    SPECIFICATION = {'datapackage': str,
-                     'resource': str,
-                     'fields': (str, list)}
+    SPECIFICATION = {'datapackage': compat.str,
+                     'resource': compat.str,
+                     'fields': (compat.str, list)}
     REQUIRED = ('fields',)
 
     def __setattr__(self, attribute, value):
@@ -55,7 +56,7 @@ class Reference(Specification):
             if type(value) == list:
                 modified_value = []
                 for single_value in value:
-                    if type(single_value) == str:
+                    if type(single_value) == compat.str:
                         modified_value.append(single_value)
                     elif isinstance(single_value, Field):
                         modified_value.append(single_value.name)
@@ -64,7 +65,7 @@ class Reference(Specification):
                             'Field type ({0}) is not supported'.format(
                                 type(single_value)))
                 value = modified_value
-            elif type(value) == str:
+            elif type(value) == compat.str:
                 # We don't need to do anything with a str
                 pass
             elif isinstance(value, Field):
@@ -83,7 +84,7 @@ class ForeignKey(Specification):
     represent a foreign key in another data package.
     """
 
-    SPECIFICATION = {'fields': (str, list),
+    SPECIFICATION = {'fields': (compat.str, list),
                      'reference': Reference}
     REQUIRED = ('fields', 'reference')
 
@@ -109,7 +110,7 @@ class ForeignKey(Specification):
             if value_type == list:
                 modified_value = []
                 for single_value in value:
-                    if type(single_value) == str:
+                    if type(single_value) == compat.str:
                         modified_value.append(single_value)
                     elif isinstance(single_value, Field):
                         modified_value.append(single_value.name)
@@ -118,7 +119,7 @@ class ForeignKey(Specification):
                             'Foreign key type ({0}) is not supported'.format(
                                 type(single_value)))
                 value = modified_value
-            elif value_type == str:
+            elif value_type == compat.str:
                 # We don't need to do anything if the value is a str
                 pass
             elif isinstance(value, Field):
@@ -152,7 +153,7 @@ class Schema(Specification):
     """
 
     SPECIFICATION = {'fields': list,
-                     'primaryKey': (str, list),
+                     'primaryKey': (compat.str, list),
                      'foreignKeys': list}
 
     def __init__(self, *args, **kwargs):
@@ -174,7 +175,7 @@ class Schema(Specification):
             if type(value) == list:
                 modified_value = []
                 for single_value in value:
-                    if type(single_value) == str:
+                    if type(single_value) == compat.str:
                         if single_value in field_names:
                             modified_value.append(single_value)
                         else:
@@ -193,7 +194,7 @@ class Schema(Specification):
                             'primaryKey type ({0}) is not supported'.format(
                                 type(single_value)))
                 value = modified_value
-            elif type(value) == str:
+            elif type(value) == compat.str:
                 if value not in field_names:
                     raise AttributeError(
                         "Unknown '{0}' cannot be primaryKey".format(

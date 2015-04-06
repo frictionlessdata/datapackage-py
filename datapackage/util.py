@@ -1,17 +1,16 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import sys
 import os
+import io
 import json
-import urllib
 import re
 from collections import namedtuple
-
-if sys.version_info[0] < 3:
-    import urlparse
-    urllib.parse = urlparse
-    urllib.request = urllib
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
+from . import compat
 
 
 class Specification(dict):
@@ -39,16 +38,16 @@ class Specification(dict):
                     if field_choice in kwargs:
                         found = True
                 if not found:
-                    missing_fields.append(str(' or ').join(field))
+                    missing_fields.append(' or '.join(field))
             else:
                 if field not in kwargs:
                     missing_fields.append(field)
         if missing_fields:
             raise ValueError('Required fields for {0} missing: {1}'.format(
                 self.__class__.__name__,
-                str(' AND ').join(missing_fields)))
+                ' AND '.join(missing_fields)))
 
-        for (key, value) in kwargs.iteritems():
+        for (key, value) in kwargs.items():
             self.__setattr__(key, value)
 
     def __getattr__(self, attribute):
@@ -92,7 +91,7 @@ class Specification(dict):
                     raise TypeError(
                         "Attribute '{0}' ({1}) should be {2}".format(
                             attribute, type(value),
-                            ' or '.join([str(s) for s in spec_type])))
+                            ' or '.join([compat.str(s) for s in spec_type])))
         elif not self.EXTENDABLE:
             raise AttributeError(
                 "Attribute '{0}' is not allowed in a '{1}' object".format(
@@ -222,11 +221,11 @@ def format_version(version):
 
     """
     major, minor, patch, prerelease, metadata = version
-    version = u".".join([str(major), str(minor), str(patch)])
+    version = "{0}.{1}.{2}".format(major, minor, patch)
     if prerelease:
-        version = u"{0}-{1}".format(version, prerelease)
+        version = "{0}-{1}".format(version, prerelease)
     if metadata:
-        version = u"{0}+{1}".format(version, metadata)
+        version = "{0}+{1}".format(version, metadata)
     return version
 
 
@@ -246,7 +245,7 @@ def load_licenses():
     # can read in the licenses file
     dirname = os.path.split(os.path.realpath(__file__))[0]
     filename = os.path.join(dirname, "data", "licenses.json")
-    with open(filename, "r") as fh:
+    with io.open(filename, "r") as fh:
         licenses = json.load(fh)
     return licenses
 
@@ -258,7 +257,7 @@ def is_local(path):
     file: scheme)
 
     """
-    parsed_results = urllib.parse.urlparse(path)
+    parsed_results = compat.parse.urlparse(path)
     return parsed_results.scheme == '' or parsed_results.netloc == ''
 
 
@@ -267,7 +266,7 @@ def is_url(path):
     check just looks if the scheme is HTTP or HTTPS.
 
     """
-    parsed_results = urllib.parse.urlparse(path)
+    parsed_results = compat.parse.urlparse(path)
     return parsed_results.scheme == 'http' or parsed_results.scheme == 'https'
 
 
@@ -289,7 +288,7 @@ def is_mimetype(val):
 
 
 def get_size_from_url(url):
-    site = urllib.urlopen(url)
+    site = compat.urlopen(url)
     meta = site.info()
     size = int(meta.getheaders("Content-Length")[0])
     return size

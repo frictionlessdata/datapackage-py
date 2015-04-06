@@ -1,10 +1,11 @@
-import sys
-if sys.version_info[0] < 3:
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from .util import Specification, is_url, is_email
+from . import compat
 
 
 class Person(Specification):
@@ -18,9 +19,9 @@ class Person(Specification):
     "email" and "web" properties.
     """
 
-    SPECIFICATION = {'name': str,
-                     'web': str,
-                     'email': str}
+    SPECIFICATION = {'name': compat.str,
+                     'web': compat.str,
+                     'email': compat.str}
     REQUIRED = ('name',)
 
     @property
@@ -34,7 +35,7 @@ class Person(Specification):
     def name(self, value):
         if not value:
             raise ValueError('A person must have a name')
-        self['name'] = str(value)
+        self['name'] = compat.str(value)
 
     @property
     def web(self):
@@ -53,7 +54,7 @@ class Person(Specification):
         if not is_url(value):
             raise ValueError("not a url: {0}".format(value))
 
-        self['web'] = str(value)
+        self['web'] = compat.str(value)
 
     @property
     def email(self):
@@ -72,4 +73,4 @@ class Person(Specification):
         if not is_email(value):
             raise ValueError("not an email address: {0}".format(value))
 
-        self['email'] = str(value)
+        self['email'] = compat.str(value)

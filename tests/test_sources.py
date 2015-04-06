@@ -1,18 +1,20 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 from nose.tools import raises
 from datapackage.sources import Source
+from datapackage import compat
 
-import sys
-if sys.version_info[0] < 3:
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
 
 class TestSources(object):
 
     def setup(self):
-        self.name = str("World Bank and OECD")
-        self.web = str("http://data.worldbank.org/indicator/NY.GDP.MKTP.CD")
-        self.email = str("info@worldbank.org")
+        self.name = "World Bank and OECD"
+        self.web = "http://data.worldbank.org/indicator/NY.GDP.MKTP.CD"
+        self.email = "info@worldbank.org"
 
     def teardown(self):
         pass

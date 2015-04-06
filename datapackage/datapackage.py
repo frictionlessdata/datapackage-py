@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 # datapackage.py - Load and manage data packages defined by dataprotocols.org
 # Copyright (C) 2013 Tryggvi Björgvinsson
@@ -16,8 +20,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import urllib
-import csv
 import json
 import itertools
 import os
@@ -25,18 +27,8 @@ import datetime
 import time
 import base64
 import re
+import io
 import warnings
-import sys
-if sys.version_info[0] < 3:
-    import urlparse
-    urllib.parse = urlparse
-    urllib.request = urllib
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
-else:
-    import urllib.request
-
 from .resource import Resource
 from .schema import Schema
 from .sources import Source
@@ -44,6 +36,7 @@ from .licenses import License, LICENSES
 from .persons import Person
 from .util import (Specification, verify_version, parse_version,
                    format_version, is_local, is_url)
+from . import compat
 
 
 class DataPackage(Specification):
@@ -54,22 +47,22 @@ class DataPackage(Specification):
 
     DATAPACKAGE_VERSION = "1.0-beta.10"
     EXTENDABLE = True
-    SPECIFICATION = {'name': str,
+    SPECIFICATION = {'name': compat.str,
                      'resources': list,
-                     'license': str,
+                     'license': compat.str,
                      'licenses': list,
-                     'datapackage_version': str,
-                     'title': str,
-                     'description': str,
-                     'homepage': str,
-                     'version': str,
+                     'datapackage_version': compat.str,
+                     'title': compat.str,
+                     'description': compat.str,
+                     'homepage': compat.str,
+                     'version': compat.str,
                      'sources': list,
                      'keywords': list,
-                     'image': str,
+                     'image': compat.str,
                      'maintainers': list,
                      'contributors': list,
                      'publishers': list,
-                     'base': str,
+                     'base': compat.str,
                      'dataDependencies': dict}
     REQUIRED = ('name',)
     RESOURCE_CLASS = Resource
@@ -105,7 +98,7 @@ class DataPackage(Specification):
         if not args:
             super(DataPackage, self).__init__(*args, **kwargs)
         elif len(args) == 1:
-            self.base = str(args[0])
+            self.base = args[0]
             descriptor = self.get_descriptor()
             super(DataPackage, self).__init__(**descriptor)
         else:
@@ -173,7 +166,7 @@ class DataPackage(Specification):
 
         # If none of the edge cases we use the default field parsers and fall
         # back on unicode type if no parser is found
-        return self.FIELD_PARSERS.get(field['type'], str)
+        return self.FIELD_PARSERS.get(field['type'], compat.str)
 
     def open_resource(self, path):
         # If base hasn't been set we use the current directory as the base
@@ -186,9 +179,10 @@ class DataPackage(Specification):
         # on Windows it will try to create URLs with backslashes
         if is_local(base):
             resource_path = os.path.join(base, path)
+            return io.open(resource_path)
         else:
-            resource_path = urllib.parse.urljoin(base, path)
-        return urllib.request.urlopen(resource_path)
+            resource_path = compat.parse.urljoin(base, path)
+            return compat.urlopen(resource_path)
 
     @property
     def name(self):
@@ -337,7 +331,7 @@ class DataPackage(Specification):
                 del self['title']
             return
 
-        self['title'] = str(value)
+        self['title'] = compat.str(value)
 
     @property
     def description(self):
@@ -354,7 +348,7 @@ class DataPackage(Specification):
                 del self['description']
             return
 
-        self['description'] = str(value)
+        self['description'] = compat.str(value)
 
     @property
     def homepage(self):
@@ -373,7 +367,7 @@ class DataPackage(Specification):
         if not is_url(value):
             raise ValueError("not a URL: {0}".format(value))
 
-        self['homepage'] = str(value)
+        self['homepage'] = compat.str(value)
 
     @property
     def version(self):
@@ -384,7 +378,7 @@ class DataPackage(Specification):
         Defaults to 0.0.1 if not specified.
 
         """
-        return self.get('version', u'0.0.1')
+        return self.get('version', '0.0.1')
 
     @version.setter
     def version(self, val):
@@ -492,7 +486,7 @@ class DataPackage(Specification):
                 del self['keywords']
             return
 
-        self['keywords'] = [str(x) for x in value]
+        self['keywords'] = [compat.str(x) for x in value]
 
     @property
     def image(self):
@@ -507,7 +501,7 @@ class DataPackage(Specification):
                 del self['image']
             return
 
-        self['image'] = str(value)
+        self['image'] = compat.str(value)
 
     @property
     def maintainers(self):
@@ -662,7 +656,7 @@ class DataPackage(Specification):
                 'fields': resource.get('schema', Schema()).get('fields', [])
             }
             # Add the resource to the resource dictionary collection
-            resources[resource.get('name', resource.get('id', u''))] = rsource
+            resources[resource.get('name', resource.get('id', ''))] = rsource
 
         # Return the resource collection
         return resources
@@ -685,7 +679,7 @@ class DataPackage(Specification):
         resource_file = (line.decode(resource.get('encoding', 'utf-8'))
                          for line in resource_file)
         # We assume CSV so we create the csv file
-        reader = csv.reader(resource_file)
+        reader = compat.csv_reader(resource_file)
         # Throw away the first line (headers)
         next(reader)
         # For each row we yield it as a dictionary where keys are the field
@@ -708,7 +702,7 @@ class DataPackage(Specification):
                 try:
                     row_dict[field_name] = self._field_parser(field)(value)
                 except:
-                    msg = u'Field "{field}" in row {row} could not be parsed.'
+                    msg = 'Field "{field}" in row {row} could not be parsed.'
                     raise ValueError(msg.format(field=field_name, row=row_idx))
 
             yield row_dict

@@ -1,10 +1,11 @@
-import sys
-if sys.version_info[0] < 3:
-    next = lambda x: x.next()
-    bytes = str
-    str = unicode
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from .util import Specification, is_url, is_email
+from . import compat
 
 
 class Source(Specification):
@@ -16,9 +17,9 @@ class Source(Specification):
     Each source hash may have name, web and email fields.
     """
 
-    SPECIFICATION = {'name': str,
-                     'web': str,
-                     'email': str}
+    SPECIFICATION = {'name': compat.str,
+                     'web': compat.str,
+                     'email': compat.str}
 
     @property
     def web(self):
