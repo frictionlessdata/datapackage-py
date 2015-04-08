@@ -29,19 +29,9 @@ class Specification(dict):
 
         Keyword arguments can set attributes/values on instance creation
         """
+
         # Check if required fields are missing
-        missing_fields = []
-        for field in self.REQUIRED:
-            if type(field) == list or type(field) == tuple:
-                found = False
-                for field_choice in field:
-                    if field_choice in kwargs:
-                        found = True
-                if not found:
-                    missing_fields.append(' or '.join(field))
-            else:
-                if field not in kwargs:
-                    missing_fields.append(field)
+        missing_fields = self.ensure_required(kwargs)
         if missing_fields:
             raise ValueError('Required fields for {0} missing: {1}'.format(
                 self.__class__.__name__,
@@ -132,6 +122,30 @@ class Specification(dict):
             modified_array.append(value)
 
         return modified_array
+
+    def ensure_required(self, kwargs):
+
+        """Ensure all required fields are present.
+
+        Returns:
+            * a list of field names that are required and missing
+
+        """
+
+        missing_fields = []
+        for field in self.REQUIRED:
+            if isinstance(field, (list, tuple)):
+                found = False
+                for field_choice in field:
+                    if field_choice in kwargs:
+                        found = True
+                if not found:
+                    missing_fields.append(' or '.join(field))
+            else:
+                if field not in kwargs:
+                    missing_fields.append(field)
+
+        return missing_fields
 
 # This is a named tuple for representing semantic versions (see
 # http://semver.org/). Semantic versions look like this:
