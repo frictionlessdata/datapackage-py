@@ -18,7 +18,7 @@ with io.open('README.rst') as readme:
 
 setup(
     name = 'datapackage',
-    version = '0.4.3',
+    version = '0.5.0',
     url = 'https://github.com/tryggvib/datapackage',
     license = 'GPLv3',
     description = description,
