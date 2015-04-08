@@ -305,3 +305,14 @@ class TestDatapackage(object):
              "url": "http://opendefinition.org/licenses/odc-by"}]
         assert 'license' not in self.dpkg
         assert 'licenses' in self.dpkg
+
+    def test_as_dict(self):
+        assert self.dpkg.as_dict()
+
+    def test_as_dict_exclude(self):
+        self.dpkg.SERIALIZE_EXCLUDES = ('name',)
+        as_dict = self.dpkg.as_dict()
+        assert 'name' not in list(as_dict.keys())
+
+    def test_as_json(self):
+        assert self.dpkg.as_json()

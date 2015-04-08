@@ -42,8 +42,8 @@ class Specification(dict):
             self.__setattr__(key, value)
 
     def as_dict(self):
-        return {k: v for k, v in self.items() if
-                k not in self.SERIALIZE_EXCLUDES}
+        return dict((k, v) for k, v in self.items() if
+                    k not in self.SERIALIZE_EXCLUDES)
 
     def as_json(self):
         return json.dumps(self.as_dict(), ensure_ascii=False, indent=4)
