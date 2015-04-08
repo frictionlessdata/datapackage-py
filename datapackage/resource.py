@@ -38,6 +38,7 @@ class Resource(Specification):
                      'sources': list,
                      'licenses': list}
     REQUIRED = (('url', 'path', 'data'),)
+    SERIALIZE_EXCLUDES = ('datapackage_uri', 'is_local')
 
     def __init__(self, *args, **kwargs):
         self.datapackage_uri = kwargs.pop('datapackage_uri', os.path.curdir)

@@ -309,10 +309,16 @@ class TestDatapackage(object):
     def test_as_dict(self):
         assert self.dpkg.as_dict()
 
+
+    def test_as_json(self):
+        assert self.dpkg.as_json()
+
     def test_as_dict_exclude(self):
         self.dpkg.SERIALIZE_EXCLUDES = ('name',)
         as_dict = self.dpkg.as_dict()
         assert 'name' not in list(as_dict.keys())
 
-    def test_as_json(self):
-        assert self.dpkg.as_json()
+    def test_as_dict_exclude_on_resource(self):
+        as_dict = self.dpkg.as_dict()
+        resource = as_dict['resources'][0]
+        assert 'is_local' not in list(resource.keys())
