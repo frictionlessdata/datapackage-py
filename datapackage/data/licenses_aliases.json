@@ -1,0 +1,9 @@
+{
+  "ODC-PDDL-1.0": ["PDDL-1.0", "PDDL"],
+  "CC-BY-4.0": ["CC-BY"],
+  "CC-BY-SA-4.0": ["CC-BY-SA"],
+  "FAL-1.3": ["FAL"],
+  "ODbL-1.0": ["ODbL"],
+  "ODC-BY-1.0": ["ODC-BY"],
+  "CC0-1.0": ["CC0"]
+}
