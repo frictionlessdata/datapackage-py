@@ -3,7 +3,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from __future__ import unicode_literals
 
 import io
 
@@ -18,7 +17,7 @@ with io.open('README.rst') as readme:
 
 setup(
     name = 'datapackage',
-    version = '0.4.3',
+    version = '0.5.1',
     url = 'https://github.com/tryggvib/datapackage',
     license = 'GPLv3',
     description = description,

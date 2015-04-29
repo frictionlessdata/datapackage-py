@@ -706,3 +706,12 @@ class DataPackage(Specification):
                     raise ValueError(msg.format(field=field_name, row=row_idx))
 
             yield row_dict
+
+    def as_dict(self):
+        """Override base to deal with resources."""
+        _resources = [dict((k, v) for k, v in r.items() if
+                           k not in r.SERIALIZE_EXCLUDES)
+                      for r in self.resources]
+        as_dict = super(DataPackage, self).as_dict()
+        as_dict['resources'] = _resources
+        return as_dict
