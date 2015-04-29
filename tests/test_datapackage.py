@@ -8,7 +8,16 @@ import io
 import datapackage
 from nose.tools import raises
 import unittest
-from datapackage.compat import mock as mocklib
+from datapackage import compat
+
+if compat.is_py2:
+    import mock as mocklib
+
+if compat.is_py3:
+    if compat.is_py32:
+        import mock as mocklib
+    else:
+        from unittest import mock as mocklib
 
 
 class TestDatapackage(object):
