@@ -62,7 +62,7 @@ class DataPackage(Specification):
                      'maintainers': list,
                      'contributors': list,
                      'publishers': list,
-                     'base': compat.str,
+                     'base': compat.basestring,
                      'dataDependencies': dict}
     REQUIRED = ('name',)
     RESOURCE_CLASS = Resource
