@@ -13,7 +13,9 @@ except ImportError:
 
 description = "Manage and load dataprotocols.org Data Packages"
 with io.open('README.rst') as readme:
-    long_description = readme.read()
+    long_description = '\n'.join(
+        filter(lambda x: 'https://travis-ci.org/' not in x,
+               readme.readlines()))
 
 setup(
     name = 'datapackage',

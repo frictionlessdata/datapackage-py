@@ -1,6 +1,9 @@
 datapackage
 ===========
 
+.. image:: https://travis-ci.org/trickvi/datapackage.svg?branch=master
+    :target: https://travis-ci.org/trickvi/datapackage
+
 **datapackage** provides means to work with DataPackages as defined on
 `dataprotocols.org <http://dataprotocols.org/data-packages/>`__.
 
