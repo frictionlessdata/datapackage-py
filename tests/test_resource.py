@@ -8,16 +8,7 @@ import datapackage
 from datapackage import compat
 import posixpath
 from nose.tools import raises
-from datapackage import compat
-
-if compat.is_py2:
-    import mock as mocklib
-
-if compat.is_py3:
-    if compat.is_py32:
-        import mock as mocklib
-    else:
-        from unittest import mock as mocklib
+from datapackage.compat import mock as mocklib
 
 
 class TestDatapackage(object):
@@ -653,3 +644,11 @@ class TestDatapackage(object):
         rows = list(dpkg.data) # Force the iteration over the iterable returned from data property.
         # And make sure we were able to get some utf-8 data out of thereget
         assert 'Alg\xe9rie' == rows[2]['name_fr']
+
+    def test_open_resource_parsing(self):
+        dpkg = datapackage.DataPackage("tests/test.dpkg_local/")
+
+        rows = list(dpkg.data) # Force the iteration over the iterable returned from data property.
+        # And make sure we were able to get some utf-8 data out of thereget
+        for r in rows:
+            print(r)

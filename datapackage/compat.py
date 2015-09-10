@@ -20,6 +20,7 @@ is_py27 = (is_py2 and _ver[1] == 7)
 if is_py2:
     import urlparse as parse
     from urllib2 import urlopen, HTTPError
+    import mock
     builtin_str = str
     bytes = str
     str = unicode
@@ -38,6 +39,10 @@ if is_py2:
             yield [str(cell, 'utf-8') for cell in row]
 
 elif is_py3:
+    if is_py32:
+        import mock
+    else:
+        from unittest import mock
     from urllib import parse
     from urllib.request import urlopen
     from urllib.error import HTTPError

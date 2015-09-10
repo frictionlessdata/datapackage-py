@@ -62,7 +62,7 @@ class DataPackage(Specification):
                      'maintainers': list,
                      'contributors': list,
                      'publishers': list,
-                     'base': compat.basestring,
+                     'base': compat.str,
                      'dataDependencies': dict}
     REQUIRED = ('name',)
     RESOURCE_CLASS = Resource
@@ -187,7 +187,6 @@ class DataPackage(Specification):
                 resource_path = compat.parse.urljoin(base, path)
                 return compat.urlopen(resource_path)  # Do not use os.path.join here since url separators do not change with platform
 
-
     @property
     def name(self):
         """The name of the dataset as described by its descriptor. This is a
@@ -233,8 +232,8 @@ class DataPackage(Specification):
     @license.setter
     def license(self, value):
         if value not in LICENSES:
-            raise ValueError(
-                "License string must be an Open Definition License ID")
+            # "license MUST be a string and its value SHOULD be an Open Definition license ID"
+            warnings.warn("License string is not an Open Definition License ID: {0}".format(value))
         self['license'] = value
         # If there were licenses already we remove them
         if 'licenses' in self:
@@ -590,7 +589,8 @@ class DataPackage(Specification):
         descriptor = self.open_resource('datapackage.json')
 
         # Load the descriptor json contents
-        str_descriptor = descriptor.read()
+        str_descriptor = descriptor.read().decode('utf-8') # The spec doesn't seem to say anything about the encoding of the datapackage.json files themselves
+
         json_descriptor = json.loads(str_descriptor)
 
         # Return the descriptor json contents (as the dict json.load returns
@@ -627,7 +627,7 @@ class DataPackage(Specification):
                 pass
             elif type(single_value) == dict:
                 # We turn the single_value into kwargs and pass it into
-                # the License constructor
+                # the Resource class constructor
                 base = os.path.curdir if 'base' not in self else self.base
                 single_value = self.RESOURCE_CLASS(datapackage_uri=base,
                                                    **single_value)
@@ -652,8 +652,8 @@ class DataPackage(Specification):
         for resource in self['resources']:
             # Create a resource dictionary
             rsource = {
-                # Location is url path or None (in that order)
-                'location': resource.get('url', resource.get('path', None)),
+                # Location is path, url, or None (in that order)
+                'location': resource.get('path', resource.get('url', None)),
                 # The encoding of the file - defaults to utf-8
                 'encoding': resource.get('encoding', 'utf-8'),
                 # Fields are found in schema.fields
@@ -671,15 +671,20 @@ class DataPackage(Specification):
         """
         # Open the resource location
         resource_path = None
-        for location_type in ('url', 'path'):
+        for location_type in ('path', 'url'):
             if location_type in resource:
                 resource_path = resource[location_type]
-                break
-        if resource_path is None:
-            raise NotImplementedError(
-                'Datapackage currently only supports resource url and path')
+                try:
+                    resource_file = self.open_resource(resource_path)
+                except Exception as x:
+                    warnings.warn("Error opening resource {}={}: {}".format(location_type, resource_path, x))
+                    continue # Try next location_type
+                else:
+                    break
+        else:
+            # None of the location types were in resource
+            raise NotImplementedError('Datapackage currently only supports resource url and path')
 
-        resource_file = self.open_resource(resource_path)
         resource_file = (line.decode(resource.get('encoding', 'utf-8'))
                          for line in resource_file)
         # We assume CSV so we create the csv file
@@ -701,21 +706,24 @@ class DataPackage(Specification):
                 # Decode the field value
                 value = row[field_idx]
 
+                field_required = field.get('constraints', {}).get('required', False)
+
                 # We wrap this in a try clause so that we can give error
                 # messages about specific fields in a row
                 try:
-                    row_dict[field_name] = self._field_parser(field)(value)
-                except:
-                    msg = 'Field "{field}" in row {row} could not be parsed.'
-                    raise ValueError(msg.format(field=field_name, row=row_idx))
+                    if not value and field_required:
+                        raise ValueError("Field {field} is required.".format(field=field_name))
+
+                    parser = self._field_parser(field)
+
+                    # Attempting to parse legally empty values (e.g. cast to int) will raise an unnecessary exception here.
+                    if value == '' and parser is not compat.str:
+                        row_dict[field_name] = None
+                    else:
+                        row_dict[field_name] = parser(value)
+
+                except Exception as x:
+                    msg = 'Field "{field}" in row {row} could not be parsed due to: {x}'
+                    raise ValueError(msg.format(field=field_name, row=row_idx, x=x))
 
             yield row_dict
-
-    def as_dict(self):
-        """Override base to deal with resources."""
-        _resources = [dict((k, v) for k, v in r.items() if
-                           k not in r.SERIALIZE_EXCLUDES)
-                      for r in self.resources]
-        as_dict = super(DataPackage, self).as_dict()
-        as_dict['resources'] = _resources
-        return as_dict
