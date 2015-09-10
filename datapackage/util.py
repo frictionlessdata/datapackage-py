@@ -174,7 +174,7 @@ def parse_version(version):
     try:
         minor = int(minor)
     except ValueError:
-        raise ValueError("minor version is not an integer: {0}".format(major))
+        raise ValueError("minor version is not an integer: {0}".format(minor))
 
     # check for metadata
     if "+" in patch:

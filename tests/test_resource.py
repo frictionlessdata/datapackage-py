@@ -626,3 +626,21 @@ class TestDatapackage(object):
             name='villain', title='Movie villain')
         foreign_key = datapackage.schema.ForeignKey(fields=[villain],
                                                     reference=reference)
+
+    @mocklib.patch('datapackage.compat.urlopen')
+    def test_open_resource_url(self, mocklib_urlopen):
+        dpkg = datapackage.DataPackage("tests/test.dpkg_url/")
+        list(dpkg.data) # Force the iteration over the iterable returned from data property.
+        mocklib_urlopen.assert_called_once_with('http://example.com/country-codes.csv')
+
+    def test_open_resource_local(self):
+        dpkg = datapackage.DataPackage("tests/test.dpkg_local/")
+        with mocklib.patch('io.open') as mocklib_open:
+            list(dpkg.data) # Force the iteration over the iterable returned from data property.
+            mocklib_open.assert_called_once()
+
+    def test_open_resource_encoding(self):
+        dpkg = datapackage.DataPackage("tests/test.dpkg_local/")
+        rows = list(dpkg.data) # Force the iteration over the iterable returned from data property.
+        # And make sure we were able to get some utf-8 data out of thereget
+        assert 'Alg\xe9rie' == rows[2]['name_fr']
