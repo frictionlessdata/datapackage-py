@@ -19,7 +19,7 @@ with io.open('README.rst') as readme:
 
 setup(
     name = 'datapackage',
-    version = '0.5.3',
+    version = '0.5.4',
     url = 'https://github.com/trickvi/datapackage',
     license = 'GPLv3',
     description = description,
