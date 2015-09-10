@@ -37,7 +37,7 @@ class TestDatapackage(object):
         joker = datapackage.Resource(datapackage_uri='http://gotham.us/',
             name="joker", url="http://gotham.us/villains.csv")
         villains = datapackage.DataPackage(
-            name="villains", license="PDDL", resources=[joker])
+            name="villains", license="ODC-PDDL-1.0", resources=[joker])
         assert villains.name == "villains"
         assert len(villains.resources) == 1
         assert villains.resources[0].name == "joker"
@@ -212,7 +212,7 @@ class TestDatapackage(object):
         """Try reading a datapackage from the web"""
 
         # setup the mock for url read
-        with io.open("tests/cpi/datapackage.json", "r") as fh:
+        with io.open("tests/cpi/datapackage.json", "rb") as fh:
             metadata = fh.read()
         mock = mocklib.Mock()
         mock.read.side_effect = [metadata]
@@ -310,7 +310,7 @@ class TestDatapackage(object):
         assert 'license' in self.dpkg
         assert 'licenses' not in self.dpkg
         self.dpkg.licenses = [
-            {"type": "ODC-BY",
+            {"type": "ODC-BY-1.0",
              "url": "http://opendefinition.org/licenses/odc-by"}]
         assert 'license' not in self.dpkg
         assert 'licenses' in self.dpkg

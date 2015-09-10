@@ -11,7 +11,7 @@ from datapackage.licenses import License
 class TestLicenses(object):
 
     def setup(self):
-        self.license ="ODC-BY"
+        self.license ="ODC-BY-1.0"
         self.license_url = "http://opendefinition.org/licenses/odc-by"
 
     def teardown(self):
