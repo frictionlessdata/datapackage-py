@@ -420,7 +420,7 @@ class TestDatapackage(object):
 
     def test_set_licenses(self):
         """Test setting the licenses"""
-        license_type = "PDDL"
+        license_type = "ODC-PDDL-1.0"
         license_url = "http://opendefinition.org/licenses/odc-pddl"
         self.resource.licenses = [
             {"type": license_type,
@@ -432,13 +432,13 @@ class TestDatapackage(object):
 
     def test_add_license(self):
         """Test adding another license"""
-        self.resource.add_license("PDDL")
+        self.resource.add_license("odc-pddl-1.0")
         licenses = self.resource.licenses
         assert len(licenses) == 2
         assert licenses[0]["type"] == "CC-BY"
         ccby_url = "http://creativecommons.org/licenses/by/4.0/"
         assert licenses[0]["url"] == ccby_url
-        assert licenses[1]["type"] == "PDDL"
+        assert licenses[1]["type"] == "ODC-PDDL-1.0"
 
     def test_get_missing_licenses(self):
         """Check than an empty list is return when there are no licenses"""

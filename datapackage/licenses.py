@@ -52,7 +52,8 @@ class License(Specification):
         value = value.upper()
         self['type'] = value
 
-        license_url = LICENSES.get(value, None)
+        license_data = LICENSES.get(value, {})
+        license_url = license_data.get('url')
         if 'url' not in self and license_url is None:
             raise AttributeError(
                 "url is required if type isn't {0}".format(
