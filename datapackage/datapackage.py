@@ -711,7 +711,7 @@ class DataPackage(Specification):
                 # We wrap this in a try clause so that we can give error
                 # messages about specific fields in a row
                 try:
-                    if not value and field_required:
+                    if (value == '' or value is None) and field_required:
                         raise ValueError("Field {field} is required.".format(field=field_name))
 
                     parser = self._field_parser(field)
