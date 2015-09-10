@@ -5,10 +5,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import datapackage
+import datapackage.schema
 from datapackage import compat
 import posixpath
 from nose.tools import raises
-from datapackage import compat
 
 if compat.is_py2:
     import mock as mocklib
@@ -653,3 +653,11 @@ class TestDatapackage(object):
         rows = list(dpkg.data) # Force the iteration over the iterable returned from data property.
         # And make sure we were able to get some utf-8 data out of thereget
         assert 'Alg\xe9rie' == rows[2]['name_fr']
+
+    def test_open_resource_parsing(self):
+        dpkg = datapackage.DataPackage("tests/test.dpkg_local/")
+
+        rows = list(dpkg.data) # Force the iteration over the iterable returned from data property.
+        # And make sure we were able to get some utf-8 data out of thereget
+        for r in rows:
+            print(r)

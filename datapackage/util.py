@@ -43,7 +43,16 @@ class Specification(dict):
 
     def as_dict(self):
         """Output a dict of the specification."""
-        return dict((k, v) for k, v in self.items() if
+
+        def nested_val(val):
+            if isinstance(val, Specification):
+                return val.as_dict()
+            elif isinstance(val, (list,tuple)):
+                return [nested_val(v) for v in val]
+            else:
+                return val
+
+        return dict((k, nested_val(v)) for k, v in self.items() if
                     k not in self.SERIALIZE_EXCLUDES)
 
     def as_json(self):
