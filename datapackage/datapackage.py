@@ -677,7 +677,7 @@ class DataPackage(Specification):
                 try:
                     resource_file = self.open_resource(resource_path)
                 except Exception as x:
-                    warnings.warn("Error opening resource {}={}: {}".format(location_type, resource_path, x))
+                    warnings.warn("Error opening resource {0}={1}: {2}".format(location_type, resource_path, x))
                     continue # Try next location_type
                 else:
                     break
