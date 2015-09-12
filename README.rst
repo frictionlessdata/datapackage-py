@@ -16,10 +16,10 @@ datapackage
     >>
     >> print datapkg.title
     Annual Consumer Price Index (CPI)
-    >> print datapkg.description
+    >> print(datapkg.description)
     Annual Consumer Price Index (CPI) for most countries in the world. Reference year is 2005.
     >> # Weird example just to show how to work with data rows
-    >> print sum([row['CPI'] for row in datapkg.data])
+    >> print(sum([row['CPI'] for row in datapkg.data]))
     668134.635662
 
 Python support
