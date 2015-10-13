@@ -7,7 +7,8 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install -r dev-requirements.txt
+  - pip install coveralls
 script:
-  - nosetests
+  - nosetests --nologcapture --with-coverage --cover-package=datapackage_registry --cover-inclusive --cover-erase --cover-tests
 after_success:
   - coveralls
