@@ -79,3 +79,31 @@ tabular,Tabular Data Package,https://example.com/two.json,http://example.com"""
         assert_equal(reg[0]['title'], 'Data Package')
         assert_equal(reg[0]['schema'], 'https://example.com/one.json')
         assert_equal(reg[0]['specification'], 'http://example.com')
+
+    @httpretty.activate
+    def test_custom_config_returns_expected_values(self):
+        '''If a custom config is passed to get, return the appropriate values
+        in the dict'''
+        # default url has an empty csv file
+        httpretty.register_uri(httpretty.GET, BACKEND_URL,
+                               body="id,title,schema,specification")
+        custom_registry_url = 'http://example.com/custom_registry.csv'
+        custom_body = """id,title,schema,specification
+1,2,3,4
+a,b,c,d"""
+
+        # custom url has csv file with some rows we can test
+        httpretty.register_uri(httpretty.GET,
+                               custom_registry_url,
+                               body=custom_body)
+
+        custom_config = {
+            'backend': custom_registry_url,
+        }
+
+        reg = datapackage_registry.get(custom_config)
+        assert_equal(len(reg), 2)
+        assert_equal(reg[0]['id'], '1')
+        assert_equal(reg[0]['title'], '2')
+        assert_equal(reg[0]['schema'], '3')
+        assert_equal(reg[0]['specification'], '4')
