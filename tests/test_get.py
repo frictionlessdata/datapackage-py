@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -107,3 +108,19 @@ a,b,c,d"""
         assert_equal(reg[0]['title'], '2')
         assert_equal(reg[0]['schema'], '3')
         assert_equal(reg[0]['specification'], '4')
+
+    @httpretty.activate
+    def test_unicode_in_registry(self):
+        '''A utf-8 encoded string in the registry csv won't break the code.'''
+        # default url has an empty csv file
+        body = """id,title,schema,specification
+base,Iñtërnâtiônàlizætiøn,3,4
+a,b,c,d"""
+        httpretty.register_uri(httpretty.GET, BACKEND_URL,
+                               body=body)
+
+        reg = datapackage_registry.get()
+        print(reg)
+        assert_equal(len(reg), 2)
+        assert_equal(reg[0]['id'], 'base')
+        assert_equal(reg[0]['title'], 'Iñtërnâtiônàlizætiøn')

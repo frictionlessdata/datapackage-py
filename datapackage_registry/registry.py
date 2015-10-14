@@ -5,8 +5,9 @@ from __future__ import unicode_literals
 
 from io import StringIO
 
-import csv
 import requests
+
+from . import compat
 
 
 DEFAULT_CONFIG = {
@@ -20,7 +21,7 @@ def _get_registry_at_endpoint(endpoint):
 
     data = StringIO(resp.text)
 
-    reader = csv.DictReader(data)
+    reader = compat.csv_dict_reader(data)
 
     return [o for o in reader]
 
