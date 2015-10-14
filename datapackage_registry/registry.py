@@ -18,6 +18,7 @@ DEFAULT_CONFIG = {
 def _get_registry_at_endpoint(endpoint):
     '''Return an array of objects from an endpoint that is parsable as CSV'''
     resp = requests.get(endpoint)
+    resp.raise_for_status()
 
     data = StringIO(resp.text)
 

@@ -4,13 +4,16 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from nose.tools import (assert_true,
-                        assert_equal)
 import unittest
+
+import requests
+import httpretty
+from nose.tools import (assert_true,
+                        assert_equal,
+                        assert_raises)
 
 import datapackage_registry
 
-import httpretty
 
 BACKEND_URL = "https://rawgit.com/dataprotocols/registry/master/registry.csv"
 
@@ -112,7 +115,6 @@ a,b,c,d"""
     @httpretty.activate
     def test_unicode_in_registry(self):
         '''A utf-8 encoded string in the registry csv won't break the code.'''
-        # default url has an empty csv file
         body = """id,title,schema,specification
 base,Iñtërnâtiônàlizætiøn,3,4
 a,b,c,d"""
@@ -123,3 +125,23 @@ a,b,c,d"""
         assert_equal(len(reg), 2)
         assert_equal(reg[0]['id'], 'base')
         assert_equal(reg[0]['title'], 'Iñtërnâtiônàlizætiøn')
+
+    @httpretty.activate
+    def test_404_raises_error(self):
+        '''A 404 while getting the registry raises an error.'''
+        httpretty.register_uri(httpretty.GET, BACKEND_URL,
+                               body="404", status=404)
+
+        with assert_raises(requests.HTTPError) as cm:
+            datapackage_registry.get()
+        assert_equal(cm.exception.response.status_code, 404)
+
+    @httpretty.activate
+    def test_500_raises_error(self):
+        '''A 500 while getting the registry raises an error.'''
+        httpretty.register_uri(httpretty.GET, BACKEND_URL,
+                               body="500", status=500)
+
+        with assert_raises(requests.HTTPError) as cm:
+            datapackage_registry.get()
+        assert_equal(cm.exception.response.status_code, 500)
