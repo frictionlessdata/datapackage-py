@@ -120,7 +120,6 @@ a,b,c,d"""
                                body=body)
 
         reg = datapackage_registry.get()
-        print(reg)
         assert_equal(len(reg), 2)
         assert_equal(reg[0]['id'], 'base')
         assert_equal(reg[0]['title'], 'Iñtërnâtiônàlizætiøn')
