@@ -1,0 +1,12 @@
+language: python
+python:
+  - "2.7"
+  - "3.3"
+  - "3.4"
+install:
+  - pip install -r dev-requirements.txt
+  - pip install coveralls
+script:
+  - nosetests --nologcapture --with-coverage --cover-package=datapackage_validate --cover-inclusive --cover-erase --cover-tests
+after_success:
+  - coveralls
