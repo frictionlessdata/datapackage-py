@@ -9,8 +9,7 @@ import jsonschema
 import datapackage_registry
 import requests
 
-
-# from . import compat
+from . import compat
 
 
 def _get_schema_url_from_registry(id, registry):
@@ -40,7 +39,7 @@ def validate(datapackage, schema=None):
     schema_obj = None
 
     # check json is well formed
-    if type(datapackage) is unicode:
+    if isinstance(datapackage, compat.str):
         try:
             json.loads(datapackage)
         except ValueError as e:
@@ -50,7 +49,7 @@ def validate(datapackage, schema=None):
     # ::TODO:: what if datapackage is already a python object?
 
     # If the schema is a string...
-    if type(schema) is unicode:
+    if isinstance(schema, compat.str):
         # Try to load schema as a json string
         try:
             schema_obj = json.loads(schema)
@@ -70,7 +69,7 @@ def validate(datapackage, schema=None):
             schema_obj = _fetch_schema_obj_from_url(schema_url)
 
     # If schema is a dict, assume it's a schema object
-    elif type(schema) is dict:
+    elif isinstance(schema, dict):
         schema_obj = schema
 
     if schema_obj:
