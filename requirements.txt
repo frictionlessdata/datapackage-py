@@ -1,3 +1,3 @@
 jsonschema==2.5.1
 requests==2.8.0
--e git+https://github.com/okfn/datapackage-registry-py.git@876c9db783f36531d0810b6bb94f5c3a81f23c59#egg=datapackage_registry-develop
+-e git+https://github.com/okfn/datapackage-registry-py.git@master#egg=datapackage_registry-develop
