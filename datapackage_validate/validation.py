@@ -24,13 +24,12 @@ def _fetch_schema_obj_from_url(url):
     return json.loads(schema_response.text)
 
 
-def validate(datapackage, schema=None):
+def validate(datapackage, schema='base'):
     '''
     `datapackage` is a json string or python object
 
     `schema` is a schema string id, json string, or python dict
     '''
-    schema = schema or 'base'
 
     # ::TODO:: probably don't want to set valid to True here. Default to
     # False, then set to true if jsonschema.validate doesn't raise exceptions
