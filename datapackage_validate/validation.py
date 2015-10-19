@@ -44,7 +44,6 @@ def validate(datapackage, schema='base'):
             datapackage_obj = None
             errors.append('Invalid JSON: {0}'.format(e))
     elif not (isinstance(datapackage, dict) or isinstance(datapackage, list)):
-        # ::TODO:: test this message is returned
         datapackage_obj = None
         errors.append('Invalid Data Package: not a string or object')
     else:
@@ -68,7 +67,6 @@ def validate(datapackage, schema='base'):
             else:
                 schema_obj = _fetch_schema_obj_from_url(schema_url)
     elif not isinstance(schema, dict):
-        # ::TODO:: test this message is returned
         schema_obj = None
         errors.append('Invalid Schema: not a string or object')
     else:
@@ -82,6 +80,5 @@ def validate(datapackage, schema='base'):
             errors.append('Schema ValidationError: {0}'.format(e.message))
         else:
             valid = True
-    # ::TODO:: errors for no schema_obj
 
     return valid, errors

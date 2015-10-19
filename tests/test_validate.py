@@ -55,7 +55,8 @@ class TestValidDatapackageJsonString(unittest.TestCase):
 
     @httpretty.activate
     def test_invalid_json_string(self):
-        '''validate() returns False, with expected error message.'''
+        '''Datapackage JSON string is not well formed. Retrn False with
+        expected error message.'''
         httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
                                body=REGISTRY_BODY)
         httpretty.register_uri(httpretty.GET,
@@ -63,16 +64,36 @@ class TestValidDatapackageJsonString(unittest.TestCase):
                                body=_get_local_base_datapackage_schema())
 
         # missing closing bracket
-        invalid_datapacakge_json_str = """{
+        invalid_datapackage_json_str = """{
   "name": "basic-data-package",
   "title": "Basic Data Package"
 """
         valid, errors = datapackage_validate.validate(
-            invalid_datapacakge_json_str)
+            invalid_datapackage_json_str)
 
         assert_false(valid)
         assert_true(errors)
         assert_true('Invalid JSON:' in errors[0])
+
+    @httpretty.activate
+    def test_invalid_json_not_string(self):
+        '''Datapackage isn't a JSON string. Return False with expected error
+        message.'''
+        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
+                               body=REGISTRY_BODY)
+        httpretty.register_uri(httpretty.GET,
+                               'https://example.com/base_schema.json',
+                               body=_get_local_base_datapackage_schema())
+
+        # not a string
+        invalid_datapackage_json_str = 123
+        valid, errors = datapackage_validate.validate(
+            invalid_datapackage_json_str)
+
+        assert_false(valid)
+        assert_true(errors)
+        assert_true('Invalid Data Package: not a string or object'
+                    in errors[0])
 
 
 class TestValidateWithSchemaAsArgument(unittest.TestCase):
@@ -94,6 +115,18 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
 
         assert_true(valid)
         assert_false(errors)
+
+    def test_schema_as_wrong_object_type(self):
+        '''Pass schema as not an expected object type (should be string or
+        dict).'''
+
+        valid, errors = datapackage_validate.validate(
+            self.dp, schema=123)
+
+        assert_false(valid)
+        assert_true(errors)
+        assert_true('Invalid Schema: not a string or object'
+                    in errors[0])
 
     def test_schema_as_dict(self):
         '''Pass schema as python dict to validate()'''
