@@ -38,4 +38,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
     ],
+    install_requires=[
+        'requests>=2.8.0',
+    ]
 )
