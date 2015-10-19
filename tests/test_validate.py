@@ -31,7 +31,7 @@ def _get_local_base_datapackage_schema():
         return stream.read()
 
 
-class TestValidDatapackageJsonString(unittest.TestCase):
+class TestValidDatapackageJson(unittest.TestCase):
 
     '''The datapackage json itself is well formed'''
 
@@ -93,6 +93,49 @@ class TestValidDatapackageJsonString(unittest.TestCase):
         assert_false(valid)
         assert_true(errors)
         assert_true('Invalid Data Package: not a string or object'
+                    in errors[0])
+
+    @httpretty.activate
+    def test_valid_json_obj(self):
+        '''Datapackage as valid Python object.'''
+        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
+                               body=REGISTRY_BODY)
+        httpretty.register_uri(httpretty.GET,
+                               'https://example.com/base_schema.json',
+                               body=_get_local_base_datapackage_schema())
+
+        datapackage_json_str = """{
+  "name": "basic-data-package",
+  "title": "Basic Data Package"
+}"""
+        datapackage_obj = json.loads(datapackage_json_str)
+        valid, errors = datapackage_validate.validate(datapackage_obj)
+
+        assert_true(valid)
+        assert_false(errors)
+
+    @httpretty.activate
+    def test_invalid_json_obj(self):
+        '''Datapackage as invalid Python object.
+
+        Datapackage is well-formed JSON, but doesn't validate against schema.
+        '''
+        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
+                               body=REGISTRY_BODY)
+        httpretty.register_uri(httpretty.GET,
+                               'https://example.com/base_schema.json',
+                               body=_get_local_base_datapackage_schema())
+
+        datapackage_json_str = """{
+  "asdf": "1234",
+  "qwer": "abcd"
+}"""
+        datapackage_obj = json.loads(datapackage_json_str)
+        valid, errors = datapackage_validate.validate(datapackage_obj)
+
+        assert_false(valid)
+        assert_true(errors)
+        assert_true("Schema ValidationError: u'name' is a required property"
                     in errors[0])
 
 
