@@ -31,22 +31,26 @@ def validate(datapackage, schema='base'):
     `schema` is a schema string id, json string, or python dict
     '''
 
-    # ::TODO:: probably don't want to set valid to True here. Default to
-    # False, then set to true if jsonschema.validate doesn't raise exceptions
-    valid = True
+    valid = False
     errors = []
     schema_obj = None
 
-    # check json is well formed
+    # Sanity check datapackage
+    # If datapackage is a str, check json is well formed
     if isinstance(datapackage, compat.str):
         try:
-            json.loads(datapackage)
+            datapackage_obj = json.loads(datapackage)
         except ValueError as e:
-            valid = False
+            datapackage_obj = None
             errors.append('Invalid JSON: {0}'.format(e))
-            return valid, errors
-    # ::TODO:: what if datapackage is already a python object?
+    elif not (isinstance(datapackage, dict) or isinstance(datapackage, list)):
+        # ::TODO:: test this message is returned
+        datapackage_obj = None
+        errors.append('Invalid Data Package: not a string or object')
+    else:
+        datapackage_obj = datapackage
 
+    # Sanity check schema (and get from registry if necessary)
     # If the schema is a string...
     if isinstance(schema, compat.str):
         # Try to load schema as a json string
@@ -59,24 +63,25 @@ def validate(datapackage, schema='base'):
             schema_url = _get_schema_url_from_registry(schema, registry)
 
             if schema_url is None:
-                valid = False
                 errors.append(
                     'Registry Error: no schema with id "{0}"'.format(schema))
-                # ::TODO:: refactor to remove this premature return
-                return valid, errors
-
-            schema_obj = _fetch_schema_obj_from_url(schema_url)
-
-    # If schema is a dict, assume it's a schema object
-    elif isinstance(schema, dict):
+            else:
+                schema_obj = _fetch_schema_obj_from_url(schema_url)
+    elif not isinstance(schema, dict):
+        # ::TODO:: test this message is returned
+        schema_obj = None
+        errors.append('Invalid Schema: not a string or object')
+    else:
         schema_obj = schema
 
-    if schema_obj:
+    # Validate datapackage against the schema
+    if datapackage_obj and schema_obj:
         try:
-            jsonschema.validate(json.loads(datapackage), schema_obj)
+            jsonschema.validate(datapackage_obj, schema_obj)
         except jsonschema.ValidationError as e:
-            valid = False
             errors.append('Schema ValidationError: {0}'.format(e.message))
+        else:
+            valid = True
     # ::TODO:: errors for no schema_obj
 
     return valid, errors
