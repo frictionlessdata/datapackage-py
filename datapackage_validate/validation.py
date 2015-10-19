@@ -19,8 +19,8 @@ def _get_schema_url_from_registry(id, registry):
 
 def _fetch_schema_obj_from_url(url):
     '''Fetch schema from url and return schema object'''
-    # ::TODO:: handle HTTPError when fetching schema from url
     schema_response = requests.get(url)
+    schema_response.raise_for_status()
     return json.loads(schema_response.text)
 
 
@@ -57,14 +57,21 @@ def validate(datapackage, schema='base'):
         except ValueError as e:
             # Can't load as json, assume string is a schema id
             # Get schema from registry
-            registry = datapackage_registry.get()
-            schema_url = _get_schema_url_from_registry(schema, registry)
-
-            if schema_url is None:
-                errors.append(
-                    'Registry Error: no schema with id "{0}"'.format(schema))
+            try:
+                registry = datapackage_registry.get()
+            except requests.HTTPError as e:
+                errors.append('Registry Error: {0}'.format(e))
             else:
-                schema_obj = _fetch_schema_obj_from_url(schema_url)
+                schema_url = _get_schema_url_from_registry(schema, registry)
+                if schema_url is None:
+                    errors.append(
+                        'Registry Error: no schema with id "{0}"'
+                        .format(schema))
+                else:
+                    try:
+                        schema_obj = _fetch_schema_obj_from_url(schema_url)
+                    except requests.HTTPError as e:
+                        errors.append('Registry Error: {0}'.format(e))
     elif not isinstance(schema, dict):
         errors.append('Invalid Schema: not a string or object')
     else:

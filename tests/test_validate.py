@@ -210,3 +210,67 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
         assert_true(errors)
         assert_true('Registry Error: no schema with id "not-a-valid-id"'
                     in errors[0])
+
+    @httpretty.activate
+    def test_schema_404_raises_error(self):
+        '''A 404 while getting the schema raises an error.'''
+        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
+                               body=REGISTRY_BODY)
+        httpretty.register_uri(httpretty.GET,
+                               'https://example.com/base_schema.json',
+                               body="404", status=404)
+
+        valid, errors = datapackage_validate.validate(self.dp)
+
+        assert_false(valid)
+        assert_true(errors)
+        assert_true('Registry Error: 404 Client Error: '
+                    'Not Found for url: https://example.com/base_schema.json'
+                    in errors[0])
+
+    @httpretty.activate
+    def test_schema_500_raises_error(self):
+        '''A 500 while getting the schema raises an error.'''
+        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
+                               body=REGISTRY_BODY)
+        httpretty.register_uri(httpretty.GET,
+                               'https://example.com/base_schema.json',
+                               body="500", status=500)
+
+        valid, errors = datapackage_validate.validate(self.dp)
+
+        assert_false(valid)
+        assert_true(errors)
+        assert_true('Registry Error: 500 Server Error: '
+                    'Internal Server Error for url: '
+                    'https://example.com/base_schema.json'
+                    in errors[0])
+
+    @httpretty.activate
+    def test_registry_404_raises_error(self):
+        '''A 404 while getting the registry raises an error.'''
+        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
+                               body="404", status=404)
+
+        valid, errors = datapackage_validate.validate(self.dp)
+
+        assert_false(valid)
+        assert_true(errors)
+        assert_true('Registry Error: 404 Client Error: Not Found for url: '
+                    'https://rawgit.com/dataprotocols/registry/master/registry.csv'
+                    in errors[0])
+
+    @httpretty.activate
+    def test_registry_500_raises_error(self):
+        '''A 500 while getting the registry raises an error.'''
+        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
+                               body="500", status=500)
+
+        valid, errors = datapackage_validate.validate(self.dp)
+
+        assert_false(valid)
+        assert_true(errors)
+        assert_true('Registry Error: 500 Server Error: '
+                    'Internal Server Error for url: '
+                    'https://rawgit.com/dataprotocols/registry/master/registry.csv'
+                    in errors[0])
