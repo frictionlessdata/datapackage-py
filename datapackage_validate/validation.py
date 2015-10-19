@@ -34,6 +34,7 @@ def validate(datapackage, schema='base'):
     valid = False
     errors = []
     schema_obj = None
+    datapackage_obj = None
 
     # Sanity check datapackage
     # If datapackage is a str, check json is well formed
@@ -41,10 +42,8 @@ def validate(datapackage, schema='base'):
         try:
             datapackage_obj = json.loads(datapackage)
         except ValueError as e:
-            datapackage_obj = None
             errors.append('Invalid JSON: {0}'.format(e))
     elif not (isinstance(datapackage, dict) or isinstance(datapackage, list)):
-        datapackage_obj = None
         errors.append('Invalid Data Package: not a string or object')
     else:
         datapackage_obj = datapackage
@@ -67,7 +66,6 @@ def validate(datapackage, schema='base'):
             else:
                 schema_obj = _fetch_schema_obj_from_url(schema_url)
     elif not isinstance(schema, dict):
-        schema_obj = None
         errors.append('Invalid Schema: not a string or object')
     else:
         schema_obj = schema
