@@ -135,7 +135,11 @@ class TestValidDatapackageJson(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
+        # Py2 returns u'name', Py3 doesn't. Test for either.
         assert_true("Schema ValidationError: u'name' is a required property"
+                    in errors[0]
+                    or
+                    "Schema ValidationError: 'name' is a required property"
                     in errors[0])
 
 
