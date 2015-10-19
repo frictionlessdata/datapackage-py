@@ -25,10 +25,16 @@ def _fetch_schema_obj_from_url(url):
 
 
 def validate(datapackage, schema='base'):
-    '''
-    `datapackage` is a json string or python object
+    '''Validate Data Package datapackage.json files against a jsonschema.
 
-    `schema` is a schema string id, json string, or python dict
+    `datapackage` - a json string or python object
+    `schema` - a schema string id, json string, or python dict
+
+    Return a tuple (valid, errors):
+
+    `valid` - a boolean to determine whether the datapackage validates against
+    the schema.
+    `errors` - an array of error string messages. Empty if `valid` is True.
     '''
 
     valid = False
