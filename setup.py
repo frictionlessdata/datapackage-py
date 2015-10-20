@@ -14,17 +14,22 @@ with io.open('README.md') as readme:
         filter(lambda x: 'https://travis-ci.org/' not in x,
                readme.readlines()))
 
+dependencies = [
+    'requests>=2.8.0',
+]
+
 setup(
     name='datapackage-registry',
-    version='0.0.1',
+    version='0.0.2',
     url='https://github.com/okfn/datapackage-registry-py',
     license='MIT',
     description=description,
     long_description=long_description,
-    maintainer='Brook Elgie',
-    maintainer_email='brook.elgie@okfn.org',
+    author='Open Knowledge Foundation',
+    author_email='info@okfn.org',
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     package_dir={'datapackage_registry': 'datapackage_registry'},
+    install_requires=dependencies,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -38,7 +43,4 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
     ],
-    install_requires=[
-        'requests>=2.8.0',
-    ]
 )
