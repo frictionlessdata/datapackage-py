@@ -5,7 +5,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
-import csv
 
 
 _ver = sys.version_info
@@ -26,8 +25,6 @@ if is_py2:
 
 elif is_py3:
     from urllib import parse
-    csv_reader = csv.reader
-    csv_dict_reader = csv.DictReader
     builtin_str = str
     str = str
     bytes = bytes
