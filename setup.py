@@ -14,6 +14,12 @@ with io.open('README.md') as readme:
         filter(lambda x: 'https://travis-ci.org/' not in x,
                readme.readlines()))
 
+dependencies = [
+    'requests>=2.8.0',
+    'jsonschema>=2.5.1',
+    'datapackage-registry>=0.0.2'
+]
+
 setup(
     name='datapackage-validate',
     version='0.0.1',
@@ -21,10 +27,11 @@ setup(
     license='MIT',
     description=description,
     long_description=long_description,
-    maintainer='Brook Elgie',
-    maintainer_email='brook.elgie@okfn.org',
+    author='Open Knowledge Foundation',
+    author_email='info@okfn.org',
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     package_dir={'datapackage_validate': 'datapackage_validate'},
+    install_requires=dependencies,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
