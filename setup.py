@@ -33,6 +33,7 @@ setup(
 
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
     ],
 
     keywords='data dataprotocols jsontableschema openrefine datascience',
@@ -40,5 +41,7 @@ setup(
     packages=find_packages(exclude=['tests']),
 
     install_requires=[
+        'jsonschema >= 2.5',
+        'six >= 1.0',
     ],
 )
