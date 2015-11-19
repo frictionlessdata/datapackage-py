@@ -1,10 +1,9 @@
 import six
 import json
 import jsonschema
-
-
-SchemaError = jsonschema.exceptions.SchemaError
-ValidationError = jsonschema.exceptions.ValidationError
+from .exceptions import (
+    SchemaError, ValidationError
+)
 
 
 class Schema(object):
@@ -12,14 +11,17 @@ class Schema(object):
         self.__schema = self.__load_schema(schema)
         validator_class = jsonschema.validators.validator_for(self.schema)
         self.__validator = validator_class(self.schema)
-        self.__validator.check_schema(self.schema)
+        self.__check_schema()
 
     @property
     def schema(self):
         return self.__schema
 
     def validate(self, data):
-        self.__validator.validate(data)
+        try:
+            self.__validator.validate(data)
+        except jsonschema.exceptions.ValidationError as e:
+            raise ValidationError(e)
 
     def __load_schema(self, schema):
         the_schema = schema
@@ -29,3 +31,9 @@ class Schema(object):
             msg = 'Schema must be a "dict", but was a "{0}"'
             raise SchemaError(msg.format(type(the_schema).__name__))
         return the_schema
+
+    def __check_schema(self):
+        try:
+            self.__validator.check_schema(self.schema)
+        except jsonschema.exceptions.SchemaError as e:
+            raise SchemaError(e)

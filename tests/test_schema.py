@@ -1,7 +1,7 @@
 import six
 import pytest
-import datapackage.schema
 import tests.test_helpers as test_helpers
+import datapackage
 
 
 class TestSchema(object):
@@ -35,9 +35,16 @@ class TestSchema(object):
         with pytest.raises(ValueError):
             datapackage.schema.Schema(not_a_json_path)
 
-    def test_init_raises_if_schema_is_invalid(self):
+    def test_init_raises_if_schema_isnt_string_nor_dict(self):
         invalid_schema = []
-        with pytest.raises(datapackage.schema.SchemaError):
+        with pytest.raises(datapackage.exceptions.SchemaError):
+            datapackage.schema.Schema(invalid_schema)
+
+    def test_init_raises_if_schema_is_invalid(self):
+        invalid_schema = {
+            'required': 51,
+        }
+        with pytest.raises(datapackage.exceptions.SchemaError):
             datapackage.schema.Schema(invalid_schema)
 
     def test_validate(self):
@@ -66,5 +73,5 @@ class TestSchema(object):
         }
         data = {}
         schema = datapackage.schema.Schema(schema_dict)
-        with pytest.raises(datapackage.schema.ValidationError):
+        with pytest.raises(datapackage.exceptions.ValidationError):
             schema.validate(data)
