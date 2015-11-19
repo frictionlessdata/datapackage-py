@@ -4,7 +4,6 @@ env:
   fast_finish: true
   matrix:
     - TOXENV=py27
-    - TOXENV=py32
     - TOXENV=py33
     - TOXENV=py34
 install:
