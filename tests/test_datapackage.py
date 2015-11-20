@@ -10,8 +10,7 @@ class TestDataPackage(object):
         assert dp.schema.to_dict() == schema
 
     def test_datapackage_attributes(self):
-        descriptor = {}
-        dp = datapackage.DataPackage(descriptor)
+        dp = datapackage.DataPackage()
         dp.foo = 'bar'
         dp.bar = 'baz'
         assert dp.attributes == {'foo': 'bar', 'bar': 'baz'}
@@ -30,13 +29,12 @@ class TestDataPackage(object):
         dp.validate()
 
     def test_validate_raises_validation_error_if_invalid(self):
-        descriptor = {}
         schema = {
             'properties': {
                 'name': {},
             },
             'required': ['name'],
         }
-        dp = datapackage.DataPackage(descriptor, schema)
+        dp = datapackage.DataPackage(schema=schema)
         with pytest.raises(datapackage.exceptions.ValidationError):
             dp.validate()

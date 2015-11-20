@@ -14,7 +14,9 @@ class DataPackage(object):
     )
     BASE_SCHEMA_PATH = os.path.join(SCHEMAS_PATH, 'base.json')
 
-    def __init__(self, descriptor, schema=BASE_SCHEMA_PATH):
+    def __init__(self, descriptor=None, schema=BASE_SCHEMA_PATH):
+        if descriptor is None:
+            descriptor = {}
         self._descriptor = descriptor
         self._schema = Schema(schema)
 
