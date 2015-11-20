@@ -22,6 +22,10 @@ class Schema(object):
     def schema(self):
         return self._schema
 
+    @property
+    def required_attributes(self):
+        return self.schema.get('required', [])
+
     def validate(self, data):
         try:
             self._validator.validate(data)

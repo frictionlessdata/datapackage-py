@@ -66,3 +66,15 @@ class TestSchema(object):
         schema = datapackage.schema.Schema(schema_dict)
         with pytest.raises(datapackage.exceptions.ValidationError):
             schema.validate(data)
+
+    def test_required_attributes(self):
+        schema_dict = {
+            'required': ['name'],
+        }
+        schema = datapackage.schema.Schema(schema_dict)
+        assert schema.required_attributes == ['name']
+
+    def test_required_attributes_returns_empty_array_if_null(self):
+        schema_dict = {}
+        schema = datapackage.schema.Schema(schema_dict)
+        assert schema.required_attributes == []
