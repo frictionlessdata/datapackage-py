@@ -13,22 +13,22 @@ from .exceptions import (
 
 class Schema(object):
     def __init__(self, schema):
-        self.__schema = self.__load_schema(schema)
+        self._schema = self._load_schema(schema)
         validator_class = jsonschema.validators.validator_for(self.schema)
-        self.__validator = validator_class(self.schema)
-        self.__check_schema()
+        self._validator = validator_class(self.schema)
+        self._check_schema()
 
     @property
     def schema(self):
-        return self.__schema
+        return self._schema
 
     def validate(self, data):
         try:
-            self.__validator.validate(data)
+            self._validator.validate(data)
         except jsonschema.exceptions.ValidationError as e:
             six.raise_from(ValidationError.create_from(e), e)
 
-    def __load_schema(self, schema):
+    def _load_schema(self, schema):
         the_schema = schema
         if isinstance(schema, six.string_types):
             try:
@@ -41,8 +41,8 @@ class Schema(object):
             raise SchemaError(msg.format(type(the_schema).__name__))
         return the_schema
 
-    def __check_schema(self):
+    def _check_schema(self):
         try:
-            self.__validator.check_schema(self.schema)
+            self._validator.check_schema(self.schema)
         except jsonschema.exceptions.SchemaError as e:
             six.raise_from(SchemaError.create_from(e), e)

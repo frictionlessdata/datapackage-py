@@ -15,21 +15,20 @@ class DataPackage(object):
     BASE_SCHEMA_PATH = os.path.join(SCHEMAS_PATH, 'base.json')
 
     def __init__(self, descriptor, schema=BASE_SCHEMA_PATH):
-        self.__descriptor = descriptor
-        self.__schema = Schema(schema)
+        self._descriptor = descriptor
+        self._schema = Schema(schema)
 
     @property
     def descriptor(self):
-        return self.__descriptor
+        return self._descriptor
 
     @property
     def schema(self):
-        return self.__schema
+        return self._schema
 
     @property
     def attributes(self):
-        private_prefix = '_{cls}__'.format(cls=self.__class__.__name__)
-        is_private = lambda k: k.startswith(private_prefix)
+        is_private = lambda k: k.startswith('_')
 
         return {k: v for (k, v) in self.__dict__.items()
                 if not is_private(k) and v is not None}
