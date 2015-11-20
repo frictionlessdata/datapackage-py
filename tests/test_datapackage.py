@@ -13,11 +13,21 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(descriptor, schema=schema)
         assert dp.schema.to_dict() == schema
 
-    def test_datapackage_attributes(self):
-        dp = datapackage.DataPackage()
-        dp.foo = 'bar'
-        dp.bar = 'baz'
-        assert dp.attributes == {'foo': 'bar', 'bar': 'baz'}
+    def test_attributes(self):
+        descriptor = {
+            'name': 'foo',
+        }
+        dp = datapackage.DataPackage(descriptor)
+        dp.title = 'bar'
+        assert dp.attributes == {'name': 'foo', 'title': 'bar'}
+
+    def test_attributes_arent_immutable(self):
+        descriptor = {
+            'keywords': [],
+        }
+        dp = datapackage.DataPackage(descriptor)
+        dp.keywords.append('foo')
+        assert dp.attributes == {'keywords': ['foo']}
 
     def test_validate(self):
         descriptor = {
@@ -30,6 +40,17 @@ class TestDataPackage(object):
             'required': ['name'],
         }
         dp = datapackage.DataPackage(descriptor, schema)
+        dp.validate()
+
+    def test_validate_works_when_setting_attributes_after_creation(self):
+        schema = {
+            'properties': {
+                'name': {}
+            },
+            'required': ['name'],
+        }
+        dp = datapackage.DataPackage(schema=schema)
+        dp.name = 'foo'
         dp.validate()
 
     def test_validate_raises_validation_error_if_invalid(self):

@@ -17,12 +17,8 @@ class DataPackage(object):
     def __init__(self, descriptor=None, schema=BASE_SCHEMA_PATH):
         if descriptor is None:
             descriptor = {}
-        self._descriptor = descriptor
+        self.__dict__.update(descriptor)
         self._schema = Schema(schema)
-
-    @property
-    def descriptor(self):
-        return self._descriptor
 
     @property
     def schema(self):
@@ -36,4 +32,4 @@ class DataPackage(object):
                 if not is_private(k) and v is not None}
 
     def validate(self):
-        self.schema.validate(self.descriptor)
+        self.schema.validate(self.attributes)
