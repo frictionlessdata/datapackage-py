@@ -1,4 +1,5 @@
 import pytest
+import tests.test_helpers as test_helpers
 import datapackage
 
 
@@ -6,6 +7,33 @@ class TestDataPackage(object):
     def test_init_uses_base_schema_by_default(self):
         dp = datapackage.DataPackage()
         assert dp.schema.title == 'DataPackage'
+
+    def test_init_accepts_dicts(self):
+        descriptor = {
+            'foo': 'bar',
+        }
+        dp = datapackage.DataPackage(descriptor)
+        assert dp.to_dict() == descriptor
+
+    def test_init_accepts_file_paths(self):
+        path = test_helpers.fixture_path('empty_datapackage.json')
+        dp = datapackage.DataPackage(path)
+        assert dp.to_dict() == {}
+
+    def test_init_raises_if_file_path_doesnt_exist(self):
+        path = 'this-file-doesnt-exist.json'
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(path)
+
+    def test_init_raises_if_path_isnt_a_json(self):
+        not_a_json_path = test_helpers.fixture_path('not_a_json')
+        with pytest.raises(ValueError):
+            datapackage.DataPackage(not_a_json_path)
+
+    def test_init_raises_if_descriptor_isnt_dict_or_string(self):
+        descriptor = 51
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(descriptor)
 
     def test_schema(self):
         descriptor = {}
