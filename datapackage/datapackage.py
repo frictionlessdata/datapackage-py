@@ -27,7 +27,7 @@ class DataPackage(object):
         return self.__schema
 
     @property
-    def properties(self):
+    def attributes(self):
         private_prefix = '_{cls}__'.format(cls=self.__class__.__name__)
         is_private = lambda k: k.startswith(private_prefix)
 

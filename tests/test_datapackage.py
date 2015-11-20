@@ -9,12 +9,12 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(descriptor, schema=schema)
         assert dp.schema.schema == schema
 
-    def test_datapackage_properties(self):
+    def test_datapackage_attributes(self):
         descriptor = {}
         dp = datapackage.DataPackage(descriptor)
         dp.foo = 'bar'
         dp.bar = 'baz'
-        assert dp.properties == {'foo': 'bar', 'bar': 'baz'}
+        assert dp.attributes == {'foo': 'bar', 'bar': 'baz'}
 
     def test_validate(self):
         descriptor = {
