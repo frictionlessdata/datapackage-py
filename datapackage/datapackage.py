@@ -26,10 +26,18 @@ class DataPackage(object):
 
     @property
     def attributes(self):
+        attributes = set(self.to_dict().keys())
+        try:
+            attributes.update(self.schema.properties.keys())
+        except AttributeError:
+            pass
+        return list(attributes)
+
+    def to_dict(self):
         is_private = lambda k: k.startswith('_')
 
         return {k: v for (k, v) in self.__dict__.items()
                 if not is_private(k) and v is not None}
 
     def validate(self):
-        self.schema.validate(self.attributes)
+        self.schema.validate(self.to_dict())
