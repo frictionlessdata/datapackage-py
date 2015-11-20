@@ -1,4 +1,3 @@
-import six
 import pytest
 import tests.test_helpers as test_helpers
 import datapackage
@@ -19,15 +18,7 @@ class TestSchema(object):
         assert datapackage.schema.Schema(schema_path).schema == {}
 
     def test_init_raises_if_path_doesnt_exist(self):
-        # FIXME: It would be better to catch these errors on Schema() and raise
-        # a single Error type. This would make it easier both for testing and
-        # for the package's users.
-        if six.PY2:
-            expected_exception = IOError
-        else:
-            expected_exception = FileNotFoundError
-
-        with pytest.raises(expected_exception):
+        with pytest.raises(datapackage.exceptions.SchemaError):
             datapackage.schema.Schema('inexistent_schema.json')
 
     def test_init_raises_if_path_isnt_a_json(self):

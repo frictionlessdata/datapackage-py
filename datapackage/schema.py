@@ -26,12 +26,16 @@ class Schema(object):
         try:
             self.__validator.validate(data)
         except jsonschema.exceptions.ValidationError as e:
-            raise ValidationError(e)
+            six.raise_from(ValidationError.create_from(e), e)
 
     def __load_schema(self, schema):
         the_schema = schema
         if isinstance(schema, six.string_types):
-            the_schema = json.load(open(schema, 'r'))
+            try:
+                the_schema = json.load(open(schema, 'r'))
+            except IOError as e:
+                msg = 'Unable to load JSON at "{0}"'
+                six.raise_from(SchemaError(msg.format(schema)), e)
         if not isinstance(the_schema, dict):
             msg = 'Schema must be a "dict", but was a "{0}"'
             raise SchemaError(msg.format(type(the_schema).__name__))
@@ -41,4 +45,4 @@ class Schema(object):
         try:
             self.__validator.check_schema(self.schema)
         except jsonschema.exceptions.SchemaError as e:
-            raise SchemaError(e)
+            six.raise_from(SchemaError.create_from(e), e)
