@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import six
+import copy
 import json
 import jsonschema
 from .exceptions import (
@@ -14,17 +15,16 @@ from .exceptions import (
 class Schema(object):
     def __init__(self, schema):
         self._schema = self._load_schema(schema)
-        validator_class = jsonschema.validators.validator_for(self.schema)
-        self._validator = validator_class(self.schema)
+        validator_class = jsonschema.validators.validator_for(self._schema)
+        self._validator = validator_class(self._schema)
         self._check_schema()
 
-    @property
-    def schema(self):
-        return self._schema
+    def to_dict(self):
+        return copy.deepcopy(self._schema)
 
     @property
     def required_attributes(self):
-        return self.schema.get('required', [])
+        return self._schema.get('required', [])
 
     def validate(self, data):
         try:
@@ -34,19 +34,23 @@ class Schema(object):
 
     def _load_schema(self, schema):
         the_schema = schema
+
         if isinstance(schema, six.string_types):
             try:
                 the_schema = json.load(open(schema, 'r'))
             except IOError as e:
                 msg = 'Unable to load JSON at "{0}"'
                 six.raise_from(SchemaError(msg.format(schema)), e)
-        if not isinstance(the_schema, dict):
+        elif isinstance(the_schema, dict):
+            the_schema = copy.deepcopy(the_schema)
+        else:
             msg = 'Schema must be a "dict", but was a "{0}"'
             raise SchemaError(msg.format(type(the_schema).__name__))
+
         return the_schema
 
     def _check_schema(self):
         try:
-            self._validator.check_schema(self.schema)
+            self._validator.check_schema(self._schema)
         except jsonschema.exceptions.SchemaError as e:
             six.raise_from(SchemaError.create_from(e), e)

@@ -7,7 +7,7 @@ class TestDataPackage(object):
         descriptor = {}
         schema = {'foo': 'bar'}
         dp = datapackage.DataPackage(descriptor, schema=schema)
-        assert dp.schema.schema == schema
+        assert dp.schema.to_dict() == schema
 
     def test_datapackage_attributes(self):
         descriptor = {}
