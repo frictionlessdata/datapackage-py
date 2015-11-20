@@ -92,14 +92,29 @@ class TestSchema(object):
         with pytest.raises(datapackage.exceptions.ValidationError):
             schema.validate(data)
 
-    def test_required_attributes(self):
+    def test_it_creates_properties_for_every_toplevel_attribute(self):
         schema_dict = {
-            'required': ['name'],
+            'foo': 'bar',
+            'baz': [],
         }
         schema = datapackage.schema.Schema(schema_dict)
-        assert schema.required_attributes == ['name']
+        assert schema.foo == 'bar'
+        assert schema.baz == []
 
-    def test_required_attributes_returns_empty_array_if_null(self):
-        schema_dict = {}
+    def test_doesnt_allow_changing_properties(self):
+        schema_dict = {
+            'foo': 'bar',
+        }
         schema = datapackage.schema.Schema(schema_dict)
-        assert schema.required_attributes == []
+        with pytest.raises(AttributeError):
+            schema.foo = 'baz'
+
+    def test_changing_properties_attributes_doesnt_change_the_originals(self):
+        schema_dict = {
+            'foo': {
+                'bar': [],
+            }
+        }
+        schema = datapackage.schema.Schema(schema_dict)
+        schema.foo['bar'].append('baz')
+        assert schema.foo == {'bar': []}

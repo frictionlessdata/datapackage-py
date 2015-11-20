@@ -18,13 +18,10 @@ class Schema(object):
         validator_class = jsonschema.validators.validator_for(self._schema)
         self._validator = validator_class(self._schema)
         self._check_schema()
+        self._create_properties()
 
     def to_dict(self):
         return copy.deepcopy(self._schema)
-
-    @property
-    def required_attributes(self):
-        return self._schema.get('required', [])
 
     def validate(self, data):
         try:
@@ -54,3 +51,12 @@ class Schema(object):
             self._validator.check_schema(self._schema)
         except jsonschema.exceptions.SchemaError as e:
             six.raise_from(SchemaError.create_from(e), e)
+
+    def _create_properties(self):
+        def _create_property(name):
+            def get(self):
+                return copy.deepcopy(self._schema[name])
+            return property(get)
+
+        for name in self._schema.keys():
+            setattr(self.__class__, name, _create_property(name))
