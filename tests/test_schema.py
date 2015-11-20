@@ -101,13 +101,19 @@ class TestSchema(object):
         assert schema.foo == 'bar'
         assert schema.baz == []
 
-    def test_doesnt_allow_changing_properties(self):
+    def test_doesnt_allow_changing_schema_properties(self):
         schema_dict = {
             'foo': 'bar',
         }
         schema = datapackage.schema.Schema(schema_dict)
         with pytest.raises(AttributeError):
             schema.foo = 'baz'
+
+    def test_allow_changing_properties_not_in_schema(self):
+        schema_dict = {}
+        schema = datapackage.schema.Schema(schema_dict)
+        schema.foo = 'bar'
+        assert schema.foo == 'bar'
 
     def test_raises_if_trying_to_access_inexistent_attribute(self):
         schema_dict = {}

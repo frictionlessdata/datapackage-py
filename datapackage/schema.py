@@ -52,9 +52,7 @@ class Schema(object):
             six.raise_from(SchemaError.create_from(e), e)
 
     def __getattr__(self, name):
-        if name in self.__dict__:
-            return self.__dict__[name]
-        elif name in self.__dict__.get('_schema', {}):
+        if name in self.__dict__.get('_schema', {}):
             return copy.deepcopy(self._schema[name])
 
         msg = '\'{0}\' object has no attribute \'{1}\''
