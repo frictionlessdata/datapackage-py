@@ -109,7 +109,13 @@ class TestSchema(object):
         with pytest.raises(AttributeError):
             schema.foo = 'baz'
 
-    def test_changing_properties_attributes_doesnt_change_the_originals(self):
+    def test_raises_if_trying_to_access_inexistent_attribute(self):
+        schema_dict = {}
+        schema = datapackage.schema.Schema(schema_dict)
+        with pytest.raises(AttributeError):
+            schema.this_doesnt_exist
+
+    def test_changing_properties_doesnt_change_the_originals(self):
         schema_dict = {
             'foo': {
                 'bar': [],
@@ -118,3 +124,23 @@ class TestSchema(object):
         schema = datapackage.schema.Schema(schema_dict)
         schema.foo['bar'].append('baz')
         assert schema.foo == {'bar': []}
+
+    def test_properties_are_visible_with_dir(self):
+        schema_dict = {
+            'foo': {}
+        }
+        schema = datapackage.schema.Schema(schema_dict)
+        assert 'foo' in dir(schema)
+
+    def test_schema_properties_doesnt_linger_in_class(self):
+        foo_schema_dict = {
+            'foo': {}
+        }
+        bar_schema_dict = {
+            'bar': {}
+        }
+        foo_schema = datapackage.schema.Schema(foo_schema_dict)
+        bar_schema = datapackage.schema.Schema(bar_schema_dict)
+
+        assert 'bar' not in dir(foo_schema)
+        assert 'foo' not in dir(bar_schema)

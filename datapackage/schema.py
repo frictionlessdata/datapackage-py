@@ -18,7 +18,6 @@ class Schema(object):
         validator_class = jsonschema.validators.validator_for(self._schema)
         self._validator = validator_class(self._schema)
         self._check_schema()
-        self._create_properties()
 
     def to_dict(self):
         return copy.deepcopy(self._schema)
@@ -52,11 +51,19 @@ class Schema(object):
         except jsonschema.exceptions.SchemaError as e:
             six.raise_from(SchemaError.create_from(e), e)
 
-    def _create_properties(self):
-        def _create_property(name):
-            def get(self):
-                return copy.deepcopy(self._schema[name])
-            return property(get)
+    def __getattr__(self, name):
+        if name in self.__dict__:
+            return self.__dict__[name]
+        elif name in self.__dict__.get('_schema', {}):
+            return copy.deepcopy(self._schema[name])
 
-        for name in self._schema.keys():
-            setattr(self.__class__, name, _create_property(name))
+        msg = '\'{0}\' object has no attribute \'{1}\''
+        raise AttributeError(msg.format(self.__class__.__name__, name))
+
+    def __setattr__(self, name, value):
+        if name in self.__dict__.get('_schema', {}):
+            raise AttributeError('can\'t set attribute')
+        super(self.__class__, self).__setattr__(name, value)
+
+    def __dir__(self):
+        return list(self.__dict__.keys()) + list(self._schema.keys())
