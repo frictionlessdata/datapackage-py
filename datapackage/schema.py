@@ -36,7 +36,7 @@ class Schema(object):
         if isinstance(schema, six.string_types):
             try:
                 if os.path.isfile(schema):
-                    the_schema = json.load(open(schema, 'rb'))
+                    the_schema = json.load(open(schema, 'r'))
                 else:
                     req = requests.get(schema)
                     the_schema = req.json()
