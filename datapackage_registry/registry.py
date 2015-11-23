@@ -10,25 +10,26 @@ import requests
 from . import compat
 
 
-DEFAULT_CONFIG = {
-  'backend': 'https://rawgit.com/dataprotocols/registry/master/registry.csv',
-}
+class Registry(object):
+    DEFAULT_CONFIG = {
+        'backend': 'https://rawgit.com/dataprotocols/registry/master/registry.csv',
+    }
 
+    def __init__(self, user_config=None):
+        config = user_config or self.DEFAULT_CONFIG
+        self._profiles = self._get_registry_at_endpoint(config['backend'])
 
-def _get_registry_at_endpoint(endpoint):
-    '''Return an array of objects from an endpoint that is parsable as CSV'''
-    resp = requests.get(endpoint)
-    resp.raise_for_status()
+    @property
+    def profiles(self):
+        return self._profiles
 
-    data = StringIO(resp.text)
+    def _get_registry_at_endpoint(self, endpoint):
+        '''Return an array of objects from a CSV endpoint'''
+        resp = requests.get(endpoint)
+        resp.raise_for_status()
 
-    reader = compat.csv_dict_reader(data)
+        data = StringIO(resp.text)
 
-    return [o for o in reader]
+        reader = compat.csv_dict_reader(data)
 
-
-def get_registry(user_config=None):
-    '''Return the DataPackage Registry as an array of objects'''
-    config = user_config or DEFAULT_CONFIG
-
-    return _get_registry_at_endpoint(config['backend'])
+        return [o for o in reader]

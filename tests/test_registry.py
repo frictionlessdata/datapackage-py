@@ -18,9 +18,7 @@ import datapackage_registry
 BACKEND_URL = "https://rawgit.com/dataprotocols/registry/master/registry.csv"
 
 
-class DataPackageRegistryGetTest(unittest.TestCase):
-
-    '''Tests for registry.get()'''
+class TestRegistry(unittest.TestCase):
 
     @httpretty.activate
     def test_return_empty_array_when_registry_is_empty(self):
@@ -28,7 +26,8 @@ class DataPackageRegistryGetTest(unittest.TestCase):
         httpretty.register_uri(httpretty.GET, BACKEND_URL,
                                body="id,title,schema,specification")
 
-        assert_equal(datapackage_registry.get(), [],
+        registry = datapackage_registry.Registry()
+        assert_equal(registry.profiles, [],
                      'Registry is not an empty array')
 
     @httpretty.activate
@@ -41,11 +40,12 @@ tabular,Tabular Data Package,https://example.com/two.json,http://example.com"""
 
         httpretty.register_uri(httpretty.GET, BACKEND_URL, body=body)
 
-        reg = datapackage_registry.get()
-        assert_equal(len(reg), 2)
+        registry = datapackage_registry.Registry()
+
+        assert_equal(len(registry.profiles), 2)
         # each member in array is a dict
-        for o in reg:
-            assert_equal(type(o), dict)
+        for profile in registry.profiles:
+            assert_equal(type(profile), dict)
 
     @httpretty.activate
     def test_dicts_have_expected_keys(self):
@@ -57,14 +57,14 @@ tabular,Tabular Data Package,https://example.com/two.json,http://example.com"""
 
         httpretty.register_uri(httpretty.GET, BACKEND_URL, body=body)
 
-        reg = datapackage_registry.get()
+        registry = datapackage_registry.Registry()
 
         # each dict in array has the expected keys
-        for o in reg:
-            assert_true('id' in o)
-            assert_true('title' in o)
-            assert_true('schema' in o)
-            assert_true('specification' in o)
+        for profile in registry.profiles:
+            assert_true('id' in profile)
+            assert_true('title' in profile)
+            assert_true('schema' in profile)
+            assert_true('specification' in profile)
 
     @httpretty.activate
     def test_dicts_have_expected_values(self):
@@ -76,13 +76,14 @@ tabular,Tabular Data Package,https://example.com/two.json,http://example.com"""
 
         httpretty.register_uri(httpretty.GET, BACKEND_URL, body=body)
 
-        reg = datapackage_registry.get()
+        registry = datapackage_registry.Registry()
+        base_profile = registry.profiles[0]
 
         # first dict in array has the expected values
-        assert_equal(reg[0]['id'], 'base')
-        assert_equal(reg[0]['title'], 'Data Package')
-        assert_equal(reg[0]['schema'], 'https://example.com/one.json')
-        assert_equal(reg[0]['specification'], 'http://example.com')
+        assert_equal(base_profile['id'], 'base')
+        assert_equal(base_profile['title'], 'Data Package')
+        assert_equal(base_profile['schema'], 'https://example.com/one.json')
+        assert_equal(base_profile['specification'], 'http://example.com')
 
     @httpretty.activate
     def test_custom_config_returns_expected_values(self):
@@ -105,12 +106,13 @@ a,b,c,d"""
             'backend': custom_registry_url,
         }
 
-        reg = datapackage_registry.get(custom_config)
-        assert_equal(len(reg), 2)
-        assert_equal(reg[0]['id'], '1')
-        assert_equal(reg[0]['title'], '2')
-        assert_equal(reg[0]['schema'], '3')
-        assert_equal(reg[0]['specification'], '4')
+        registry = datapackage_registry.Registry(custom_config)
+
+        assert_equal(len(registry.profiles), 2)
+        assert_equal(registry.profiles[0]['id'], '1')
+        assert_equal(registry.profiles[0]['title'], '2')
+        assert_equal(registry.profiles[0]['schema'], '3')
+        assert_equal(registry.profiles[0]['specification'], '4')
 
     @httpretty.activate
     def test_unicode_in_registry(self):
@@ -121,10 +123,11 @@ a,b,c,d"""
         httpretty.register_uri(httpretty.GET, BACKEND_URL,
                                body=body)
 
-        reg = datapackage_registry.get()
-        assert_equal(len(reg), 2)
-        assert_equal(reg[0]['id'], 'base')
-        assert_equal(reg[0]['title'], 'Iñtërnâtiônàlizætiøn')
+        registry = datapackage_registry.Registry()
+
+        assert_equal(len(registry.profiles), 2)
+        assert_equal(registry.profiles[0]['id'], 'base')
+        assert_equal(registry.profiles[0]['title'], 'Iñtërnâtiônàlizætiøn')
 
     @httpretty.activate
     def test_404_raises_error(self):
@@ -133,7 +136,7 @@ a,b,c,d"""
                                body="404", status=404)
 
         with assert_raises(requests.HTTPError) as cm:
-            datapackage_registry.get()
+            datapackage_registry.Registry()
         assert_equal(cm.exception.response.status_code, 404)
 
     @httpretty.activate
@@ -143,5 +146,10 @@ a,b,c,d"""
                                body="500", status=500)
 
         with assert_raises(requests.HTTPError) as cm:
-            datapackage_registry.get()
+            datapackage_registry.Registry()
         assert_equal(cm.exception.response.status_code, 500)
+
+    def test_profiles_arent_writable(self):
+        registry = datapackage_registry.Registry()
+        with assert_raises(AttributeError):
+            registry.profiles = ['foo']
