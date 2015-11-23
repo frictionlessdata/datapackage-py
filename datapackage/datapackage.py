@@ -40,6 +40,17 @@ class DataPackage(object):
             pass
         return list(attributes)
 
+    @property
+    def required_attributes(self):
+        '''Return required attributes or empty list if nothing is required.'''
+        required = []
+        try:
+            if self.schema.required is not None:
+                required = self.schema.required
+        except AttributeError:
+            pass
+        return required
+
     def to_dict(self):
         return self._data
 

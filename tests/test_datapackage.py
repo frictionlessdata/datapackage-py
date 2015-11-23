@@ -110,3 +110,15 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(schema=schema)
         with pytest.raises(datapackage.exceptions.ValidationError):
             dp.validate()
+
+    def test_required_attributes(self):
+        schema = {
+            'required': ['name', 'title'],
+        }
+        dp = datapackage.DataPackage(schema=schema)
+        assert dp.required_attributes == ['name', 'title']
+
+    def test_required_attributes_returns_empty_list_if_nothings_required(self):
+        schema = {}
+        dp = datapackage.DataPackage(schema=schema)
+        assert dp.required_attributes == []
