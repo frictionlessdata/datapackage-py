@@ -19,9 +19,13 @@ class DataPackage(object):
     )
     BASE_SCHEMA_PATH = os.path.join(SCHEMAS_PATH, 'base.json')
 
-    def __init__(self, descriptor=None, schema=BASE_SCHEMA_PATH):
-        self.__dict__.update(self._load_descriptor(descriptor))
+    def __init__(self, data=None, schema=BASE_SCHEMA_PATH):
+        self._data = self._load_data(data)
         self._schema = Schema(schema)
+
+    @property
+    def data(self):
+        return self._data
 
     @property
     def schema(self):
@@ -37,28 +41,25 @@ class DataPackage(object):
         return list(attributes)
 
     def to_dict(self):
-        is_private = lambda k: k.startswith('_')
-
-        return {k: v for (k, v) in self.__dict__.items()
-                if not is_private(k) and v is not None}
+        return self._data
 
     def validate(self):
         self.schema.validate(self.to_dict())
 
-    def _load_descriptor(self, descriptor):
-        the_descriptor = descriptor
+    def _load_data(self, data):
+        the_data = data
 
-        if the_descriptor is None:
-            the_descriptor = {}
+        if the_data is None:
+            the_data = {}
 
-        if isinstance(the_descriptor, six.string_types):
+        if isinstance(the_data, six.string_types):
             try:
-                the_descriptor = json.load(open(descriptor, 'r'))
+                the_data = json.load(open(data, 'r'))
             except IOError as e:
-                msg = 'Unable to load JSON at \'{0}\''.format(descriptor)
+                msg = 'Unable to load JSON at \'{0}\''.format(data)
                 six.raise_from(DataPackageException(msg), e)
-        elif not isinstance(the_descriptor, dict):
-            msg = 'Unable to load descriptor \'{0}\''.format(descriptor)
+        elif not isinstance(the_data, dict):
+            msg = 'Unable to load data \'{0}\''.format(data)
             raise DataPackageException(msg)
 
-        return the_descriptor
+        return the_data
