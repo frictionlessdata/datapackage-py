@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import unittest
+import mock
 
 import requests
 import httpretty
@@ -55,6 +56,7 @@ class TestRegistry(unittest.TestCase):
         config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
         registry = datapackage_registry.Registry(config)
 
+        assert_equal(len(registry.profiles), 2)
         profile = registry.profiles[0]
 
         # first dict in array has the expected values
@@ -118,3 +120,67 @@ class TestRegistry(unittest.TestCase):
         registry = datapackage_registry.Registry()
         with assert_raises(AttributeError):
             registry.profiles = ['foo']
+
+    def test_get_loads_file_from_disk(self):
+        config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
+        registry = datapackage_registry.Registry(config)
+
+        base_profile = registry.get('base')
+        assert base_profile is not None
+        assert base_profile == {'title': 'base_profile'}
+
+    @httpretty.activate
+    def test_get_loads_file_from_http_if_theres_no_local_copy(self):
+        url = 'http://some-place.com/registry.csv'
+        body = (
+            'id,title,schema,specification\r\n'
+            'base,Data Package,http://example.com/one.json,http://example.com'
+        )
+        httpretty.register_uri(httpretty.GET, url, body=body)
+
+        profile_url = 'http://example.com/one.json'
+        profile_body = '{ "title": "base_profile" }'
+        httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
+
+        config = {'backend': url}
+        registry = datapackage_registry.Registry(config)
+
+        base_profile = registry.get('base')
+        assert base_profile is not None
+        assert base_profile == {'title': 'base_profile'}
+
+    @httpretty.activate
+    def test_get_loads_file_from_http_if_local_copys_path_isnt_a_file(self):
+        url = 'http://some-place.com/registry.csv'
+        body = (
+            'id,title,schema,specification,relative_path\r\n'
+            'base,Data Package,http://example.com/one.json,http://example.com,inexistent.json'
+        )
+        httpretty.register_uri(httpretty.GET, url, body=body)
+
+        profile_url = 'http://example.com/one.json'
+        profile_body = '{ "title": "base_profile" }'
+        httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
+
+        config = {'backend': url}
+        registry = datapackage_registry.Registry(config)
+
+        base_profile = registry.get('base')
+        assert base_profile is not None
+        assert base_profile == {'title': 'base_profile'}
+
+    def test_get_returns_none_if_profile_doesnt_exist(self):
+        registry = datapackage_registry.Registry()
+        assert registry.get('non-existent-profile') is None
+
+    def test_get_memoize_the_profiles(self):
+        config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
+        registry = datapackage_registry.Registry(config)
+
+        registry.get('base')
+
+        m = mock.mock_open(read_data='{}')
+        with mock.patch('datapackage_registry.registry.open', m):
+            registry.get('base')
+
+        assert not m.called, '.get() should memoize the profiles'
