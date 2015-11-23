@@ -21,14 +21,19 @@ custom_config = {
 }
 custom_registry = datapackage_registry.get(custom_config)
 
-# registry now has an array of dicts, e.g.:
-[{'id': 'base',
-  'schema': 'https://rawgit.com/dataprotocols/schemas/master/data-package.json',
-  'specification': 'http://dataprotocols.org/data-packages',
-  'title': 'Data Package'},
- {'id': 'tabular',
-  'schema': 'https://rawgit.com/dataprotocols/schemas/master/tabular-data-package.json',
-  'specification': 'http://dataprotocols.org/tabular-data-package/',
-  'title': 'Tabular Data Package'}]
-
+# registry now has a dict with each profile, mapped by the profile's id, e.g.:
+{
+    'base': {
+        'id': 'base',
+        'schema': 'https://rawgit.com/dataprotocols/schemas/master/data-package.json',
+        'specification': 'http://dataprotocols.org/data-packages',
+        'title': 'Data Package'
+    },
+    'tabular': {
+        'id': 'tabular',
+        'schema': 'https://rawgit.com/dataprotocols/schemas/master/tabular-data-package.json',
+        'specification': 'http://dataprotocols.org/tabular-data-package/',
+        'title': 'Tabular Data Package'
+   }
+}
 ```
