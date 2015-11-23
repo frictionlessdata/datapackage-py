@@ -3,8 +3,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import six
+import os
 import copy
+import six
+import requests
 import json
 import jsonschema
 from .exceptions import (
@@ -33,8 +35,13 @@ class Schema(object):
 
         if isinstance(schema, six.string_types):
             try:
-                the_schema = json.load(open(schema, 'r'))
-            except IOError as e:
+                if os.path.isfile(schema):
+                    the_schema = json.load(open(schema, 'r'))
+                else:
+                    req = requests.get(schema)
+                    the_schema = req.json()
+            except (IOError,
+                    requests.exceptions.RequestException) as e:
                 msg = 'Unable to load JSON at "{0}"'
                 six.raise_from(SchemaError(msg.format(schema)), e)
         elif isinstance(the_schema, dict):

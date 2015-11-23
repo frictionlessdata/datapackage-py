@@ -43,5 +43,6 @@ setup(
     install_requires=[
         'jsonschema >= 2.5',
         'six >= 1.0',
+        'datapackage_registry >= 0.0.2',
     ],
 )

@@ -3,9 +3,9 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
 import json
 import six
+import datapackage_registry
 from .schema import Schema
 from .exceptions import (
     DataPackageException
@@ -13,15 +13,9 @@ from .exceptions import (
 
 
 class DataPackage(object):
-    SCHEMAS_PATH = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        'schemas'
-    )
-    BASE_SCHEMA_PATH = os.path.join(SCHEMAS_PATH, 'base.json')
-
-    def __init__(self, data=None, schema=BASE_SCHEMA_PATH):
+    def __init__(self, data=None, schema='base'):
         self._data = self._load_data(data)
-        self._schema = Schema(schema)
+        self._schema = self._load_schema(schema)
 
     @property
     def data(self):
@@ -74,3 +68,14 @@ class DataPackage(object):
             raise DataPackageException(msg)
 
         return the_data
+
+    def _load_schema(self, schema):
+        the_schema = schema
+
+        if isinstance(schema, six.string_types):
+            registry = dict([(v['id'], v)
+                             for v in datapackage_registry.get()])
+            if schema in registry:
+                the_schema = registry[schema]['schema']
+
+        return Schema(the_schema)

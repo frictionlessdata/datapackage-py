@@ -1,4 +1,9 @@
+try:
+    import unittest.mock as mock
+except ImportError:
+    import mock
 import pytest
+import requests.exceptions
 import tests.test_helpers as test_helpers
 import datapackage
 
@@ -34,6 +39,36 @@ class TestSchema(object):
         not_a_json_path = test_helpers.fixture_path('not_a_json')
         with pytest.raises(ValueError):
             datapackage.schema.Schema(not_a_json_path)
+
+    def test_init_loads_schema_from_url(self):
+        url = (
+            'https://some-place.com/data-package.json'
+        )
+        schema = {
+            'foo': 'bar',
+        }
+
+        get_mock = mock.MagicMock()
+        get_mock.json = mock.MagicMock(return_value=schema)
+        with mock.patch('requests.get', return_value=get_mock):
+            assert datapackage.schema.Schema(url).to_dict() == schema
+
+    def test_init_raises_if_url_doesnt_exist(self):
+        url = 'https://inexistent-url.com/data-package.json'
+
+        with mock.patch('requests.get',
+                        side_effect=requests.exceptions.RequestException()):
+            with pytest.raises(datapackage.exceptions.SchemaError):
+                datapackage.schema.Schema(url).to_dict()
+
+    def test_init_raises_if_url_isnt_a_json(self):
+        url = 'https://some-place.com/data-package.csv'
+
+        get_mock = mock.MagicMock()
+        get_mock.json = mock.MagicMock(side_effect=ValueError)
+        with mock.patch('requests.get', return_value=get_mock):
+            with pytest.raises(ValueError):
+                datapackage.schema.Schema(url).to_dict()
 
     def test_init_raises_if_schema_isnt_string_nor_dict(self):
         invalid_schema = []
