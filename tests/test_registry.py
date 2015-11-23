@@ -26,7 +26,7 @@ class TestRegistry(unittest.TestCase):
         httpretty.register_uri(httpretty.GET, BACKEND_URL,
                                body="id,title,schema,specification")
 
-        registry = datapackage_registry.Registry()
+        registry = datapackage_registry.Registry({'backend': BACKEND_URL})
         assert_equal(registry.profiles, [],
                      'Registry is not an empty array')
 
@@ -40,7 +40,7 @@ tabular,Tabular Data Package,https://example.com/two.json,http://example.com"""
 
         httpretty.register_uri(httpretty.GET, BACKEND_URL, body=body)
 
-        registry = datapackage_registry.Registry()
+        registry = datapackage_registry.Registry({'backend': BACKEND_URL})
 
         assert_equal(len(registry.profiles), 2)
         # each member in array is a dict
@@ -57,7 +57,7 @@ tabular,Tabular Data Package,https://example.com/two.json,http://example.com"""
 
         httpretty.register_uri(httpretty.GET, BACKEND_URL, body=body)
 
-        registry = datapackage_registry.Registry()
+        registry = datapackage_registry.Registry({'backend': BACKEND_URL})
 
         # each dict in array has the expected keys
         for profile in registry.profiles:
@@ -76,7 +76,7 @@ tabular,Tabular Data Package,https://example.com/two.json,http://example.com"""
 
         httpretty.register_uri(httpretty.GET, BACKEND_URL, body=body)
 
-        registry = datapackage_registry.Registry()
+        registry = datapackage_registry.Registry({'backend': BACKEND_URL})
         base_profile = registry.profiles[0]
 
         # first dict in array has the expected values
@@ -123,7 +123,7 @@ a,b,c,d"""
         httpretty.register_uri(httpretty.GET, BACKEND_URL,
                                body=body)
 
-        registry = datapackage_registry.Registry()
+        registry = datapackage_registry.Registry({'backend': BACKEND_URL})
 
         assert_equal(len(registry.profiles), 2)
         assert_equal(registry.profiles[0]['id'], 'base')
@@ -136,7 +136,7 @@ a,b,c,d"""
                                body="404", status=404)
 
         with assert_raises(requests.HTTPError) as cm:
-            datapackage_registry.Registry()
+            datapackage_registry.Registry({'backend': BACKEND_URL})
         assert_equal(cm.exception.response.status_code, 404)
 
     @httpretty.activate
@@ -146,7 +146,7 @@ a,b,c,d"""
                                body="500", status=500)
 
         with assert_raises(requests.HTTPError) as cm:
-            datapackage_registry.Registry()
+            datapackage_registry.Registry({'backend': BACKEND_URL})
         assert_equal(cm.exception.response.status_code, 500)
 
     def test_profiles_arent_writable(self):
