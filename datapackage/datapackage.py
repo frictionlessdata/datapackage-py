@@ -60,7 +60,7 @@ class DataPackage(object):
         if isinstance(the_data, six.string_types):
             try:
                 the_data = json.load(open(data, 'r'))
-            except IOError as e:
+            except (ValueError, IOError) as e:
                 msg = 'Unable to load JSON at \'{0}\''.format(data)
                 six.raise_from(DataPackageException(msg), e)
         if not isinstance(the_data, dict):

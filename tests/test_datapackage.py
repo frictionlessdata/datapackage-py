@@ -27,7 +27,7 @@ class TestDataPackage(object):
 
     def test_init_raises_if_path_isnt_a_json(self):
         not_a_json_path = test_helpers.fixture_path('not_a_json')
-        with pytest.raises(ValueError):
+        with pytest.raises(datapackage.exceptions.DataPackageException):
             datapackage.DataPackage(not_a_json_path)
 
     def test_init_raises_if_path_json_isnt_a_dict(self):
