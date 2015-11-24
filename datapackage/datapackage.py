@@ -63,9 +63,9 @@ class DataPackage(object):
             except IOError as e:
                 msg = 'Unable to load JSON at \'{0}\''.format(data)
                 six.raise_from(DataPackageException(msg), e)
-        elif not isinstance(the_data, dict):
-            msg = 'Unable to load data \'{0}\''.format(data)
-            raise DataPackageException(msg)
+        if not isinstance(the_data, dict):
+            msg = 'Data must be a \'dict\', but was a \'{0}\''
+            raise DataPackageException(msg.format(type(data).__name__))
 
         return the_data
 

@@ -30,6 +30,11 @@ class TestDataPackage(object):
         with pytest.raises(ValueError):
             datapackage.DataPackage(not_a_json_path)
 
+    def test_init_raises_if_path_json_isnt_a_dict(self):
+        empty_array_path = test_helpers.fixture_path('empty_array.json')
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(empty_array_path)
+
     def test_init_raises_if_data_isnt_dict_or_string(self):
         data = 51
         with pytest.raises(datapackage.exceptions.DataPackageException):
