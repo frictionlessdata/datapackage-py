@@ -98,7 +98,7 @@ class TestValidDatapackageJson(unittest.TestCase):
 
     @httpretty.activate
     def test_valid_json_obj(self):
-        '''Datapackage as valid Python object.'''
+        '''Datapackage as valid Python dict.'''
         httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
                                body=REGISTRY_BODY)
         httpretty.register_uri(httpretty.GET,
@@ -117,7 +117,7 @@ class TestValidDatapackageJson(unittest.TestCase):
 
     @httpretty.activate
     def test_invalid_json_obj(self):
-        '''Datapackage as invalid Python object.
+        '''Datapackage as invalid Python dict.
 
         Datapackage is well-formed JSON, but doesn't validate against schema.
         '''

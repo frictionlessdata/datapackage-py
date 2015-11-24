@@ -14,9 +14,9 @@ import datapackage_validate
 valid, errors = datapackage_validate.validate(datapackage, schema)
 ```
 
-The `datapackage` can be a json string or python object.
+The `datapackage` can be a json string or python dict.
 
-The `schema` can be a json string, python object, or a schema id corresponding with a schema from the registry of [Data Package Profiles][]. `schema` is optional, and will default to the `base` schema id if not provided.
+The `schema` can be a json string, python dict, or a schema id corresponding with a schema from the registry of [Data Package Profiles][]. `schema` is optional, and will default to the `base` schema id if not provided.
 
 `validate()` returns a tuple (valid, errors):
 
