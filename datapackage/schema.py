@@ -9,6 +9,8 @@ import six
 import requests
 import json
 import jsonschema
+import datapackage_validate
+from datapackage_validate.exceptions import DataPackageValidateException
 from .exceptions import (
     SchemaError, ValidationError
 )
@@ -26,9 +28,9 @@ class Schema(object):
 
     def validate(self, data):
         try:
-            self._validator.validate(data)
-        except jsonschema.exceptions.ValidationError as e:
-            six.raise_from(ValidationError.create_from(e), e)
+            datapackage_validate.validate(data, self.to_dict())
+        except DataPackageValidateException as e:
+            six.raise_from(ValidationError(e), e)
 
     def _load_schema(self, schema):
         the_schema = schema
