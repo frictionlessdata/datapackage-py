@@ -19,7 +19,7 @@ def _get_schema_url_from_registry(id, registry):
 
 
 def _fetch_schema_obj_from_url(url):
-    '''Fetch schema from url and return schema object'''
+    '''Fetch schema from url and return schema dict'''
     schema_response = requests.get(url)
     schema_response.raise_for_status()
     return json.loads(schema_response.text)
@@ -28,7 +28,7 @@ def _fetch_schema_obj_from_url(url):
 def validate(datapackage, schema='base'):
     '''Validate Data Package datapackage.json files against a jsonschema.
 
-    `datapackage` - a json string or python object
+    `datapackage` - a json string or python dict
     `schema` - a schema string id, json string, or python dict
 
     Return a tuple (valid, errors):
