@@ -9,10 +9,12 @@ import json
 import unittest
 
 from nose.tools import (assert_true,
-                        assert_false)
+                        assert_false,
+                        assert_is_instance)
 import httpretty
 
 import datapackage_validate
+import datapackage_validate.exceptions as exceptions
 
 
 REGISTRY_BACKEND_URL = \
@@ -73,7 +75,7 @@ class TestValidDatapackageJson(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        assert_true('Invalid JSON:' in errors[0])
+        assert_is_instance(errors[0], exceptions.DataPackageValidateException)
 
     @httpretty.activate
     def test_invalid_json_not_string(self):
@@ -92,8 +94,7 @@ class TestValidDatapackageJson(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        assert_true('Invalid Data Package: not a string or object'
-                    in errors[0])
+        assert_is_instance(errors[0], exceptions.DataPackageValidateException)
 
     @httpretty.activate
     def test_valid_json_obj(self):
@@ -135,12 +136,8 @@ class TestValidDatapackageJson(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        # Py2 returns u'name', Py3 doesn't. Test for either.
-        assert_true("Schema ValidationError: u'name' is a required property"
-                    in errors[0]
-                    or
-                    "Schema ValidationError: 'name' is a required property"
-                    in errors[0])
+        assert_is_instance(errors[0], exceptions.ValidationError)
+        assert_true("'name' is a required property" in str(errors[0]))
 
 
 class TestValidateWithSchemaAsArgument(unittest.TestCase):
@@ -172,8 +169,7 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        assert_true('Invalid Schema: not a string or object'
-                    in errors[0])
+        assert_is_instance(errors[0], exceptions.SchemaError)
 
     def test_schema_as_dict(self):
         '''Pass schema as python dict to validate()'''
@@ -212,8 +208,7 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        assert_true('Registry Error: no schema with id "not-a-valid-id"'
-                    in errors[0])
+        assert_is_instance(errors[0], exceptions.RegistryError)
 
     @httpretty.activate
     def test_schema_404_raises_error(self):
@@ -228,9 +223,7 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        assert_true('Registry Error: 404 Client Error: '
-                    'Not Found for url: https://example.com/base_schema.json'
-                    in errors[0])
+        assert_is_instance(errors[0], exceptions.RegistryError)
 
     @httpretty.activate
     def test_schema_500_raises_error(self):
@@ -245,10 +238,7 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        assert_true('Registry Error: 500 Server Error: '
-                    'Internal Server Error for url: '
-                    'https://example.com/base_schema.json'
-                    in errors[0])
+        assert_is_instance(errors[0], exceptions.RegistryError)
 
     @httpretty.activate
     def test_registry_404_raises_error(self):
@@ -260,9 +250,7 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        assert_true('Registry Error: 404 Client Error: Not Found for url: '
-                    'https://rawgit.com/dataprotocols/registry/master/registry.csv'
-                    in errors[0])
+        assert_is_instance(errors[0], exceptions.RegistryError)
 
     @httpretty.activate
     def test_registry_500_raises_error(self):
@@ -274,7 +262,4 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
 
         assert_false(valid)
         assert_true(errors)
-        assert_true('Registry Error: 500 Server Error: '
-                    'Internal Server Error for url: '
-                    'https://rawgit.com/dataprotocols/registry/master/registry.csv'
-                    in errors[0])
+        assert_is_instance(errors[0], exceptions.RegistryError)

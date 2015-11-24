@@ -22,6 +22,6 @@ The `schema` can be a json string, python object, or a schema id corresponding w
 
 `valid` is a boolean determining whether the datapackage validates against the schema.
 
-`errors` is an array of error string messages. Empty if `valid` is True.
+`errors` is a list of exceptions found during validation. Empty if `valid` is True.
 
 [Data Package Profiles]: https://github.com/dataprotocols/registry
