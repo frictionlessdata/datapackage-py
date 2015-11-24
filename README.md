@@ -11,17 +11,18 @@ Validate [Data Package][] datapackage.json files against a jsonschema.
 ```python
 import datapackage_validate
 
-valid, errors = datapackage_validate.validate(datapackage, schema)
+try:
+  datapackage_validate.validate(datapackage, schema)
+except datapackage_validate.exceptions.DataPackageValidateException as e:
+  e.errors  # List with validation errors
 ```
 
 The `datapackage` can be a json string or python dict.
 
 The `schema` can be a json string, python dict, or a schema id corresponding with a schema from the registry of [Data Package Profiles][]. `schema` is optional, and will default to the `base` schema id if not provided.
 
-`validate()` returns a tuple (valid, errors):
-
-`valid` is a boolean determining whether the datapackage validates against the schema.
-
-`errors` is a list of exceptions found during validation. Empty if `valid` is True.
+`validate()` returns None. If there were errors during validation, it raises a
+`datapackage_validate.exceptions.DataPackageValidateException` with a list of
+the validation errors in its `.errors` property.
 
 [Data Package Profiles]: https://github.com/dataprotocols/registry

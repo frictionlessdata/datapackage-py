@@ -31,12 +31,10 @@ def validate(datapackage, schema='base'):
     `datapackage` - a json string or python dict
     `schema` - a schema string id, json string, or python dict
 
-    Return a tuple (valid, errors):
+    Returns None.
 
-    `valid` - a boolean to determine whether the datapackage validates against
-    the schema.
-    `errors` - a list of exceptions found during validation. Empty if `valid`
-    is True.
+    Raises a `datapackage_validate.exceptions.DataPackageValidateException`
+    with a list of the validation errors in its `.errors` attribute.
     '''
 
     valid = False
@@ -97,4 +95,7 @@ def validate(datapackage, schema='base'):
         else:
             valid = True
 
-    return valid, errors
+    if not valid:
+        exception = exceptions.DataPackageValidateException()
+        exception.errors = errors
+        raise exception

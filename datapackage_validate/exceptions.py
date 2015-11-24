@@ -1,5 +1,7 @@
 class DataPackageValidateException(Exception):
-    pass
+    def __init__(self, *args, **kwargs):
+        super(DataPackageValidateException, self).__init__(*args, **kwargs)
+        self.errors = []
 
 
 class SchemaError(DataPackageValidateException):
