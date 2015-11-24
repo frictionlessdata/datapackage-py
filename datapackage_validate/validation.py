@@ -10,6 +10,7 @@ import datapackage_registry
 import requests
 
 from . import compat
+from . import exceptions
 
 
 def _get_schema_url_from_registry(id, registry):
@@ -34,7 +35,8 @@ def validate(datapackage, schema='base'):
 
     `valid` - a boolean to determine whether the datapackage validates against
     the schema.
-    `errors` - an array of error string messages. Empty if `valid` is True.
+    `errors` - a list of exceptions found during validation. Empty if `valid`
+    is True.
     '''
 
     valid = False
@@ -48,9 +50,12 @@ def validate(datapackage, schema='base'):
         try:
             datapackage_obj = json.loads(datapackage)
         except ValueError as e:
-            errors.append('Invalid JSON: {0}'.format(e))
+            errors.append(exceptions.DataPackageValidateException(e))
     elif not (isinstance(datapackage, dict) or isinstance(datapackage, list)):
-        errors.append('Invalid Data Package: not a string or object')
+        msg = 'Data Package must be a dict or JSON string, but was a \'{0}\''
+        dp_type = type(datapackage).__name__
+        error = exceptions.DataPackageValidateException(msg.format(dp_type))
+        errors.append(error)
     else:
         datapackage_obj = datapackage
 
@@ -66,20 +71,20 @@ def validate(datapackage, schema='base'):
             try:
                 registry = datapackage_registry.get()
             except requests.HTTPError as e:
-                errors.append('Registry Error: {0}'.format(e))
+                errors.append(exceptions.RegistryError(e))
             else:
                 schema_url = _get_schema_url_from_registry(schema, registry)
                 if schema_url is None:
-                    errors.append(
-                        'Registry Error: no schema with id "{0}"'
-                        .format(schema))
+                    msg = 'No schema with id \'{0}\''.format(e)
+                    errors.append(exceptions.RegistryError(msg))
                 else:
                     try:
                         schema_obj = _fetch_schema_obj_from_url(schema_url)
                     except requests.HTTPError as e:
-                        errors.append('Registry Error: {0}'.format(e))
+                        errors.append(exceptions.RegistryError(e))
     elif not isinstance(schema, dict):
-        errors.append('Invalid Schema: not a string or object')
+        msg = 'Schema must be a string or dict'
+        errors.append(exceptions.SchemaError(msg))
     else:
         schema_obj = schema
 
@@ -88,7 +93,7 @@ def validate(datapackage, schema='base'):
         try:
             jsonschema.validate(datapackage_obj, schema_obj)
         except jsonschema.ValidationError as e:
-            errors.append('Schema ValidationError: {0}'.format(e.message))
+            errors.append(exceptions.ValidationError(e.message))
         else:
             valid = True
 
