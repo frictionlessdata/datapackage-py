@@ -134,6 +134,18 @@ class TestValidDatapackageJson(unittest.TestCase):
         assert_true("'name' is a required property" in
                     str(cm.exception.errors[0]))
 
+    def test_validate_empty_data_package(self):
+        datapackage = {}
+        schema = {
+            'required': ['name'],
+        }
+
+        with assert_raises(exceptions.DataPackageValidateException) as cm:
+            datapackage_validate.validate(datapackage, schema)
+
+        assert_true(cm.exception.errors)
+        assert_is_instance(cm.exception.errors[0], exceptions.ValidationError)
+
 
 class TestValidateWithSchemaAsArgument(unittest.TestCase):
 

@@ -91,7 +91,7 @@ def validate(datapackage, schema='base'):
         schema_obj = schema
 
     # Validate datapackage against the schema
-    if datapackage_obj and schema_obj:
+    if datapackage_obj is not None and schema_obj is not None:
         try:
             jsonschema.validate(datapackage_obj, schema_obj)
         except jsonschema.ValidationError as e:
