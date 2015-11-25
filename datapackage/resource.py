@@ -41,23 +41,22 @@ class Resource(object):
         return self._load_data(metadata)
 
     def _load_data(self, metadata):
-        has_inline_data = lambda resource: resource.get('data') is not None
-        has_local_data = lambda resource: resource.get('path') is not None
-        has_url_data = lambda resource: resource.get('url') is not None
-
+        inline_data = metadata.get('data')
+        data_path = metadata.get('path')
+        data_url = metadata.get('url')
         data = None
 
-        if has_inline_data(metadata):
-            data = metadata.get('data')
-        elif has_local_data(metadata):
-            path = self._absolute_path(metadata.get('path'))
+        if inline_data is not None:
+            data = inline_data
+        elif data_path is not None:
+            path = self._absolute_path(data_path)
             with open(path, 'r') as f:
                 data = f.read()
                 if six.PY2:
                     data = unicode(data, 'utf-8')
-        elif has_url_data(metadata):
+        elif data_url is not None:
             try:
-                req = requests.get(metadata.get('url'))
+                req = requests.get(data_url)
                 req.raise_for_status()
                 data = req.text
             except requests.exceptions.RequestException as e:
