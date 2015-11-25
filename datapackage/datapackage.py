@@ -16,6 +16,7 @@ class DataPackage(object):
     def __init__(self, data=None, schema='base'):
         self._data = self._load_data(data)
         self._schema = self._load_schema(schema)
+        self._resources = ()
 
     @property
     def data(self):
@@ -24,6 +25,10 @@ class DataPackage(object):
     @property
     def schema(self):
         return self._schema
+
+    @property
+    def resources(self):
+        return self._resources
 
     @property
     def attributes(self):

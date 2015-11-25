@@ -127,3 +127,16 @@ class TestDataPackage(object):
         schema = {}
         dp = datapackage.DataPackage(schema=schema)
         assert dp.required_attributes == []
+
+
+class TestDataPackageResources(object):
+    def test_resources_are_empty_tuple_by_default(self):
+        data = {}
+        dp = datapackage.DataPackage(data)
+        assert dp.resources == ()
+
+    def test_cant_assign_to_resources(self):
+        data = {}
+        dp = datapackage.DataPackage(data)
+        with pytest.raises(AttributeError):
+            dp.resources = ()
