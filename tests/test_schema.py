@@ -58,8 +58,10 @@ class TestSchema(object):
         with pytest.raises(ValueError):
             datapackage.schema.Schema(url).to_dict()
 
+    @httpretty.activate
     def test_init_raises_if_url_doesnt_exist(self):
         url = 'https://inexistent-url.com/data-package.json'
+        httpretty.register_uri(httpretty.GET, url, status=404)
 
         with pytest.raises(datapackage.exceptions.SchemaError):
             datapackage.schema.Schema(url).to_dict()

@@ -41,6 +41,7 @@ class Schema(object):
                     the_schema = json.load(open(schema, 'r'))
                 else:
                     req = requests.get(schema)
+                    req.raise_for_status()
                     the_schema = req.json()
             except (IOError,
                     requests.exceptions.RequestException) as e:
