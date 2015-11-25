@@ -3,7 +3,6 @@ try:
 except ImportError:
     import mock
 import pytest
-import requests.exceptions
 import tests.test_helpers as test_helpers
 import datapackage
 
@@ -56,10 +55,8 @@ class TestSchema(object):
     def test_init_raises_if_url_doesnt_exist(self):
         url = 'https://inexistent-url.com/data-package.json'
 
-        with mock.patch('requests.get',
-                        side_effect=requests.exceptions.RequestException()):
-            with pytest.raises(datapackage.exceptions.SchemaError):
-                datapackage.schema.Schema(url).to_dict()
+        with pytest.raises(datapackage.exceptions.SchemaError):
+            datapackage.schema.Schema(url).to_dict()
 
     def test_init_raises_if_url_isnt_a_json(self):
         url = 'https://some-place.com/data-package.csv'
