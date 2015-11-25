@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 
+import os
 import csv
 import json
 import requests
@@ -16,15 +17,16 @@ from .exceptions import (
 
 class Resource(object):
     @classmethod
-    def load(cls, data):
+    def load(cls, data, default_base_path=None):
         try:
-            resource = TabularResource(data)
+            resource = TabularResource(data, default_base_path)
         except ValueError:
-            resource = cls(data)
+            resource = cls(data, default_base_path)
         return resource
 
-    def __init__(self, metadata):
+    def __init__(self, metadata, default_base_path=None):
         self._metadata = metadata
+        self._base_path = self.metadata.get('base', default_base_path)
         self._data = self._parse_data(metadata)
 
     @property
@@ -40,12 +42,19 @@ class Resource(object):
 
     def _load_data(self, metadata):
         has_inline_data = lambda resource: resource.get('data') is not None
+        has_local_data = lambda resource: resource.get('path') is not None
         has_url_data = lambda resource: resource.get('url') is not None
 
         data = None
 
         if has_inline_data(metadata):
             data = metadata.get('data')
+        elif has_local_data(metadata):
+            path = self._absolute_path(metadata.get('path'))
+            with open(path, 'r') as f:
+                data = f.read()
+                if six.PY2:
+                    data = unicode(data, 'utf-8')
         elif has_url_data(metadata):
             try:
                 req = requests.get(metadata.get('url'))
@@ -55,6 +64,11 @@ class Resource(object):
                 six.raise_from(ResourceError(e), e)
 
         return data
+
+    def _absolute_path(self, path):
+        if self._base_path is None:
+            return path
+        return os.path.join(self._base_path, path)
 
 
 class TabularResource(Resource):

@@ -4,8 +4,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import pytest
 import httpretty
+import tests.test_helpers as test_helpers
 import datapackage
 import datapackage.resource
 import datapackage.exceptions
@@ -108,6 +110,50 @@ class TestResource(object):
 
         with pytest.raises(datapackage.exceptions.ResourceError):
             datapackage.Resource.load(resource_dict)
+
+    def test_load_accepts_absolute_paths(self):
+        path = test_helpers.fixture_path('unicode.txt')
+        resource_dict = {
+            'path': path,
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.data == '万事开头难\n'
+
+    def test_load_accepts_relative_paths(self):
+        filename = 'unicode.txt'
+        base_path = os.path.dirname(
+            test_helpers.fixture_path(filename)
+        )
+        resource_dict = {
+            'path': filename,
+        }
+        resource = datapackage.Resource.load(resource_dict, base_path)
+        assert resource.data == '万事开头难\n'
+
+    def test_load_accepts_relative_paths_with_base_defined_in_metadata(self):
+        filename = 'unicode.txt'
+        base_path = os.path.dirname(
+            test_helpers.fixture_path(filename)
+        )
+        resource_dict = {
+            'path': filename,
+            'base': base_path,
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.data == '万事开头难\n'
+
+    def test_load_base_path_in_metadata_overloads_base_passed_in_args(self):
+        filename = 'unicode.txt'
+        base_path = os.path.dirname(
+            test_helpers.fixture_path(filename)
+        )
+        resource_dict = {
+            'path': filename,
+            'base': base_path,
+        }
+        resource = datapackage.Resource.load(resource_dict,
+                                             'invalid_base_path')
+        assert resource.data == '万事开头难\n'
 
 
 class TestTabularResource(object):
