@@ -50,10 +50,13 @@ class Resource(object):
             data = inline_data
         elif data_path is not None:
             path = self._absolute_path(data_path)
-            with open(path, 'r') as f:
-                data = f.read()
-                if six.PY2:
-                    data = unicode(data, 'utf-8')
+            try:
+                with open(path, 'r') as f:
+                    data = f.read()
+                    if six.PY2:
+                        data = unicode(data, 'utf-8')
+            except IOError as e:
+                six.raise_from(ResourceError(e), e)
         elif data_url is not None:
             try:
                 req = requests.get(data_url)

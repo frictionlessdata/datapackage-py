@@ -155,6 +155,14 @@ class TestResource(object):
                                              'invalid_base_path')
         assert resource.data == '万事开头难\n'
 
+    def test_load_raises_if_path_doesnt_exist(self):
+        resource_dict = {
+            'path': 'inexistent-file.json',
+        }
+
+        with pytest.raises(datapackage.exceptions.ResourceError):
+            datapackage.Resource.load(resource_dict)
+
 
 class TestTabularResource(object):
     def test_load_inline_list(self):
