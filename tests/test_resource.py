@@ -5,8 +5,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import pytest
+import httpretty
 import datapackage
 import datapackage.resource
+import datapackage.exceptions
 
 TabularResource = datapackage.resource.TabularResource
 
@@ -70,6 +72,43 @@ class TestResource(object):
         resource = datapackage.Resource.load(resource_dict)
         assert isinstance(resource, TabularResource)
 
+    def test_load_prefers_loading_inline_data_over_path_and_url(self):
+        resource_dict = {
+            'data': [
+                {'country': 'China', 'value': '中国'},
+                {'country': 'Brazil', 'value': 'Brasil'}
+            ],
+            'path': 'inexistent-file.json',
+            'url': 'http://someplace.com/inexistent-file.json',
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.data == resource_dict['data']
+
+    @httpretty.activate
+    def test_load_accepts_url(self):
+        url = 'http://someplace/resource.txt'
+        body = '万事开头难'
+        httpretty.register_uri(httpretty.GET, url, body=body)
+
+        resource_dict = {
+            'url': url,
+        }
+
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.data == body
+
+    @httpretty.activate
+    def test_load_raises_if_url_doesnt_exist(self):
+        url = 'http://someplace/resource.txt'
+        httpretty.register_uri(httpretty.GET, url, status=404)
+
+        resource_dict = {
+            'url': url,
+        }
+
+        with pytest.raises(datapackage.exceptions.ResourceError):
+            datapackage.Resource.load(resource_dict)
+
 
 class TestTabularResource(object):
     def test_load_inline_list(self):
@@ -119,17 +158,26 @@ class TestTabularResource(object):
         assert resource.data[0] == {'country': 'China', 'value': '中国'}
         assert resource.data[1] == {'country': 'Brazil', 'value': 'Brasil'}
 
-    def test_load_prefers_loading_inline_data_over_path_and_url(self):
+    @httpretty.activate
+    def test_load_url(self):
+        url = 'http://someplace/resource.json'
+        body = (
+            '['
+            '{"country": "China", "value": "中国"},'
+            '{"country": "Brazil", "value": "Brasil"}'
+            ']'
+        )
+        httpretty.register_uri(httpretty.GET, url,
+                               body=body, content_type='application/json')
+
         resource_dict = {
-            'data': [
-                {'country': 'China', 'value': '中国'},
-                {'country': 'Brazil', 'value': 'Brasil'}
-            ],
-            'path': 'data.json',
-            'url': 'http://someplace.com/data.json',
+            'url': url,
         }
+
         resource = TabularResource(resource_dict)
-        assert resource.data == resource_dict['data']
+        assert len(resource.data) == 2
+        assert resource.data[0] == {'country': 'China', 'value': '中国'}
+        assert resource.data[1] == {'country': 'Brazil', 'value': 'Brasil'}
 
     def test_raises_valueerror_if_data_is_number(self):
         resource_dict = {

@@ -18,3 +18,7 @@ class SchemaError(DataPackageException,
 class ValidationError(DataPackageException,
                       jsonschema.exceptions.ValidationError):
     pass
+
+
+class ResourceError(DataPackageException):
+    pass
