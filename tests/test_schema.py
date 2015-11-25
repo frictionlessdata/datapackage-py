@@ -1,8 +1,6 @@
-try:
-    import unittest.mock as mock
-except ImportError:
-    import mock
+import json
 import pytest
+import httpretty
 import tests.test_helpers as test_helpers
 import datapackage
 
@@ -39,33 +37,32 @@ class TestSchema(object):
         with pytest.raises(ValueError):
             datapackage.schema.Schema(not_a_json_path)
 
+    @httpretty.activate
     def test_init_loads_schema_from_url(self):
-        url = (
-            'https://some-place.com/data-package.json'
-        )
         schema = {
             'foo': 'bar',
         }
+        url = 'http://someplace/datapackage.json'
+        body = json.dumps(schema)
+        httpretty.register_uri(httpretty.GET, url,
+                               body=body, content_type='application/json')
 
-        get_mock = mock.MagicMock()
-        get_mock.json = mock.MagicMock(return_value=schema)
-        with mock.patch('requests.get', return_value=get_mock):
-            assert datapackage.schema.Schema(url).to_dict() == schema
+        assert datapackage.schema.Schema(url).to_dict() == schema
+
+    @httpretty.activate
+    def test_init_raises_if_url_isnt_a_json(self):
+        url = 'https://someplace.com/data-package.csv'
+        body = 'not a json'
+        httpretty.register_uri(httpretty.GET, url, body=body)
+
+        with pytest.raises(ValueError):
+            datapackage.schema.Schema(url).to_dict()
 
     def test_init_raises_if_url_doesnt_exist(self):
         url = 'https://inexistent-url.com/data-package.json'
 
         with pytest.raises(datapackage.exceptions.SchemaError):
             datapackage.schema.Schema(url).to_dict()
-
-    def test_init_raises_if_url_isnt_a_json(self):
-        url = 'https://some-place.com/data-package.csv'
-
-        get_mock = mock.MagicMock()
-        get_mock.json = mock.MagicMock(side_effect=ValueError)
-        with mock.patch('requests.get', return_value=get_mock):
-            with pytest.raises(ValueError):
-                datapackage.schema.Schema(url).to_dict()
 
     def test_init_raises_if_schema_isnt_string_nor_dict(self):
         invalid_schema = []
