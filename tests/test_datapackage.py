@@ -1,4 +1,12 @@
+ # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import os
 import pytest
+import httpretty
 import tests.test_helpers as test_helpers
 import datapackage
 
@@ -130,6 +138,25 @@ class TestDataPackage(object):
 
 
 class TestDataPackageResources(object):
+    def test_base_path_defaults_to_none(self):
+        assert datapackage.DataPackage().base_path is None
+
+    def test_base_path_cant_be_set(self):
+        dp = datapackage.DataPackage()
+        with pytest.raises(AttributeError):
+            dp.base_path = 'foo'
+
+    def test_base_path_is_default_when_data_is_a_dict(self):
+        data = {}
+        dp = datapackage.DataPackage(data, default_base_path='foo')
+        assert dp.base_path == 'foo'
+
+    def test_base_path_is_datapackages_base_path_when_it_is_a_file(self):
+        path = test_helpers.fixture_path('empty_datapackage.json')
+        base_path = os.path.dirname(path)
+        dp = datapackage.DataPackage(path)
+        assert dp.base_path == base_path
+
     def test_resources_are_empty_tuple_by_default(self):
         data = {}
         dp = datapackage.DataPackage(data)
@@ -140,3 +167,75 @@ class TestDataPackageResources(object):
         dp = datapackage.DataPackage(data)
         with pytest.raises(AttributeError):
             dp.resources = ()
+
+    def test_inline_resources_are_loaded(self):
+        data = {
+            'resources': [
+                {'data': 'foo'},
+                {'data': 'bar'},
+            ],
+        }
+        dp = datapackage.DataPackage(data)
+        assert len(dp.resources) == 2
+        assert dp.resources[0].data == 'foo'
+        assert dp.resources[1].data == 'bar'
+
+    def test_local_resource_with_absolute_path_is_loaded(self):
+        path = test_helpers.fixture_path('unicode.txt')
+        data = {
+            'resources': [
+                {'path': path},
+            ],
+        }
+        dp = datapackage.DataPackage(data)
+        assert len(dp.resources) == 1
+        assert dp.resources[0].data == '万事开头难\n'
+
+    def test_local_resource_with_relative_path_is_loaded(self):
+        datapackage_filename = 'datapackage_with_unicode.txt_resource.json'
+        path = test_helpers.fixture_path(datapackage_filename)
+        dp = datapackage.DataPackage(path)
+        assert len(dp.resources) == 1
+        assert dp.resources[0].data == '万事开头难\n'
+
+    def test_raises_if_local_resource_path_doesnt_exist(self):
+        data = {
+            'resources': [
+                {'path': 'inexistent-file.json'},
+            ],
+        }
+
+        with pytest.raises(datapackage.exceptions.ResourceError):
+            datapackage.DataPackage(data)
+
+    @httpretty.activate
+    def test_remote_resource_is_loaded(self):
+        url = 'http://someplace.com/resource.txt'
+        body = '万事开头难'
+        httpretty.register_uri(httpretty.GET, url, body=body)
+        data = {
+            'resources': [
+                {'url': url},
+            ],
+        }
+
+        # FIXME: Remove explicit schema whenever datapackage_registry caches
+        # its schemas
+        dp = datapackage.DataPackage(data, schema={})
+        assert len(dp.resources) == 1
+        assert dp.resources[0].data == body
+
+    @httpretty.activate
+    def test_raises_if_remote_resource_url_doesnt_exist(self):
+        url = 'http://someplace.com/inexistent-file.json'
+        httpretty.register_uri(httpretty.GET, url, status=404)
+        data = {
+            'resources': [
+                {'url': url},
+            ],
+        }
+
+        # FIXME: Remove explicit schema whenever datapackage_registry caches
+        # its schemas
+        with pytest.raises(datapackage.exceptions.ResourceError):
+            datapackage.DataPackage(data, schema={})

@@ -3,20 +3,23 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import json
 import six
 import datapackage_registry
 from .schema import Schema
+from .resource import Resource
 from .exceptions import (
     DataPackageException
 )
 
 
 class DataPackage(object):
-    def __init__(self, data=None, schema='base'):
+    def __init__(self, data=None, schema='base', default_base_path=None):
         self._data = self._load_data(data)
         self._schema = self._load_schema(schema)
-        self._resources = ()
+        self._base_path = self._get_base_path(data, default_base_path)
+        self._resources = self._load_resources(self.data, self.base_path)
 
     @property
     def data(self):
@@ -25,6 +28,10 @@ class DataPackage(object):
     @property
     def schema(self):
         return self._schema
+
+    @property
+    def base_path(self):
+        return self._base_path
 
     @property
     def resources(self):
@@ -84,3 +91,19 @@ class DataPackage(object):
                 the_schema = registry[schema]['schema']
 
         return Schema(the_schema)
+
+    def _get_base_path(self, data, default_base_path):
+        if not isinstance(data, six.string_types):
+            return default_base_path
+
+        if os.path.isfile(data):
+            return os.path.dirname(os.path.abspath(data))
+
+    def _load_resources(self, data, base_path):
+        resources_dicts = data.get('resources')
+
+        if resources_dicts is None:
+            return ()
+
+        return tuple([Resource.load(resource_dict, base_path)
+                      for resource_dict in resources_dicts])
