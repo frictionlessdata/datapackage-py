@@ -24,16 +24,16 @@ class TestRegistry(unittest.TestCase):
 
     def test_return_empty_dict_when_registry_is_empty(self):
         '''Return an empty dict when registry csv is empty'''
-        config = {'backend': self.EMPTY_REGISTRY_PATH}
-        registry = datapackage_registry.Registry(config)
+        registry_path = self.EMPTY_REGISTRY_PATH
+        registry = datapackage_registry.Registry(registry_path)
 
         assert_equal(registry.available_profiles, {},
                      'Registry is not an empty dict')
 
     def test_return_non_empty_dict_when_registry_is_not_empty(self):
         '''Return an dict of dicts when registry csv is not empty'''
-        config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
-        registry = datapackage_registry.Registry(config)
+        registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
+        registry = datapackage_registry.Registry(registry_path)
 
         assert_equal(len(registry.available_profiles), 2)
         # each member in dict is a dict
@@ -42,8 +42,8 @@ class TestRegistry(unittest.TestCase):
 
     def test_dicts_have_expected_keys(self):
         '''The returned dicts have the expected keys'''
-        config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
-        registry = datapackage_registry.Registry(config)
+        registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
+        registry = datapackage_registry.Registry(registry_path)
 
         # each dict in profiles has the expected keys
         for profile in registry.available_profiles.values():
@@ -53,8 +53,8 @@ class TestRegistry(unittest.TestCase):
             assert_true('specification' in profile)
 
     def test_dicts_have_expected_values(self):
-        config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
-        registry = datapackage_registry.Registry(config)
+        registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
+        registry = datapackage_registry.Registry(registry_path)
 
         assert_equal(len(registry.available_profiles), 2)
         base_profile_metadata = registry.available_profiles.get('base')
@@ -69,8 +69,8 @@ class TestRegistry(unittest.TestCase):
 
     def test_unicode_in_registry(self):
         '''A utf-8 encoded string in the registry csv won't break the code.'''
-        config = {'backend': self.UNICODE_REGISTRY_PATH}
-        registry = datapackage_registry.Registry(config)
+        registry_path = self.UNICODE_REGISTRY_PATH
+        registry = datapackage_registry.Registry(registry_path)
 
         assert_equal(len(registry.available_profiles), 2)
         base_profile_metadata = registry.available_profiles.get('base')
@@ -87,8 +87,7 @@ class TestRegistry(unittest.TestCase):
         )
         httpretty.register_uri(httpretty.GET, url, body=body)
 
-        config = {'backend': url}
-        registry = datapackage_registry.Registry(config)
+        registry = datapackage_registry.Registry(url)
 
         assert_equal(len(registry.available_profiles), 1)
         base_profile_metadata = registry.available_profiles.get('base')
@@ -107,7 +106,7 @@ class TestRegistry(unittest.TestCase):
                                body="404", status=404)
 
         with assert_raises(requests.HTTPError) as cm:
-            datapackage_registry.Registry({'backend': url})
+            datapackage_registry.Registry(url)
         assert_equal(cm.exception.response.status_code, 404)
 
     @httpretty.activate
@@ -118,17 +117,17 @@ class TestRegistry(unittest.TestCase):
                                body="500", status=500)
 
         with assert_raises(requests.HTTPError) as cm:
-            datapackage_registry.Registry({'backend': url})
+            datapackage_registry.Registry(url)
         assert_equal(cm.exception.response.status_code, 500)
 
-    def test_profiles_arent_writable(self):
+    def test_available_profiles_arent_writable(self):
         registry = datapackage_registry.Registry()
         with assert_raises(AttributeError):
             registry.available_profiles = {}
 
-    def test_get_loads_file_from_disk(self):
-        config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
-        registry = datapackage_registry.Registry(config)
+    def test_get_loads_available_profile_from_disk(self):
+        registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
+        registry = datapackage_registry.Registry(registry_path)
 
         base_profile = registry.get_profile('base')
         assert base_profile is not None
@@ -136,19 +135,18 @@ class TestRegistry(unittest.TestCase):
 
     @httpretty.activate
     def test_get_loads_file_from_http_if_theres_no_local_copy(self):
-        url = 'http://some-place.com/registry.csv'
-        body = (
+        registry_url = 'http://some-place.com/registry.csv'
+        registry_body = (
             'id,title,schema,specification\r\n'
             'base,Data Package,http://example.com/one.json,http://example.com'
         )
-        httpretty.register_uri(httpretty.GET, url, body=body)
+        httpretty.register_uri(httpretty.GET, registry_url, body=registry_body)
 
         profile_url = 'http://example.com/one.json'
         profile_body = '{ "title": "base_profile" }'
         httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
 
-        config = {'backend': url}
-        registry = datapackage_registry.Registry(config)
+        registry = datapackage_registry.Registry(registry_url)
 
         base_profile = registry.get_profile('base')
         assert base_profile is not None
@@ -156,19 +154,18 @@ class TestRegistry(unittest.TestCase):
 
     @httpretty.activate
     def test_get_loads_file_from_http_if_local_copys_path_isnt_a_file(self):
-        url = 'http://some-place.com/registry.csv'
-        body = (
+        registry_url = 'http://some-place.com/registry.csv'
+        registry_body = (
             'id,title,schema,specification,relative_path\r\n'
             'base,Data Package,http://example.com/one.json,http://example.com,inexistent.json'
         )
-        httpretty.register_uri(httpretty.GET, url, body=body)
+        httpretty.register_uri(httpretty.GET, registry_url, body=registry_body)
 
         profile_url = 'http://example.com/one.json'
         profile_body = '{ "title": "base_profile" }'
         httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
 
-        config = {'backend': url}
-        registry = datapackage_registry.Registry(config)
+        registry = datapackage_registry.Registry(registry_url)
 
         base_profile = registry.get_profile('base')
         assert base_profile is not None
@@ -179,8 +176,8 @@ class TestRegistry(unittest.TestCase):
         assert registry.get_profile('non-existent-profile') is None
 
     def test_get_memoize_the_profiles(self):
-        config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
-        registry = datapackage_registry.Registry(config)
+        registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
+        registry = datapackage_registry.Registry(registry_path)
 
         registry.get_profile('base')
 

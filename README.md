@@ -35,3 +35,12 @@ print(registry.available_profiles)
 # get a profile by its id
 base_profile = registry.get_profile('base')
 ```
+
+If you'd like to use a custom registry, you can pass its URL or local path to
+the `Registry()` constructor, as in:
+
+```python
+import datapackage_registry
+
+registry = datapackage_registry.Registry('http://someplace.com/my-registry.csv')
+```

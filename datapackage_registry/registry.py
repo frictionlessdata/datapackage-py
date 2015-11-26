@@ -15,18 +15,16 @@ from . import compat
 class Registry(object):
     DEFAULT_REGISTRY_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        'registry'
+        'registry',
+        'registry.csv'
     )
 
-    DEFAULT_CONFIG = {
-        'backend': os.path.join(DEFAULT_REGISTRY_PATH, 'registry.csv'),
-    }
-
-    def __init__(self, user_config=None):
-        config = user_config or self.DEFAULT_CONFIG
-        if os.path.isfile(config['backend']):
-            self.REGISTRY_PATH = os.path.dirname(config['backend'])
-        self._registry = self._get_registry_at_endpoint(config['backend'])
+    def __init__(self, registry_path_or_url=DEFAULT_REGISTRY_PATH):
+        self._registry = self._get_registry(registry_path_or_url)
+        if os.path.isfile(registry_path_or_url):
+            self._BASE_PATH = os.path.dirname(
+                os.path.abspath(registry_path_or_url)
+            )
         self._profiles = {}
 
     @property
@@ -52,8 +50,8 @@ class Registry(object):
             return
 
         relative_path = profile_metadata.get('relative_path')
-        if relative_path and hasattr(self, 'REGISTRY_PATH'):
-            path = os.path.join(self.REGISTRY_PATH, relative_path)
+        path = self._get_absolute_path(relative_path)
+        if path:
             if os.path.isfile(path):
                 return json.load(open(path, 'r'))
 
@@ -62,16 +60,26 @@ class Registry(object):
             resp = requests.get(url)
             return resp.json()
 
-    def _get_registry_at_endpoint(self, endpoint):
+    def _get_registry(self, registry_path_or_url):
         '''Return an array of objects from a CSV endpoint'''
-        if os.path.isfile(endpoint):
-            data = open(endpoint, 'r')
+        if os.path.isfile(registry_path_or_url):
+            data = open(registry_path_or_url, 'r')
         else:
-            resp = requests.get(endpoint)
-            resp.raise_for_status()
+            res = requests.get(registry_path_or_url)
+            res.raise_for_status()
 
-            data = StringIO(resp.text)
+            data = StringIO(res.text)
 
         reader = compat.csv_dict_reader(data)
 
         return dict([(o['id'], o) for o in reader])
+
+    def _get_absolute_path(self, relative_path):
+        '''Return the received relative_path joined with the base path
+
+        It'll return None if something goes wrong.
+        '''
+        try:
+            return os.path.join(self._BASE_PATH, relative_path)
+        except:
+            pass
