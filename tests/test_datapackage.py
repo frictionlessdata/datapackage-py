@@ -17,11 +17,11 @@ class TestDataPackage(object):
         assert dp.schema.title == 'DataPackage'
 
     def test_init_accepts_dicts(self):
-        data = {
+        metadata = {
             'foo': 'bar',
         }
-        dp = datapackage.DataPackage(data)
-        assert dp.to_dict() == data
+        dp = datapackage.DataPackage(metadata)
+        assert dp.to_dict() == metadata
 
     def test_init_accepts_file_paths(self):
         path = test_helpers.fixture_path('empty_datapackage.json')
@@ -43,19 +43,19 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.DataPackageException):
             datapackage.DataPackage(empty_array_path)
 
-    def test_init_raises_if_data_isnt_dict_or_string(self):
-        data = 51
+    def test_init_raises_if_metadata_isnt_dict_or_string(self):
+        metadata = 51
         with pytest.raises(datapackage.exceptions.DataPackageException):
-            datapackage.DataPackage(data)
+            datapackage.DataPackage(metadata)
 
     def test_schema(self):
-        data = {}
+        metadata = {}
         schema = {'foo': 'bar'}
-        dp = datapackage.DataPackage(data, schema=schema)
+        dp = datapackage.DataPackage(metadata, schema=schema)
         assert dp.schema.to_dict() == schema
 
     def test_attributes(self):
-        data = {
+        metadata = {
             'name': 'test',
             'title': 'a test',
         }
@@ -64,33 +64,33 @@ class TestDataPackage(object):
                 'name': {}
             }
         }
-        dp = datapackage.DataPackage(data, schema)
+        dp = datapackage.DataPackage(metadata, schema)
         assert sorted(dp.attributes) == sorted(['name', 'title'])
 
     def test_attributes_can_be_set(self):
-        data = {
+        metadata = {
             'name': 'foo',
         }
-        dp = datapackage.DataPackage(data)
-        dp.data['title'] = 'bar'
+        dp = datapackage.DataPackage(metadata)
+        dp.metadata['title'] = 'bar'
         assert dp.to_dict() == {'name': 'foo', 'title': 'bar'}
 
     def test_attributes_arent_immutable(self):
-        data = {
+        metadata = {
             'keywords': [],
         }
-        dp = datapackage.DataPackage(data)
-        dp.data['keywords'].append('foo')
+        dp = datapackage.DataPackage(metadata)
+        dp.metadata['keywords'].append('foo')
         assert dp.to_dict() == {'keywords': ['foo']}
 
     def test_attributes_return_an_empty_list_if_there_are_none(self):
-        data = {}
+        metadata = {}
         schema = {}
-        dp = datapackage.DataPackage(data, schema)
+        dp = datapackage.DataPackage(metadata, schema)
         assert dp.attributes == []
 
     def test_validate(self):
-        data = {
+        metadata = {
             'name': 'foo',
         }
         schema = {
@@ -99,7 +99,7 @@ class TestDataPackage(object):
             },
             'required': ['name'],
         }
-        dp = datapackage.DataPackage(data, schema)
+        dp = datapackage.DataPackage(metadata, schema)
         dp.validate()
 
     def test_validate_works_when_setting_attributes_after_creation(self):
@@ -110,7 +110,7 @@ class TestDataPackage(object):
             'required': ['name'],
         }
         dp = datapackage.DataPackage(schema=schema)
-        dp.data['name'] = 'foo'
+        dp.metadata['name'] = 'foo'
         dp.validate()
 
     def test_validate_raises_validation_error_if_invalid(self):
@@ -146,23 +146,23 @@ class TestDataPackageResources(object):
         with pytest.raises(AttributeError):
             dp.base_path = 'foo'
 
-    def test_base_path_can_be_set_by_changing_the_data(self):
-        data = {}
-        dp = datapackage.DataPackage(data, default_base_path='foo')
+    def test_base_path_can_be_set_by_changing_the_metadata(self):
+        metadata = {}
+        dp = datapackage.DataPackage(metadata, default_base_path='foo')
         assert dp.base_path == 'foo'
-        dp.data['base'] = 'data/base/path'
-        assert dp.base_path == 'data/base/path'
+        dp.metadata['base'] = 'metadata/base/path'
+        assert dp.base_path == 'metadata/base/path'
 
     def test_base_path_passed_through_data_is_prefered_over_the_default(self):
-        data = {
-            'base': 'data/base/path'
+        metadata = {
+            'base': 'metadata/base/path'
         }
-        dp = datapackage.DataPackage(data, default_base_path='foo')
-        assert dp.base_path == 'data/base/path'
+        dp = datapackage.DataPackage(metadata, default_base_path='foo')
+        assert dp.base_path == 'metadata/base/path'
 
-    def test_base_path_is_default_when_data_is_a_dict(self):
-        data = {}
-        dp = datapackage.DataPackage(data, default_base_path='foo')
+    def test_base_path_is_default_when_metadata_is_a_dict(self):
+        metadata = {}
+        dp = datapackage.DataPackage(metadata, default_base_path='foo')
         assert dp.base_path == 'foo'
 
     def test_base_path_is_datapackages_base_path_when_it_is_a_file(self):
@@ -172,36 +172,36 @@ class TestDataPackageResources(object):
         assert dp.base_path == base_path
 
     def test_resources_are_empty_tuple_by_default(self):
-        data = {}
-        dp = datapackage.DataPackage(data)
+        metadata = {}
+        dp = datapackage.DataPackage(metadata)
         assert dp.resources == ()
 
     def test_cant_assign_to_resources(self):
-        data = {}
-        dp = datapackage.DataPackage(data)
+        metadata = {}
+        dp = datapackage.DataPackage(metadata)
         with pytest.raises(AttributeError):
             dp.resources = ()
 
     def test_inline_resources_are_loaded(self):
-        data = {
+        metadata = {
             'resources': [
                 {'data': 'foo'},
                 {'data': 'bar'},
             ],
         }
-        dp = datapackage.DataPackage(data)
+        dp = datapackage.DataPackage(metadata)
         assert len(dp.resources) == 2
         assert dp.resources[0].data == 'foo'
         assert dp.resources[1].data == 'bar'
 
     def test_local_resource_with_absolute_path_is_loaded(self):
         path = test_helpers.fixture_path('unicode.txt')
-        data = {
+        metadata = {
             'resources': [
                 {'path': path},
             ],
         }
-        dp = datapackage.DataPackage(data)
+        dp = datapackage.DataPackage(metadata)
         assert len(dp.resources) == 1
         assert dp.resources[0].data == '万事开头难\n'
 
@@ -213,21 +213,21 @@ class TestDataPackageResources(object):
         assert dp.resources[0].data == '万事开头难\n'
 
     def test_raises_if_local_resource_path_doesnt_exist(self):
-        data = {
+        metadata = {
             'resources': [
                 {'path': 'inexistent-file.json'},
             ],
         }
 
         with pytest.raises(datapackage.exceptions.ResourceError):
-            datapackage.DataPackage(data)
+            datapackage.DataPackage(metadata)
 
     @httpretty.activate
     def test_remote_resource_is_loaded(self):
         url = 'http://someplace.com/resource.txt'
         body = '万事开头难'
         httpretty.register_uri(httpretty.GET, url, body=body)
-        data = {
+        metadata = {
             'resources': [
                 {'url': url},
             ],
@@ -235,7 +235,7 @@ class TestDataPackageResources(object):
 
         # FIXME: Remove explicit schema whenever datapackage_registry caches
         # its schemas
-        dp = datapackage.DataPackage(data, schema={})
+        dp = datapackage.DataPackage(metadata, schema={})
         assert len(dp.resources) == 1
         assert dp.resources[0].data == body
 
@@ -243,7 +243,7 @@ class TestDataPackageResources(object):
     def test_raises_if_remote_resource_url_doesnt_exist(self):
         url = 'http://someplace.com/inexistent-file.json'
         httpretty.register_uri(httpretty.GET, url, status=404)
-        data = {
+        metadata = {
             'resources': [
                 {'url': url},
             ],
@@ -252,4 +252,4 @@ class TestDataPackageResources(object):
         # FIXME: Remove explicit schema whenever datapackage_registry caches
         # its schemas
         with pytest.raises(datapackage.exceptions.ResourceError):
-            datapackage.DataPackage(data, schema={})
+            datapackage.DataPackage(metadata, schema={})

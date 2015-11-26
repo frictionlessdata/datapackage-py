@@ -15,15 +15,15 @@ from .exceptions import (
 
 
 class DataPackage(object):
-    def __init__(self, data=None, schema='base', default_base_path=None):
-        self._data = self._load_data(data)
+    def __init__(self, metadata=None, schema='base', default_base_path=None):
+        self._metadata = self._load_metadata(metadata)
         self._schema = self._load_schema(schema)
-        self._base_path = self._get_base_path(data, default_base_path)
-        self._resources = self._load_resources(self.data, self.base_path)
+        self._base_path = self._get_base_path(metadata, default_base_path)
+        self._resources = self._load_resources(self.metadata, self.base_path)
 
     @property
-    def data(self):
-        return self._data
+    def metadata(self):
+        return self._metadata
 
     @property
     def schema(self):
@@ -31,7 +31,7 @@ class DataPackage(object):
 
     @property
     def base_path(self):
-        return self.data.get('base', self._base_path)
+        return self.metadata.get('base', self._base_path)
 
     @property
     def resources(self):
@@ -58,28 +58,28 @@ class DataPackage(object):
         return required
 
     def to_dict(self):
-        return self._data
+        return self._metadata
 
     def validate(self):
         self.schema.validate(self.to_dict())
 
-    def _load_data(self, data):
-        the_data = data
+    def _load_metadata(self, metadata):
+        the_metadata = metadata
 
-        if the_data is None:
-            the_data = {}
+        if the_metadata is None:
+            the_metadata = {}
 
-        if isinstance(the_data, six.string_types):
+        if isinstance(the_metadata, six.string_types):
             try:
-                the_data = json.load(open(data, 'r'))
+                the_metadata = json.load(open(metadata, 'r'))
             except (ValueError, IOError) as e:
-                msg = 'Unable to load JSON at \'{0}\''.format(data)
+                msg = 'Unable to load JSON at \'{0}\''.format(metadata)
                 six.raise_from(DataPackageException(msg), e)
-        if not isinstance(the_data, dict):
+        if not isinstance(the_metadata, dict):
             msg = 'Data must be a \'dict\', but was a \'{0}\''
-            raise DataPackageException(msg.format(type(data).__name__))
+            raise DataPackageException(msg.format(type(metadata).__name__))
 
-        return the_data
+        return the_metadata
 
     def _load_schema(self, schema):
         the_schema = schema
@@ -92,19 +92,19 @@ class DataPackage(object):
 
         return Schema(the_schema)
 
-    def _get_base_path(self, data, default_base_path):
+    def _get_base_path(self, metadata, default_base_path):
         try:
-            return data['base']
+            return metadata['base']
         except (TypeError, KeyError):
             pass
 
         try:
-            return os.path.dirname(os.path.abspath(data))
+            return os.path.dirname(os.path.abspath(metadata))
         except AttributeError:
             return default_base_path
 
-    def _load_resources(self, data, base_path):
-        resources_dicts = data.get('resources')
+    def _load_resources(self, metadata, base_path):
+        resources_dicts = metadata.get('resources')
 
         if resources_dicts is None:
             return ()
