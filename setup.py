@@ -9,7 +9,7 @@ import io
 from setuptools import setup, find_packages
 
 description = "A Python library for working with a Data Package Registry."
-with io.open('README.md') as readme:
+with io.open('README.rst') as readme:
     long_description = ''.join(
         filter(lambda x: 'https://travis-ci.org/' not in x,
                readme.readlines()))
