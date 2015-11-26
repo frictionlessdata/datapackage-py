@@ -11,7 +11,7 @@ from . import compat
 
 
 DEFAULT_CONFIG = {
-  'backend': 'https://rawgit.com/dataprotocols/registry/master/registry.csv',
+    'backend': 'https://rawgit.com/dataprotocols/registry/master/registry.csv',
 }
 
 
@@ -28,7 +28,8 @@ def _get_registry_at_endpoint(endpoint):
 
 
 def get_registry(user_config=None):
-    '''Return the DataPackage Registry as an array of objects'''
+    '''Return the DataPackage Registry as a dict with profiles' ids as keys'''
     config = user_config or DEFAULT_CONFIG
 
-    return _get_registry_at_endpoint(config['backend'])
+    return dict([(profile['id'], profile)
+                 for profile in _get_registry_at_endpoint(config['backend'])])
