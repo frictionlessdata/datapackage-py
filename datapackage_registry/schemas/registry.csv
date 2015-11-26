@@ -1,0 +1,4 @@
+id,title,schema,schema_path,specification
+base,Data Package,https://rawgit.com/dataprotocols/schemas/master/data-package.json,data-package.json,http://dataprotocols.org/data-packages
+tabular,Tabular Data Package,https://rawgit.com/dataprotocols/schemas/master/tabular-data-package.json,tabular-data-package.json,http://dataprotocols.org/tabular-data-package/
+fiscal,Fiscal Data Package,https://rawgit.com/dataprotocols/schemas/master/fiscal-data-package.json,fiscal-data-package.json,http://fiscal.dataprotocols.org/spec/
