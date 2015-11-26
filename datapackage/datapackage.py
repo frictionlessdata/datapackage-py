@@ -31,7 +31,7 @@ class DataPackage(object):
 
     @property
     def base_path(self):
-        return self._base_path
+        return self.data.get('base', self._base_path)
 
     @property
     def resources(self):
@@ -93,11 +93,15 @@ class DataPackage(object):
         return Schema(the_schema)
 
     def _get_base_path(self, data, default_base_path):
-        if not isinstance(data, six.string_types):
-            return default_base_path
+        try:
+            return data['base']
+        except (TypeError, KeyError):
+            pass
 
-        if os.path.isfile(data):
+        try:
             return os.path.dirname(os.path.abspath(data))
+        except AttributeError:
+            return default_base_path
 
     def _load_resources(self, data, base_path):
         resources_dicts = data.get('resources')

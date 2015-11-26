@@ -141,10 +141,24 @@ class TestDataPackageResources(object):
     def test_base_path_defaults_to_none(self):
         assert datapackage.DataPackage().base_path is None
 
-    def test_base_path_cant_be_set(self):
+    def test_base_path_cant_be_set_directly(self):
         dp = datapackage.DataPackage()
         with pytest.raises(AttributeError):
             dp.base_path = 'foo'
+
+    def test_base_path_can_be_set_by_changing_the_data(self):
+        data = {}
+        dp = datapackage.DataPackage(data, default_base_path='foo')
+        assert dp.base_path == 'foo'
+        dp.data['base'] = 'data/base/path'
+        assert dp.base_path == 'data/base/path'
+
+    def test_base_path_passed_through_data_is_prefered_over_the_default(self):
+        data = {
+            'base': 'data/base/path'
+        }
+        dp = datapackage.DataPackage(data, default_base_path='foo')
+        assert dp.base_path == 'data/base/path'
 
     def test_base_path_is_default_when_data_is_a_dict(self):
         data = {}
