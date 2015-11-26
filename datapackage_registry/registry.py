@@ -49,8 +49,7 @@ class Registry(object):
         if not profile_metadata:
             return
 
-        relative_path = profile_metadata.get('relative_path')
-        path = self._get_absolute_path(relative_path)
+        path = self._get_absolute_path(profile_metadata.get('schema_path'))
         if path:
             if os.path.isfile(path):
                 return json.load(open(path, 'r'))

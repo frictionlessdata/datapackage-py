@@ -5,7 +5,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import unittest
-import mock
+try:
+    import mock
+except ImportError:
+    import unittest.mock as mock
 
 import requests
 import httpretty
@@ -125,7 +128,10 @@ class TestRegistry(unittest.TestCase):
         with assert_raises(AttributeError):
             registry.available_profiles = {}
 
+    @httpretty.activate
     def test_get_loads_available_profile_from_disk(self):
+        httpretty.HTTPretty.allow_net_connect = False
+
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
         registry = datapackage_registry.Registry(registry_path)
 
@@ -156,7 +162,7 @@ class TestRegistry(unittest.TestCase):
     def test_get_loads_file_from_http_if_local_copys_path_isnt_a_file(self):
         registry_url = 'http://some-place.com/registry.csv'
         registry_body = (
-            'id,title,schema,specification,relative_path\r\n'
+            'id,title,schema,specification,schema_path\r\n'
             'base,Data Package,http://example.com/one.json,http://example.com,inexistent.json'
         )
         httpretty.register_uri(httpretty.GET, registry_url, body=registry_body)
