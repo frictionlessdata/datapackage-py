@@ -20,7 +20,7 @@ dependencies = [
 
 setup(
     name='datapackage-registry',
-    version='0.0.2',
+    version='0.1.0',
     url='https://github.com/okfn/datapackage-registry-py',
     license='MIT',
     description=description,
