@@ -33,5 +33,5 @@ print(registry.available_profiles)
 # }
 
 # get a profile by its id
-base_profile = registry.get('base')
+base_profile = registry.get_profile('base')
 ```

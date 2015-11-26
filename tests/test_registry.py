@@ -130,7 +130,7 @@ class TestRegistry(unittest.TestCase):
         config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
         registry = datapackage_registry.Registry(config)
 
-        base_profile = registry.get('base')
+        base_profile = registry.get_profile('base')
         assert base_profile is not None
         assert base_profile['title'] == 'base_profile'
 
@@ -150,7 +150,7 @@ class TestRegistry(unittest.TestCase):
         config = {'backend': url}
         registry = datapackage_registry.Registry(config)
 
-        base_profile = registry.get('base')
+        base_profile = registry.get_profile('base')
         assert base_profile is not None
         assert base_profile == {'title': 'base_profile'}
 
@@ -170,22 +170,22 @@ class TestRegistry(unittest.TestCase):
         config = {'backend': url}
         registry = datapackage_registry.Registry(config)
 
-        base_profile = registry.get('base')
+        base_profile = registry.get_profile('base')
         assert base_profile is not None
         assert base_profile == {'title': 'base_profile'}
 
     def test_get_returns_none_if_profile_doesnt_exist(self):
         registry = datapackage_registry.Registry()
-        assert registry.get('non-existent-profile') is None
+        assert registry.get_profile('non-existent-profile') is None
 
     def test_get_memoize_the_profiles(self):
         config = {'backend': self.BASE_AND_TABULAR_REGISTRY_PATH}
         registry = datapackage_registry.Registry(config)
 
-        registry.get('base')
+        registry.get_profile('base')
 
         m = mock.mock_open(read_data='{}')
         with mock.patch('datapackage_registry.registry.open', m):
-            registry.get('base')
+            registry.get_profile('base')
 
         assert not m.called, '.get() should memoize the profiles'
