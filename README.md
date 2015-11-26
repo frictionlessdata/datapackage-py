@@ -13,22 +13,25 @@ https://rawgit.com/dataprotocols/registry/master/registry.csv
 import datapackage_registry
 
 # get the default registry objects
-registry = datapackage_registry.get()
+registry = datapackage_registry.Registry()
 
-# or pass in a config object to define a non-default backend endpoint
-custom_config = {
-  'backend': 'https://mycustomconfig.com/registry.csv',
-}
-custom_registry = datapackage_registry.get(custom_config)
+# see the available profiles in the registry
+print(registry.available_profiles)
+# {
+#     'base': {
+#         'id': 'base',
+#         'schema': 'https://rawgit.com/dataprotocols/schemas/master/data-package.json',
+#         'specification': 'http://dataprotocols.org/data-packages',
+#         'title': 'Data Package'
+#     },
+#     'tabular': {
+#         'id': 'tabular',
+#         'schema': 'https://rawgit.com/dataprotocols/schemas/master/tabular-data-package.json',
+#         'specification': 'http://dataprotocols.org/tabular-data-package/',
+#         'title': 'Tabular Data Package'
+#    }
+# }
 
-# registry now has an array of dicts, e.g.:
-[{'id': 'base',
-  'schema': 'https://rawgit.com/dataprotocols/schemas/master/data-package.json',
-  'specification': 'http://dataprotocols.org/data-packages',
-  'title': 'Data Package'},
- {'id': 'tabular',
-  'schema': 'https://rawgit.com/dataprotocols/schemas/master/tabular-data-package.json',
-  'specification': 'http://dataprotocols.org/tabular-data-package/',
-  'title': 'Tabular Data Package'}]
-
+# get a profile by its id
+base_profile = registry.get('base')
 ```

@@ -26,31 +26,29 @@ class Registry(object):
         config = user_config or self.DEFAULT_CONFIG
         if os.path.isfile(config['backend']):
             self.REGISTRY_PATH = os.path.dirname(config['backend'])
-        self._profiles = self._get_registry_at_endpoint(config['backend'])
-        self._profiles_cache = {}
+        self._registry = self._get_registry_at_endpoint(config['backend'])
+        self._profiles = {}
 
     @property
-    def profiles(self):
-        '''Return the DataPackage Registry as an array of objects'''
-        return self._profiles
+    def available_profiles(self):
+        '''Return the available profiles' metadata as a dict of dicts'''
+        return self._registry
 
     def get(self, profile_id):
         '''Return the profile with the received ID as a dict
 
-        If a local copy of the profile exists, it'll be returned. If not, this
-        method will download it from the web.
+        If a local copy of the profile exists, it'll be returned. If not, it'll
+        be downloaded from the web.
         '''
-        if profile_id not in self._profiles_cache:
-            self._profiles_cache[profile_id] = self._get_profile(profile_id)
-        return self._profiles_cache[profile_id]
+        if profile_id not in self._profiles:
+            self._profiles[profile_id] = self._get_profile(profile_id)
+        return self._profiles[profile_id]
 
     def _get_profile(self, profile_id):
         '''Return the profile with the received ID as a dict'''
-        profile_metadata = [profile for profile in self.profiles
-                            if profile['id'] == profile_id]
+        profile_metadata = self._registry.get(profile_id)
         if not profile_metadata:
             return
-        profile_metadata = profile_metadata[0]
 
         relative_path = profile_metadata.get('relative_path')
         if relative_path and hasattr(self, 'REGISTRY_PATH'):
@@ -75,4 +73,4 @@ class Registry(object):
 
         reader = compat.csv_dict_reader(data)
 
-        return [o for o in reader]
+        return dict([(o['id'], o) for o in reader])
