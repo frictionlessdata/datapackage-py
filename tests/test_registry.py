@@ -135,7 +135,7 @@ class TestRegistry(unittest.TestCase):
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
         registry = datapackage_registry.Registry(registry_path)
 
-        base_profile = registry.get_profile('base')
+        base_profile = registry.get('base')
         assert base_profile is not None
         assert base_profile['title'] == 'base_profile'
 
@@ -154,7 +154,7 @@ class TestRegistry(unittest.TestCase):
 
         registry = datapackage_registry.Registry(registry_url)
 
-        base_profile = registry.get_profile('base')
+        base_profile = registry.get('base')
         assert base_profile is not None
         assert base_profile == {'title': 'base_profile'}
 
@@ -173,22 +173,22 @@ class TestRegistry(unittest.TestCase):
 
         registry = datapackage_registry.Registry(registry_url)
 
-        base_profile = registry.get_profile('base')
+        base_profile = registry.get('base')
         assert base_profile is not None
         assert base_profile == {'title': 'base_profile'}
 
     def test_get_returns_none_if_profile_doesnt_exist(self):
         registry = datapackage_registry.Registry()
-        assert registry.get_profile('non-existent-profile') is None
+        assert registry.get('non-existent-profile') is None
 
     def test_get_memoize_the_profiles(self):
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
         registry = datapackage_registry.Registry(registry_path)
 
-        registry.get_profile('base')
+        registry.get('base')
 
         m = mock.mock_open(read_data='{}')
         with mock.patch('datapackage_registry.registry.open', m):
-            registry.get_profile('base')
+            registry.get('base')
 
         assert not m.called, '.get() should memoize the profiles'

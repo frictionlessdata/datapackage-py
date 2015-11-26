@@ -36,7 +36,7 @@ Usage
     # }
 
     # get a profile by its id
-    base_profile = registry.get_profile('base')
+    base_profile = registry.get('base')
 
 If you’d like to use a custom registry, you can pass its URL or local
 path to the ``Registry()`` constructor, as in:

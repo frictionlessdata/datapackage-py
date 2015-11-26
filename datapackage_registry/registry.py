@@ -32,7 +32,7 @@ class Registry(object):
         '''Return the available profiles' metadata as a dict of dicts'''
         return self._registry
 
-    def get_profile(self, profile_id):
+    def get(self, profile_id):
         '''Return the profile with the received ID as a dict
 
         If a local copy of the profile exists, it'll be returned. If not, it'll
