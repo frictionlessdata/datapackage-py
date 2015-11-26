@@ -1,2 +1,4 @@
 include LICENSE
 include README.md
+recursive-exclude datapackage_registry/schemas *
+recursive-include datapackage_registry/schemas *.csv *.json
