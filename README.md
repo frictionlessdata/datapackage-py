@@ -44,3 +44,18 @@ import datapackage_registry
 
 registry = datapackage_registry.Registry('http://someplace.com/my-registry.csv')
 ```
+
+
+## Developer notes
+
+These notes are intended to help people that want to contribute to this
+package itself. If you just want to use it, you can safely ignore this.
+
+### Upgrading the local schemas cache
+
+We cache the schemas from https://github.com/dataprotocols/schemas using
+git-subtree. To update it, use:
+
+```
+git subtree pull --prefix datapackage_registry/schemas https://github.com/dataprotocols/schemas.git master --squash
+```
