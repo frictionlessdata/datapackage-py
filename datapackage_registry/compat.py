@@ -24,12 +24,6 @@ if is_py2:
     basestring = basestring
     numeric_types = (int, long, float)
 
-    def csv_reader(data, dialect=csv.excel, **kwargs):
-        '''Read text stream (unicode on Py2.7) as CSV.'''
-        reader = csv.reader(data, dialect=dialect, **kwargs)
-        for row in reader:
-            yield [str(cell, 'utf-8') for cell in row]
-
     def csv_dict_reader(data, dialect=csv.excel, **kwargs):
         '''Read text stream as CSV, yielding dict objects'''
         dict_reader = csv.DictReader(data, **kwargs)
@@ -39,7 +33,6 @@ if is_py2:
 
 elif is_py3:
     from urllib import parse
-    csv_reader = csv.reader
     csv_dict_reader = csv.DictReader
     builtin_str = str
     str = str
