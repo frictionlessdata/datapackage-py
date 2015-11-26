@@ -15,7 +15,7 @@ from . import compat
 class Registry(object):
     DEFAULT_REGISTRY_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        'registry',
+        'schemas',
         'registry.csv'
     )
 
