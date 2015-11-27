@@ -10,7 +10,6 @@ try:
 except ImportError:
     import unittest.mock as mock
 
-import requests
 import httpretty
 from nose.tools import (assert_true,
                         assert_equal,
@@ -18,6 +17,7 @@ from nose.tools import (assert_true,
 
 import tests.test_helpers as test_helpers
 import datapackage_registry
+from datapackage_registry.exceptions import DataPackageRegistryException
 
 
 class TestRegistry(unittest.TestCase):
@@ -102,15 +102,24 @@ class TestRegistry(unittest.TestCase):
                      'http://example.com')
 
     @httpretty.activate
+    def test_raises_error_if_registry_has_no_id_field(self):
+        '''A 404 while getting the registry raises an error.'''
+        url = 'http://some-place.com/registry.csv'
+        httpretty.register_uri(httpretty.GET, url,
+                               body="foo\nbar")
+
+        with assert_raises(DataPackageRegistryException):
+            datapackage_registry.Registry(url)
+
+    @httpretty.activate
     def test_404_raises_error(self):
         '''A 404 while getting the registry raises an error.'''
         url = 'http://some-place.com/registry.csv'
         httpretty.register_uri(httpretty.GET, url,
                                body="404", status=404)
 
-        with assert_raises(requests.HTTPError) as cm:
+        with assert_raises(DataPackageRegistryException):
             datapackage_registry.Registry(url)
-        assert_equal(cm.exception.response.status_code, 404)
 
     @httpretty.activate
     def test_500_raises_error(self):
@@ -119,9 +128,31 @@ class TestRegistry(unittest.TestCase):
         httpretty.register_uri(httpretty.GET, url,
                                body="500", status=500)
 
-        with assert_raises(requests.HTTPError) as cm:
+        with assert_raises(DataPackageRegistryException):
             datapackage_registry.Registry(url)
-        assert_equal(cm.exception.response.status_code, 500)
+
+    @httpretty.activate
+    def test_raises_if_profile_in_remote_file_isnt_a_json(self):
+        url = 'http://some-place.com/registry.csv'
+        body = (
+            'id,schema\r\n'
+            'notajson,http://example.com/one.json'
+        )
+        httpretty.register_uri(httpretty.GET, url, body=body)
+        httpretty.register_uri(httpretty.GET, 'http://example.com/one.json',
+                               body='I\'m not a JSON')
+
+        registry = datapackage_registry.Registry(url)
+
+        with assert_raises(DataPackageRegistryException):
+            registry.get('notajson')
+
+    def test_raises_if_profile_in_local_file_isnt_a_json(self):
+        registry_path = test_helpers.fixture_path('registry_with_notajson_profile.csv')
+        registry = datapackage_registry.Registry(registry_path)
+
+        with assert_raises(DataPackageRegistryException):
+            registry.get('notajson')
 
     def test_available_profiles_arent_writable(self):
         registry = datapackage_registry.Registry()

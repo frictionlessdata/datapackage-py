@@ -18,6 +18,7 @@ with io.open('README.rst') as readme:
 
 dependencies = [
     'requests>=2.8.0',
+    'six>=1.10.0',
 ]
 
 

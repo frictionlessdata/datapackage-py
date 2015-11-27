@@ -1,0 +1,2 @@
+class DataPackageRegistryException(Exception):
+    pass

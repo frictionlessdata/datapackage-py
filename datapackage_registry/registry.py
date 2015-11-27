@@ -7,9 +7,11 @@ import os
 import json
 from io import StringIO
 
+import six
 import requests
 
 from . import compat
+from .exceptions import DataPackageRegistryException
 
 
 class Registry(object):
@@ -20,12 +22,23 @@ class Registry(object):
     )
 
     def __init__(self, registry_path_or_url=DEFAULT_REGISTRY_PATH):
-        self._registry = self._get_registry(registry_path_or_url)
+        '''Allows interfacing with a dataprotocols schema registry
+
+        This method raises DataPackageRegistryException if there were any
+        errors.
+        '''
         if os.path.isfile(registry_path_or_url):
             self._BASE_PATH = os.path.dirname(
                 os.path.abspath(registry_path_or_url)
             )
-        self._profiles = {}
+        try:
+            self._profiles = {}
+            self._registry = self._get_registry(registry_path_or_url)
+        except (IOError,
+                ValueError,
+                KeyError,
+                requests.exceptions.RequestException) as e:
+            six.raise_from(DataPackageRegistryException(e), e)
 
     @property
     def available_profiles(self):
@@ -38,9 +51,17 @@ class Registry(object):
         If a local copy of the profile exists, it'll be returned. If not, it'll
         be downloaded from the web. The results are cached, so any subsequent
         calls won't hit the filesystem or the web.
+
+        This method raises DataPackageRegistryException if there were any
+        errors.
         '''
         if profile_id not in self._profiles:
-            self._profiles[profile_id] = self._get_profile(profile_id)
+            try:
+                self._profiles[profile_id] = self._get_profile(profile_id)
+            except (IOError,
+                    ValueError,
+                    requests.exceptions.RequestException) as e:
+                six.raise_from(DataPackageRegistryException(e), e)
         return self._profiles[profile_id]
 
     def _get_profile(self, profile_id):
@@ -60,7 +81,7 @@ class Registry(object):
             return resp.json()
 
     def _get_registry(self, registry_path_or_url):
-        '''Return an array of objects from a CSV endpoint'''
+        '''Return a dict with objects mapped by their id from a CSV endpoint'''
         if os.path.isfile(registry_path_or_url):
             data = open(registry_path_or_url, 'r')
         else:
