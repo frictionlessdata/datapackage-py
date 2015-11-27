@@ -27,12 +27,12 @@ class TestDataPackage(object):
             'foo': 'bar',
         }
         dp = datapackage.DataPackage(metadata)
-        assert dp.to_dict() == metadata
+        assert dp.metadata == metadata
 
     def test_init_accepts_file_paths(self):
         path = test_helpers.fixture_path('empty_datapackage.json')
         dp = datapackage.DataPackage(path)
-        assert dp.to_dict() == {}
+        assert dp.metadata == {}
 
     def test_init_raises_if_file_path_doesnt_exist(self):
         path = 'this-file-doesnt-exist.json'
@@ -108,11 +108,11 @@ class TestDataPackage(object):
         dp.metadata['keywords'].append('foo')
         assert dp.to_dict() == {'keywords': ['foo']}
 
-    def test_attributes_return_an_empty_list_if_there_are_none(self):
+    def test_attributes_return_an_empty_tuple_if_there_are_none(self):
         metadata = {}
         schema = {}
         dp = datapackage.DataPackage(metadata, schema)
-        assert dp.attributes == []
+        assert dp.attributes == ()
 
     def test_validate(self):
         metadata = {
@@ -154,12 +154,19 @@ class TestDataPackage(object):
             'required': ['name', 'title'],
         }
         dp = datapackage.DataPackage(schema=schema)
-        assert dp.required_attributes == ['name', 'title']
+        assert dp.required_attributes == ('name', 'title')
 
-    def test_required_attributes_returns_empty_list_if_nothings_required(self):
+    def test_required_attributes_return_empty_tuple_if_nothings_required(self):
         schema = {}
         dp = datapackage.DataPackage(schema=schema)
-        assert dp.required_attributes == []
+        assert dp.required_attributes == ()
+
+    def test_altering_dict_returned_by_to_dict_doesnt_change_the_dp(self):
+        metadata = {}
+        dp = datapackage.DataPackage(metadata)
+        dp_dict = dp.to_dict()
+        dp_dict['foo'] = 'bar'
+        assert dp.metadata == {}
 
 
 class TestDataPackageResources(object):

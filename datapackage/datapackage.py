@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import os
 import json
+import copy
 import six
 import datapackage_registry
 from datapackage_registry.exceptions import DataPackageRegistryException
@@ -72,29 +73,29 @@ class DataPackage(object):
 
     @property
     def attributes(self):
-        '''list: The union of the attributes defined in the schema and the data
-        package (can be empty).'''
+        '''tuple: The union of the attributes defined in the schema and the
+        data package (can be empty).'''
         attributes = set(self.to_dict().keys())
         try:
             attributes.update(self.schema.properties.keys())
         except AttributeError:
             pass
-        return list(attributes)
+        return tuple(attributes)
 
     @property
     def required_attributes(self):
-        '''list: The schema's required attributed (can be empty).'''
-        required = []
+        '''tuple: The schema's required attributed (can be empty).'''
+        required = ()
         try:
             if self.schema.required is not None:
-                required = self.schema.required
+                required = tuple(self.schema.required)
         except AttributeError:
             pass
         return required
 
     def to_dict(self):
         '''dict: Convert this Data Package to dict.'''
-        return self._metadata
+        return copy.deepcopy(self.metadata)
 
     def validate(self):
         '''Validate this Data Package.
