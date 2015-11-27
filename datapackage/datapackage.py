@@ -7,6 +7,7 @@ import os
 import json
 import copy
 import six
+import requests
 import datapackage_registry
 from datapackage_registry.exceptions import DataPackageRegistryException
 from .schema import Schema
@@ -22,10 +23,11 @@ class DataPackage(object):
 
     Args:
         metadata (dict or str, optional): The contents of the
-            `datapackage.json` file. It can be a ``dict`` with its contents or
-            the local path for the file. If you're passing a ``dict``, it's a
-            good practice to also set the ``default_base_path`` parameter to
-            the absolute `datapackage.json` path.
+            `datapackage.json` file. It can be a ``dict`` with its contents,
+            the local path for the file or its URL. If you're passing a
+            ``dict``, it's a good practice to also set the
+            ``default_base_path`` parameter to the absolute `datapackage.json`
+            path.
         schema (dict or str, optional): The schema to be used to validate this
             data package. If can be a ``dict`` with the schema's contents or a
             ``str``. The string can contain the schema's ID if it's in the
@@ -113,11 +115,19 @@ class DataPackage(object):
 
         if isinstance(the_metadata, six.string_types):
             try:
-                with open(metadata, 'r') as f:
-                    the_metadata = json.load(f)
-            except (ValueError, IOError) as e:
+                if os.path.isfile(the_metadata):
+                    with open(the_metadata, 'r') as f:
+                        the_metadata = json.load(f)
+                else:
+                    req = requests.get(the_metadata)
+                    req.raise_for_status()
+                    the_metadata = req.json()
+            except (IOError,
+                    ValueError,
+                    requests.exceptions.RequestException) as e:
                 msg = 'Unable to load JSON at \'{0}\''.format(metadata)
                 six.raise_from(DataPackageException(msg), e)
+
         if not isinstance(the_metadata, dict):
             msg = 'Data must be a \'dict\', but was a \'{0}\''
             raise DataPackageException(msg.format(type(metadata).__name__))

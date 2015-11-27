@@ -49,6 +49,44 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.DataPackageException):
             datapackage.DataPackage(empty_array_path)
 
+    @httpretty.activate
+    def test_init_accepts_urls(self):
+        url = 'http://someplace.com/datapackage.json'
+        body = '{"foo": "bar"}'
+        httpretty.register_uri(httpretty.GET, url, body=body,
+                               content_type='application/json')
+
+        dp = datapackage.DataPackage(url)
+        assert dp.metadata == {'foo': 'bar'}
+
+    @httpretty.activate
+    def test_init_raises_if_url_doesnt_exist(self):
+        url = 'http://someplace.com/datapackage.json'
+        httpretty.register_uri(httpretty.GET, url, status=404)
+
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(url)
+
+    @httpretty.activate
+    def test_init_raises_if_url_isnt_a_json(self):
+        url = 'http://someplace.com/datapackage.json'
+        body = 'Not a JSON'
+        httpretty.register_uri(httpretty.GET, url, body=body,
+                               content_type='application/json')
+
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(url)
+
+    @httpretty.activate
+    def test_init_raises_if_url_json_isnt_a_dict(self):
+        url = 'http://someplace.com/datapackage.json'
+        body = '["foo"]'
+        httpretty.register_uri(httpretty.GET, url, body=body,
+                               content_type='application/json')
+
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(url)
+
     def test_init_raises_if_metadata_isnt_dict_or_string(self):
         metadata = 51
         with pytest.raises(datapackage.exceptions.DataPackageException):
