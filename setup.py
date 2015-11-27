@@ -44,6 +44,6 @@ setup(
         'jsonschema >= 2.5',
         'six >= 1.0',
         'datapackage_registry >= 0.1.3',
-        'datapackage_validate >= 0.0.3',
+        'datapackage_validate >= 0.1.0',
     ],
 )
