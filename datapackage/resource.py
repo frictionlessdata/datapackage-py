@@ -16,8 +16,32 @@ from .exceptions import (
 
 
 class Resource(object):
+    '''Base class for all Data Package's resource types.
+
+    This classes will usually be created by :class:`DataPackage`, and not by
+    you. If you need to create one, use the :func:`Resource.load` factory
+    method.
+    '''
+
     @classmethod
     def load(cls, metadata, default_base_path=None):
+        '''Factory method that loads the resource described in ``metadata``.
+
+        It'll first try to load the resource defined in ``metadata`` as a
+        :class:`TabularResource`. If that fails, it'll fall back to loading it
+        as a :class:`Resource`.
+
+        Args:
+            metadata (dict): The dict with the resource's metadata
+            default_base_path (str, optional): The base path to be used in case
+                the resource's data is in the local disk. Usually this would be
+                the base path of the `datapackage.json` this resource is in.
+
+        Returns:
+            Resource: The returned resource's class will depend on the type of
+                resource. If it was tabular, a :class:`TabularResource` will be
+                returned, otherwise, it'll be a :class:`Resource`.
+        '''
         try:
             resource = TabularResource(metadata, default_base_path)
         except ValueError:
@@ -31,10 +55,12 @@ class Resource(object):
 
     @property
     def metadata(self):
+        '''dict: The metadata this resource was created with.'''
         return self._metadata
 
     @property
     def data(self):
+        '''str: This resource's data.'''
         return self._data
 
     def _parse_data(self, metadata):
@@ -74,7 +100,23 @@ class Resource(object):
 
 
 class TabularResource(Resource):
+    '''Subclass of :class:`Resource` that deals with tabular data.
+
+    It currently only supports CSVs.
+    '''
+
+    @property
+    def data(self):
+        '''list: This resource's data.'''
+        return super(TabularResource, self).data
+
     def _parse_data(self, metadata):
+        '''Parses the data
+
+        Raises:
+            ValueError: If the data isn't tabular. We consider tabular data as
+                a ``dict``, ``list``, ``tuple``, ``JSON`` or ``CSV``.
+        '''
         data = self._load_data(metadata)
 
         if isinstance(data, six.string_types):
@@ -98,7 +140,7 @@ class TabularResource(Resource):
 
 if six.PY2:
     def _csv_dictreader(data, dialect=csv.excel, **kwargs):
-        """Read text stream (unicode on Py2.7) as CSV."""
+        '''Read text stream (unicode on Py2.7) as CSV.'''
 
         def iterenc_utf8(data):
             for line in data:
