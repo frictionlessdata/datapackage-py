@@ -7,10 +7,12 @@ import os
 import json
 import six
 import datapackage_registry
+from datapackage_registry.exceptions import DataPackageRegistryException
 from .schema import Schema
 from .resource import Resource
 from .exceptions import (
-    DataPackageException
+    DataPackageException,
+    SchemaError
 )
 
 
@@ -85,10 +87,13 @@ class DataPackage(object):
         the_schema = schema
 
         if isinstance(schema, six.string_types):
-            registry = dict([(v['id'], v)
-                             for v in datapackage_registry.get()])
-            if schema in registry:
-                the_schema = registry[schema]['schema']
+            try:
+                registry = datapackage_registry.Registry()
+                registry_schema = registry.get(schema)
+                if registry_schema is not None:
+                    the_schema = registry_schema
+            except DataPackageRegistryException as e:
+                six.raise_from(SchemaError(e), e)
 
         return Schema(the_schema)
 

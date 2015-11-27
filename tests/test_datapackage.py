@@ -4,10 +4,16 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+try:
+    import mock
+except ImportError:
+    import unittest.mock as mock
+
 import os
 import pytest
 import httpretty
 import tests.test_helpers as test_helpers
+import datapackage_registry
 import datapackage
 
 
@@ -53,6 +59,25 @@ class TestDataPackage(object):
         schema = {'foo': 'bar'}
         dp = datapackage.DataPackage(metadata, schema=schema)
         assert dp.schema.to_dict() == schema
+
+    @mock.patch('datapackage_registry.Registry')
+    def test_schema_gets_from_registry_if_available(self, registry_class_mock):
+        schema = {'foo': 'bar'}
+        registry_mock = mock.MagicMock()
+        registry_mock.get.return_value = schema
+        registry_class_mock.return_value = registry_mock
+
+        assert datapackage.DataPackage().schema.to_dict() == schema
+
+    @mock.patch('datapackage_registry.Registry')
+    def test_schema_raises_schemaerror_if_registry_raised(self,
+                                                          registry_class_mock):
+        registry_ex = datapackage_registry.exceptions
+        DataPackageRegistryException = registry_ex.DataPackageRegistryException
+        registry_class_mock.side_effect = DataPackageRegistryException
+
+        with pytest.raises(datapackage.exceptions.SchemaError):
+            datapackage.DataPackage()
 
     def test_attributes(self):
         metadata = {
@@ -233,9 +258,7 @@ class TestDataPackageResources(object):
             ],
         }
 
-        # FIXME: Remove explicit schema whenever datapackage_registry caches
-        # its schemas
-        dp = datapackage.DataPackage(metadata, schema={})
+        dp = datapackage.DataPackage(metadata)
         assert len(dp.resources) == 1
         assert dp.resources[0].data == body
 
@@ -249,7 +272,5 @@ class TestDataPackageResources(object):
             ],
         }
 
-        # FIXME: Remove explicit schema whenever datapackage_registry caches
-        # its schemas
         with pytest.raises(datapackage.exceptions.ResourceError):
-            datapackage.DataPackage(metadata, schema={})
+            datapackage.DataPackage(metadata)
