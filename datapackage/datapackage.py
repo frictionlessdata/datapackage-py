@@ -73,7 +73,8 @@ class DataPackage(object):
 
         if isinstance(the_metadata, six.string_types):
             try:
-                the_metadata = json.load(open(metadata, 'r'))
+                with open(metadata, 'r') as f:
+                    the_metadata = json.load(f)
             except (ValueError, IOError) as e:
                 msg = 'Unable to load JSON at \'{0}\''.format(metadata)
                 six.raise_from(DataPackageException(msg), e)
