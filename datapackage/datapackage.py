@@ -17,6 +17,31 @@ from .exceptions import (
 
 
 class DataPackage(object):
+    '''Class for loading, validating and working with a Data Package.
+
+    Args:
+        metadata (dict or str, optional): The contents of the
+            `datapackage.json` file. It can be a ``dict`` with its contents or
+            the local path for the file. If you're passing a ``dict``, it's a
+            good practice to also set the ``default_base_path`` parameter to
+            the absolute `datapackage.json` path.
+        schema (dict or str, optional): The schema to be used to validate this
+            data package. If can be a ``dict`` with the schema's contents or a
+            ``str``. The string can contain the schema's ID if it's in the
+            registry, a local path, or an URL.
+        default_base_path (str, optional): The default path to be used to load
+            resources located on the local disk that don't define a base path
+            themselves. This will usually be the path for the
+            `datapackage.json` file. If the ``metadata`` parameter was the path
+            to the `datapackage.json`, this will automatically be set to its
+            base path.
+
+    Raises:
+        DataPackageException: If the ``metadata`` couldn't be loaded or was
+            invalid.
+        SchemaError: If the ``schema`` couldn't be loaded or was invalid.
+    '''
+
     def __init__(self, metadata=None, schema='base', default_base_path=None):
         self._metadata = self._load_metadata(metadata)
         self._schema = self._load_schema(schema)
@@ -25,22 +50,30 @@ class DataPackage(object):
 
     @property
     def metadata(self):
+        '''dict: The metadata of this data package. Its attributes can be
+        changed.'''
         return self._metadata
 
     @property
     def schema(self):
+        ''':class:`.Schema`: The schema of this data package.'''
         return self._schema
 
     @property
     def base_path(self):
+        '''str: The base path of this Data Package (can be None).'''
         return self.metadata.get('base', self._base_path)
 
     @property
     def resources(self):
+        '''tuple of :class:`.Resource`: The resources defined in this data
+        package (can be empty).'''
         return self._resources
 
     @property
     def attributes(self):
+        '''list: The union of the attributes defined in the schema and the data
+        package (can be empty).'''
         attributes = set(self.to_dict().keys())
         try:
             attributes.update(self.schema.properties.keys())
@@ -50,7 +83,7 @@ class DataPackage(object):
 
     @property
     def required_attributes(self):
-        '''Return required attributes or empty list if nothing is required.'''
+        '''list: The schema's required attributed (can be empty).'''
         required = []
         try:
             if self.schema.required is not None:
@@ -60,9 +93,15 @@ class DataPackage(object):
         return required
 
     def to_dict(self):
+        '''dict: Convert this Data Package to dict.'''
         return self._metadata
 
     def validate(self):
+        '''Validate this Data Package.
+
+        Raises:
+            DataPackageValidateException: If the Data Package is invalid.
+        '''
         self.schema.validate(self.to_dict())
 
     def _load_metadata(self, metadata):
