@@ -17,11 +17,11 @@ from .exceptions import (
 
 class Resource(object):
     @classmethod
-    def load(cls, data, default_base_path=None):
+    def load(cls, metadata, default_base_path=None):
         try:
-            resource = TabularResource(data, default_base_path)
+            resource = TabularResource(metadata, default_base_path)
         except ValueError:
-            resource = cls(data, default_base_path)
+            resource = cls(metadata, default_base_path)
         return resource
 
     def __init__(self, metadata, default_base_path=None):
