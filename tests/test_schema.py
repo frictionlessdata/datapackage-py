@@ -34,7 +34,7 @@ class TestSchema(object):
 
     def test_init_raises_if_path_isnt_a_json(self):
         not_a_json_path = test_helpers.fixture_path('not_a_json')
-        with pytest.raises(ValueError):
+        with pytest.raises(datapackage.exceptions.SchemaError):
             datapackage.schema.Schema(not_a_json_path)
 
     @httpretty.activate
@@ -55,7 +55,7 @@ class TestSchema(object):
         body = 'not a json'
         httpretty.register_uri(httpretty.GET, url, body=body)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(datapackage.exceptions.SchemaError):
             datapackage.schema.Schema(url).to_dict()
 
     @httpretty.activate

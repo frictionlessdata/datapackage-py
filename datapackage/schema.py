@@ -67,6 +67,7 @@ class Schema(object):
                     req.raise_for_status()
                     the_schema = req.json()
             except (IOError,
+                    ValueError,
                     requests.exceptions.RequestException) as e:
                 msg = 'Unable to load JSON at "{0}"'
                 six.raise_from(SchemaError(msg.format(schema)), e)
