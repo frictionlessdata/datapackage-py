@@ -17,6 +17,19 @@ from .exceptions import (
 
 
 class Schema(object):
+    '''Abstracts a JSON Schema and allows validation of data against it.
+
+    Args:
+        schema (str or dict): The JSON Schema itself as a dict, or a local path
+            or URL to it.
+
+    Raises:
+        SchemaError: If unable to load schema or it was invalid.
+
+    Warning:
+        The schema objects created with this class are read-only. You should
+        change any of its attributes after creation.
+    '''
     def __init__(self, schema):
         self._schema = self._load_schema(schema)
         validator_class = jsonschema.validators.validator_for(self._schema)
@@ -24,9 +37,18 @@ class Schema(object):
         self._check_schema()
 
     def to_dict(self):
+        '''dict: Convert this Schema to dict.'''
         return copy.deepcopy(self._schema)
 
     def validate(self, data):
+        '''Validates a data dict against this schema.
+
+        Args:
+            data (dict): The data to be validated.
+
+        Raises:
+            ValidationError: If the data is invalid.
+        '''
         try:
             datapackage_validate.validate(data, self.to_dict())
         except DataPackageValidateException as e:
