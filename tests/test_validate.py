@@ -7,12 +7,17 @@ import os
 import io
 import json
 import unittest
+try:
+    import mock
+except ImportError:
+    import unittest.mock as mock
 
 from nose.tools import (assert_true,
                         assert_is_instance,
                         assert_raises)
 import httpretty
 
+import datapackage_registry
 import datapackage_validate
 import datapackage_validate.exceptions as exceptions
 
@@ -204,53 +209,11 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
         assert_true(cm.exception.errors)
         assert_is_instance(cm.exception.errors[0], exceptions.RegistryError)
 
-    @httpretty.activate
-    def test_schema_404_raises_error(self):
+    @mock.patch('datapackage_registry.Registry')
+    def test_raises_error_when_registry_raises_error(self, registry_mock):
         '''A 404 while getting the schema raises an error.'''
-        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
-                               body=REGISTRY_BODY)
-        httpretty.register_uri(httpretty.GET,
-                               'https://example.com/base_schema.json',
-                               body="404", status=404)
-
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
-            datapackage_validate.validate(self.dp)
-
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0], exceptions.RegistryError)
-
-    @httpretty.activate
-    def test_schema_500_raises_error(self):
-        '''A 500 while getting the schema raises an error.'''
-        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
-                               body=REGISTRY_BODY)
-        httpretty.register_uri(httpretty.GET,
-                               'https://example.com/base_schema.json',
-                               body="500", status=500)
-
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
-            datapackage_validate.validate(self.dp)
-
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0], exceptions.RegistryError)
-
-    @httpretty.activate
-    def test_registry_404_raises_error(self):
-        '''A 404 while getting the registry raises an error.'''
-        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
-                               body="404", status=404)
-
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
-            datapackage_validate.validate(self.dp)
-
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0], exceptions.RegistryError)
-
-    @httpretty.activate
-    def test_registry_500_raises_error(self):
-        '''A 500 while getting the registry raises an error.'''
-        httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
-                               body="500", status=500)
+        registry_excep = datapackage_registry.exceptions
+        registry_mock.side_effect = registry_excep.DataPackageRegistryException
 
         with assert_raises(exceptions.DataPackageValidateException) as cm:
             datapackage_validate.validate(self.dp)

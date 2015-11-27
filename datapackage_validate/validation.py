@@ -7,7 +7,7 @@ import json
 
 import jsonschema
 import datapackage_registry
-import requests
+from datapackage_registry.exceptions import DataPackageRegistryException
 
 from . import compat
 from .exceptions import (
@@ -16,18 +16,6 @@ from .exceptions import (
     ValidationError,
     RegistryError,
 )
-
-
-def _get_schema_url_from_registry(id, registry):
-    '''Return schema url corresponding with `id` from `registry`, or None'''
-    return next((s['schema'] for s in registry if s['id'] == id), None)
-
-
-def _fetch_schema_obj_from_url(url):
-    '''Fetch schema from url and return schema dict'''
-    schema_response = requests.get(url)
-    schema_response.raise_for_status()
-    return json.loads(schema_response.text)
 
 
 def validate(datapackage, schema='base'):
@@ -71,19 +59,13 @@ def validate(datapackage, schema='base'):
             # Can't load as json, assume string is a schema id
             # Get schema from registry
             try:
-                registry = datapackage_registry.get()
-            except requests.HTTPError as e:
-                errors.append(RegistryError(e))
-            else:
-                schema_url = _get_schema_url_from_registry(schema, registry)
-                if schema_url is None:
+                registry = datapackage_registry.Registry()
+                schema_obj = registry.get(schema)
+                if schema_obj is None:
                     msg = 'No schema with id \'{0}\''.format(e)
                     errors.append(RegistryError(msg))
-                else:
-                    try:
-                        schema_obj = _fetch_schema_obj_from_url(schema_url)
-                    except requests.HTTPError as e:
-                        errors.append(RegistryError(e))
+            except DataPackageRegistryException as e:
+                errors.append(RegistryError(e))
     elif not isinstance(schema, dict):
         msg = 'Schema must be a string or dict'
         errors.append(SchemaError(msg))
