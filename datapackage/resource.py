@@ -107,15 +107,19 @@ class TabularResource(Resource):
 
     @property
     def data(self):
-        '''list: This resource's data.'''
+        '''tuple of dicts: This resource's data.'''
         return super(TabularResource, self).data
 
     def _parse_data(self, metadata):
         '''Parses the data
 
+        Returns:
+            tuple of dicts: The parsed rows of this resource.
+
         Raises:
             ValueError: If the data isn't tabular. We consider tabular data as
-                a ``dict``, ``list``, ``tuple``, ``JSON`` or ``CSV``.
+                a ``list``, ``tuple``, ``JSON`` or ``CSV``. If it's a ``JSON``,
+                its root content must be an array.
         '''
         data = self._load_data(metadata)
 
@@ -127,15 +131,26 @@ class TabularResource(Resource):
                 if not data:
                     data = None
 
-        if not self._is_tabular_data(data):
-            raise ValueError()
+        self._raise_if_isnt_tabular_data(data)
 
         return data
 
-    def _is_tabular_data(self, data):
-        return (isinstance(data, dict) or
-                isinstance(data, list) or
-                isinstance(data, tuple))
+    def _raise_if_isnt_tabular_data(self, data):
+        tabular_types = (
+            list,
+            tuple,
+        )
+        valid = False
+
+        for tabular_type in tabular_types:
+            if isinstance(data, tabular_type):
+                valid = True
+                break
+
+        if not valid:
+            types_str = ', '.join([t.__name__ for t in tabular_types])
+            msg = 'Expected data type to be any of \'{0}\' but it was \'{1}\''
+            raise ValueError(msg.format(types_str, type(data).__name__))
 
 
 if six.PY2:

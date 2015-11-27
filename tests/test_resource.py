@@ -175,16 +175,6 @@ class TestTabularResource(object):
         resource = TabularResource(resource_dict)
         assert resource.data == resource_dict['data']
 
-    def test_load_inline_dict(self):
-        resource_dict = {
-            'data': {
-                'country': 'China',
-                'value': '中国',
-            },
-        }
-        resource = TabularResource(resource_dict)
-        assert resource.data == resource_dict['data']
-
     def test_load_inline_csv(self):
         resource_dict = {
             'data': (
@@ -232,6 +222,16 @@ class TestTabularResource(object):
         assert len(resource.data) == 2
         assert resource.data[0] == {'country': 'China', 'value': '中国'}
         assert resource.data[1] == {'country': 'Brazil', 'value': 'Brasil'}
+
+    def test_raises_valueerror_if_data_is_dict(self):
+        resource_dict = {
+            'data': {
+                'foo': 'bar',
+            },
+        }
+
+        with pytest.raises(ValueError):
+            TabularResource(resource_dict)
 
     def test_raises_valueerror_if_data_is_number(self):
         resource_dict = {
