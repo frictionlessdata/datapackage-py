@@ -12,7 +12,7 @@ The default registry backend is currently located at:
 Usage
 -----
 
-``` {.sourceCode .python}
+```python
 import datapackage_registry
 
 # get the default registry objects
@@ -42,7 +42,7 @@ base_profile = registry.get('base')
 If you’d like to use a custom registry, you can pass its URL or local
 path to the `Registry()` constructor, as in:
 
-``` {.sourceCode .python}
+```python
 import datapackage_registry
 
 registry = datapackage_registry.Registry('http://someplace.com/my-registry.csv')
