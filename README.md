@@ -1,4 +1,5 @@
-[![Build Status][]][] [![Coverage Status]]
+[![Build Status](https://travis-ci.org/okfn/datapackage-registry-py.svg)](https://travis-ci.org/okfn/datapackage-registry-py)
+[![Coverage Status](https://coveralls.io/repos/okfn/datapackage-registry-py/badge.svg?branch=master&service=github)](https://coveralls.io/github/okfn/datapackage-registry-py?branch=master)
 
 datapackage-registry-py
 =======================
@@ -59,8 +60,3 @@ We cache the schemas from <https://github.com/dataprotocols/schemas>
 using git-subtree. To update it, use:
 
     git subtree pull --prefix datapackage_registry/schemas https://github.com/dataprotocols/schemas.git master --squash
-
-  [Build Status]: https://travis-ci.org/okfn/datapackage-registry-py.svg
-  [![Build Status]]: https://travis-ci.org/okfn/datapackage-registry-py
-  [Coverage Status]: https://coveralls.io/repos/okfn/datapackage-registry-py/badge.svg?branch=master&service=github
-  [![Coverage Status]]: https://coveralls.io/github/okfn/datapackage-registry-py?branch=master
