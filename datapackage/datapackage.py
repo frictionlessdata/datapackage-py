@@ -149,15 +149,18 @@ class DataPackage(object):
         return Schema(the_schema)
 
     def _get_base_path(self, metadata, default_base_path):
-        try:
-            return metadata['base']
-        except (TypeError, KeyError):
-            pass
+        base_path = default_base_path
 
-        try:
-            return os.path.dirname(os.path.abspath(metadata))
-        except AttributeError:
-            return default_base_path
+        if isinstance(metadata, dict) and 'base' in metadata:
+            base_path = metadata['base']
+        elif isinstance(metadata, six.string_types):
+            if os.path.exists(metadata):
+                base_path = os.path.dirname(os.path.abspath(metadata))
+            else:
+                # suppose metadata is a URL
+                base_path = os.path.dirname(metadata)
+
+        return base_path
 
     def _load_resources(self, metadata, base_path):
         resources_dicts = metadata.get('resources')

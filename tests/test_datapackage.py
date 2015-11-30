@@ -241,6 +241,15 @@ class TestDataPackageResources(object):
         dp = datapackage.DataPackage(path)
         assert dp.base_path == base_path
 
+    @httpretty.activate
+    def test_base_path_is_set_to_base_url_when_datapackage_is_in_url(self):
+        base_url = 'http://someplace.com/data'
+        url = '{base_url}/datapackage.json'.format(base_url=base_url)
+        body = '{}'
+        httpretty.register_uri(httpretty.GET, url, body=body)
+        dp = datapackage.DataPackage(url)
+        assert dp.base_path == base_url
+
     def test_resources_are_empty_tuple_by_default(self):
         metadata = {}
         dp = datapackage.DataPackage(metadata)

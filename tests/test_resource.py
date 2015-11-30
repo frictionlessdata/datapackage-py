@@ -155,6 +155,22 @@ class TestResource(object):
                                              'invalid_base_path')
         assert resource.data == '万事开头难\n'
 
+    @httpretty.activate
+    def test_load_accepts_relative_urls(self):
+        base_url = 'http://someplace.com'
+        path = 'resource.txt'
+        url = '{base_url}/{path}'.format(base_url=base_url, path=path)
+        body = '万事开头难'
+        httpretty.register_uri(httpretty.GET, url, body=body)
+
+        resource_dict = {
+            'path': path,
+        }
+
+        resource = datapackage.Resource.load(resource_dict,
+                                             default_base_path=base_url)
+        assert resource.data == body
+
     def test_load_raises_if_path_doesnt_exist(self):
         resource_dict = {
             'path': 'inexistent-file.json',

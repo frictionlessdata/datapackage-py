@@ -76,22 +76,32 @@ class Resource(object):
             data = inline_data
         elif data_path is not None:
             path = self._absolute_path(data_path)
-            try:
-                with open(path, 'r') as f:
-                    data = f.read()
-                    if six.PY2:
-                        data = unicode(data, 'utf-8')
-            except IOError as e:
-                six.raise_from(ResourceError(e), e)
+            if os.path.isfile(path):
+                data = self._load_data_from_path(path)
+            else:
+                data = self._load_data_from_url(path)
         elif data_url is not None:
-            try:
-                req = requests.get(data_url)
-                req.raise_for_status()
-                data = req.text
-            except requests.exceptions.RequestException as e:
-                six.raise_from(ResourceError(e), e)
+            data = self._load_data_from_url(data_url)
 
         return data
+
+    def _load_data_from_path(self, path):
+        try:
+            with open(path, 'r') as f:
+                data = f.read()
+                if six.PY2:
+                    data = unicode(data, 'utf-8')
+                return data
+        except IOError as e:
+            six.raise_from(ResourceError(e), e)
+
+    def _load_data_from_url(self, url):
+        try:
+            req = requests.get(url)
+            req.raise_for_status()
+            return req.text
+        except requests.exceptions.RequestException as e:
+            six.raise_from(ResourceError(e), e)
 
     def _absolute_path(self, path):
         if self._base_path is None:
