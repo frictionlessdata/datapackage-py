@@ -87,6 +87,37 @@ class TestResource(object):
         assert resource.data == resource_dict['data']
 
     @httpretty.activate
+    def test_load_prefers_loading_local_data_over_url(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        resource_dict = {
+            'path': test_helpers.fixture_path('unicode.txt'),
+            'url': 'http://someplace.com/inexistent-file.json',
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.data == '万事开头难\n'
+
+    @httpretty.activate
+    def test_load_loads_from_url_if_local_path_doesnt_exist(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        base_url = 'http://someplace.com'
+        path = 'resource.txt'
+        url = '{base_url}/{path}'.format(base_url=base_url, path=path)
+        body = '万事开头难'
+        httpretty.register_uri(httpretty.GET, url, body=body)
+        httpretty.register_uri(httpretty.GET,
+                               '{0}/nonexistent-file.txt'.format(base_url),
+                               status=404)
+
+        resource_dict = {
+            'path': 'nonexistent-file.txt',
+            'url': url
+        }
+
+        resource = datapackage.Resource.load(resource_dict,
+                                             default_base_path=base_url)
+        assert resource.data == body
+
+    @httpretty.activate
     def test_load_accepts_url(self):
         url = 'http://someplace/resource.txt'
         body = '万事开头难'

@@ -70,18 +70,29 @@ class Resource(object):
         inline_data = metadata.get('data')
         data_path = metadata.get('path')
         data_url = metadata.get('url')
-        data = None
+        error = None
 
-        if inline_data is not None:
-            data = inline_data
-        elif data_path is not None:
-            path = self._absolute_path(data_path)
-            if os.path.isfile(path):
-                data = self._load_data_from_path(path)
-            else:
-                data = self._load_data_from_url(path)
-        elif data_url is not None:
-            data = self._load_data_from_url(data_url)
+        data = inline_data
+
+        if data is None and data_path:
+            try:
+                path = self._absolute_path(data_path)
+                if os.path.isfile(path):
+                    data = self._load_data_from_path(path)
+                else:
+                    data = self._load_data_from_url(path)
+            except ResourceError as e:
+                error = e
+
+        if data is None and data_url:
+            try:
+                data = self._load_data_from_url(data_url)
+            except ResourceError as e:
+                if not error:
+                    error = e
+
+        if data is None and error:
+            raise error
 
         return data
 
