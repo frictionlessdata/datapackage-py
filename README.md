@@ -14,7 +14,7 @@ A model for working with [Data Packages].
 ```python
 import datapackage
 
-dp = datapackage.DataPackage('http://data.okfn.org/data/core/gdp')
+dp = datapackage.DataPackage('http://data.okfn.org/data/core/gdp/datapackage.json')
 brazil_gdp = [{'Year': int(row['Year']), 'Value': float(row['Value'])}
               for row in dp.resources[0].data if row['Country Code'] == 'BRA']
 
