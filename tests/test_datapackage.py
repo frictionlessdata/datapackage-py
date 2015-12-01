@@ -341,3 +341,28 @@ class TestDataPackageResources(object):
         dp = datapackage.DataPackage(metadata)
         dp.resources[0].metadata['name'] = 'saying'
         assert dp.to_dict()['resources'][0]['name'] == 'saying'
+
+    def test_can_add_resource(self):
+        resource = {
+            'data': '万事开头难',
+        }
+        dp = datapackage.DataPackage()
+        resources = dp.metadata.get('resources', [])
+        resources.append(resource)
+        dp.metadata['resources'] = resources
+
+        assert len(dp.resources) == 1
+        assert dp.resources[0].data == '万事开头难'
+
+    def test_can_remove_resource(self):
+        metadata = {
+            'resources': [
+                {'data': '万事开头难'},
+                {'data': 'All beginnings are hard'}
+            ]
+        }
+        dp = datapackage.DataPackage(metadata)
+        del dp.metadata['resources'][1]
+
+        assert len(dp.resources) == 1
+        assert dp.resources[0].data == '万事开头难'

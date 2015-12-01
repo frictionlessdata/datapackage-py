@@ -69,8 +69,20 @@ class DataPackage(object):
 
     @property
     def resources(self):
-        '''tuple of :class:`.Resource`: The resources defined in this data
-        package (can be empty).'''
+        '''The resources defined in this data package (can be empty).
+
+        To add or remove resources, alter the `resources` attribute of the
+        :data:`metadata`.
+
+        :returns: The resources.
+        :rtype: tuple of :class:`.Resource`
+
+        Raises:
+            ResourceError: If any resource couldn't be loaded.
+        '''
+        self._resources = self._update_resources(self._resources,
+                                                 self.metadata,
+                                                 self.base_path)
         return self._resources
 
     @property
@@ -163,10 +175,18 @@ class DataPackage(object):
         return base_path
 
     def _load_resources(self, metadata, base_path):
+        return self._update_resources((), metadata, base_path)
+
+    def _update_resources(self, current_resources, metadata, base_path):
         resources_dicts = metadata.get('resources')
+        new_resources = []
 
-        if resources_dicts is None:
-            return ()
+        if resources_dicts is not None:
+            for resource_dict in resources_dicts:
+                resource = [res for res in current_resources
+                            if res.metadata == resource_dict]
+                if not resource:
+                    resource = [Resource.load(resource_dict, base_path)]
+                new_resources.append(resource[0])
 
-        return tuple([Resource.load(resource_dict, base_path)
-                      for resource_dict in resources_dicts])
+        return tuple(new_resources)
