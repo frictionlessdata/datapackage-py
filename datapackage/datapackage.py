@@ -80,7 +80,9 @@ class DataPackage(object):
         :rtype: tuple of :class:`.Resource`
 
         Raises:
-            ResourceError: If any resource couldn't be loaded.
+            ResourceError: If any resource couldn't be loaded. This will only
+                happen if you've changed the resources in the :data:`metadata`
+                after this :class:`DataPackage` was created.
         '''
         self._resources = self._update_resources(self._resources,
                                                  self.metadata,

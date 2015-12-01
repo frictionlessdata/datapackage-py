@@ -210,6 +210,42 @@ class TestResource(object):
         with pytest.raises(datapackage.exceptions.ResourceError):
             datapackage.Resource.load(resource_dict)
 
+    def test_can_change_data_path_after_creation(self):
+        original_path = test_helpers.fixture_path('unicode.txt')
+        new_path = test_helpers.fixture_path('foo.txt')
+        resource_dict = {
+            'path': original_path
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        resource.metadata['path'] = new_path
+        assert resource.data == 'foo\n'
+
+    @httpretty.activate
+    def test_can_change_data_url_after_creation(self):
+        original_url = 'http://someplace.com/foo.txt'
+        original_body = 'foo'
+        httpretty.register_uri(httpretty.GET, original_url,
+                               body=original_body)
+        new_url = 'http://someplace.com/bar.txt'
+        new_body = 'bar'
+        httpretty.register_uri(httpretty.GET, new_url,
+                               body=new_body)
+
+        resource_dict = {
+            'url': original_url
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        resource.metadata['url'] = new_url
+        assert resource.data == new_body
+
+    def test_can_change_the_data_after_creation(self):
+        resource_dict = {
+            'data': ['foo']
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        resource.metadata['data'] = ['bar']
+        assert resource.data == ['bar']
+
 
 class TestTabularResource(object):
     def test_load_inline_list(self):

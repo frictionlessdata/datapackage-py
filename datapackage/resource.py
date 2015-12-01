@@ -21,6 +21,9 @@ class Resource(object):
     This classes will usually be created by :class:`DataPackage`, and not by
     you. If you need to create one, use the :func:`Resource.load` factory
     method.
+
+    The resources' attributes should only be altered through the
+    :data:`metadata` dict.
     '''
 
     @classmethod
@@ -41,6 +44,9 @@ class Resource(object):
             Resource: The returned resource's class will depend on the type of
                 resource. If it was tabular, a :class:`TabularResource` will be
                 returned, otherwise, it'll be a :class:`Resource`.
+
+        Raises:
+            ResourceError: If the resource couldn't be loaded.
         '''
         try:
             resource = TabularResource(metadata, default_base_path)
@@ -60,10 +66,34 @@ class Resource(object):
 
     @property
     def data(self):
-        '''str: This resource's data.'''
+        '''Returns this resource's data.
+
+        The data should not be changed.
+
+        Returns:
+            str: This resource's data.
+
+        Raises:
+            ResourceError: If the resource couldn't be loaded. This will only
+                happen if you've changed the data pointed by :data:`metadata`.
+        '''
+        if self._metadata_data_has_changed(self.metadata):
+            self._data = self._parse_data(self.metadata)
         return self._data
 
+    def _metadata_data_has_changed(self, metadata):
+        metadata_data_ids = self._metadata_data_ids(metadata)
+        return metadata_data_ids != self._original_metadata_data_ids
+
+    def _metadata_data_ids(self, metadata):
+        return {
+            'data_id': id(metadata.get('data')),
+            'data_path_id': id(metadata.get('path')),
+            'data_url_id': id(metadata.get('url'))
+        }
+
     def _parse_data(self, metadata):
+        self._original_metadata_data_ids = self._metadata_data_ids(metadata)
         return self._load_data(metadata)
 
     def _load_data(self, metadata):
@@ -126,11 +156,6 @@ class TabularResource(Resource):
     It currently only supports CSVs.
     '''
 
-    @property
-    def data(self):
-        '''tuple of dicts: This resource's data.'''
-        return super(TabularResource, self).data
-
     def _parse_data(self, metadata):
         '''Parses the data defined in ``metadata``
 
@@ -142,7 +167,7 @@ class TabularResource(Resource):
                 a ``list``, ``tuple``, ``CSV`` or ``JSON``. If it's a ``JSON``,
                 its root content must be an array.
         '''
-        data = self._load_data(metadata)
+        data = super(TabularResource, self)._parse_data(metadata)
 
         if isinstance(data, six.string_types):
             try:
