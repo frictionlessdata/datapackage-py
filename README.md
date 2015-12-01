@@ -9,7 +9,10 @@ A model for working with [Data Packages].
 
   [Data Packages]: http://dataprotocols.org/data-packages/
 
-## Example
+## Examples
+
+
+### Reading a Data Package and its resource
 
 ```python
 import datapackage
@@ -33,4 +36,24 @@ msg = (
 
 print(msg)
 # The highest Brazilian GDP occured in 2011, when it peaked at US$ 2,615,189,973,181. This was 172.44% more than its minimum GDP in 1960.
+```
+
+### Creating a Data Package
+
+```python
+import datapackage
+
+dp = datapackage.DataPackage()
+dp.metadata['name'] = 'my_sleep_duration'
+dp.metadata['resources'] = [
+    {'name': 'data'}
+]
+
+resource = dp.resources[0]
+resource.metadata['data'] = [
+    7, 8, 5, 6, 9, 7, 8
+]
+
+print(dp.to_dict())
+# {'name': 'my_sleep_duration', 'resources': [{'data': [7, 8, 5, 6, 9, 7, 8], 'name': 'data'}]}
 ```
