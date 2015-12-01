@@ -37,7 +37,7 @@ class Schema(object):
         self._check_schema()
 
     def to_dict(self):
-        '''dict: Convert this Schema to dict.'''
+        '''dict: Convert this :class:`.Schema` to dict.'''
         return copy.deepcopy(self._schema)
 
     def validate(self, data):

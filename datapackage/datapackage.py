@@ -35,15 +35,16 @@ class DataPackage(object):
         default_base_path (str, optional): The default path to be used to load
             resources located on the local disk that don't define a base path
             themselves. This will usually be the path for the
-            `datapackage.json` file. If the ``metadata`` parameter was the path
-            to the `datapackage.json`, this will automatically be set to its
-            base path.
+            `datapackage.json` file. If the :data:`metadata` parameter was the
+            path to the `datapackage.json`, this will automatically be set to
+            its base path.
 
     Raises:
-        DataPackageException: If the ``metadata`` couldn't be loaded or was
+        DataPackageException: If the :data:`metadata` couldn't be loaded or was
             invalid.
-        SchemaError: If the ``schema`` couldn't be loaded or was invalid.
-        ResourceError: If any ``metadata['resources']`` couldn't be loaded.
+        SchemaError: If the :data:`schema` couldn't be loaded or was invalid.
+        ResourceError: If any resource defined in :data:`metadata` couldn't be
+            loaded.
     '''
 
     def __init__(self, metadata=None, schema='base', default_base_path=None):

@@ -132,14 +132,14 @@ class TabularResource(Resource):
         return super(TabularResource, self).data
 
     def _parse_data(self, metadata):
-        '''Parses the data
+        '''Parses the data defined in ``metadata``
 
         Returns:
             tuple of dicts: The parsed rows of this resource.
 
         Raises:
             ValueError: If the data isn't tabular. We consider tabular data as
-                a ``list``, ``tuple``, ``JSON`` or ``CSV``. If it's a ``JSON``,
+                a ``list``, ``tuple``, ``CSV`` or ``JSON``. If it's a ``JSON``,
                 its root content must be an array.
         '''
         data = self._load_data(metadata)
