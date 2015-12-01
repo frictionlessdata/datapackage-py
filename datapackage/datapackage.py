@@ -43,6 +43,7 @@ class DataPackage(object):
         DataPackageException: If the ``metadata`` couldn't be loaded or was
             invalid.
         SchemaError: If the ``schema`` couldn't be loaded or was invalid.
+        ResourceError: If any ``metadata['resources']`` couldn't be loaded.
     '''
 
     def __init__(self, metadata=None, schema='base', default_base_path=None):
