@@ -328,3 +328,16 @@ class TestDataPackageResources(object):
 
         with pytest.raises(datapackage.exceptions.ResourceError):
             datapackage.DataPackage(metadata)
+
+    def test_changing_resource_metadata_changes_it_in_the_datapackage(self):
+        metadata = {
+            'resources': [
+                {
+                    'data': '万事开头难',
+                }
+            ]
+        }
+
+        dp = datapackage.DataPackage(metadata)
+        dp.resources[0].metadata['name'] = 'saying'
+        assert dp.to_dict()['resources'][0]['name'] == 'saying'
