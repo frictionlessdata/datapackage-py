@@ -11,6 +11,8 @@ except ImportError:
 
 import os
 import json
+import tempfile
+import zipfile
 import pytest
 import httpretty
 import tests.test_helpers as test_helpers
@@ -374,3 +376,101 @@ class TestDataPackageResources(object):
 
         assert len(dp.resources) == 1
         assert dp.resources[0].data == '万事开头难'
+
+
+class TestSavingDataPackages(object):
+    @pytest.yield_fixture
+    def tmpfile(self):
+        with tempfile.NamedTemporaryFile() as f:
+            yield f
+
+    def test_saves_as_zip(self, tmpfile):
+        dp = datapackage.DataPackage(schema={})
+        dp.save(tmpfile)
+        assert zipfile.is_zipfile(tmpfile)
+
+    def test_accepts_file_paths(self, tmpfile):
+        dp = datapackage.DataPackage(schema={})
+        dp.save(tmpfile.name)
+        assert zipfile.is_zipfile(tmpfile.name)
+
+    def test_adds_datapackage_descriptor_at_zipfile_root(self, tmpfile):
+        metadata = {
+            'name': 'proverbs',
+            'resources': [
+                {'data': '万事开头难'}
+            ]
+        }
+        schema = {}
+        dp = datapackage.DataPackage(metadata, schema)
+        dp.save(tmpfile)
+        with zipfile.ZipFile(tmpfile, 'r') as z:
+            dp_json = z.read('datapackage.json').decode('utf-8')
+        assert json.loads(dp_json) == json.loads(dp.to_json())
+
+    def test_adds_resources_inside_data_subfolder(self, tmpfile):
+        resource_path = test_helpers.fixture_path('unicode.txt')
+        metadata = {
+            'name': 'proverbs',
+            'resources': [
+                {'path': resource_path}
+            ]
+        }
+        schema = {}
+        dp = datapackage.DataPackage(metadata, schema)
+        dp.save(tmpfile)
+        with zipfile.ZipFile(tmpfile, 'r') as z:
+            resource_data = z.read('data/unicode.txt').decode('utf-8')
+        assert resource_data == '万事开头难\n'
+
+    def test_works_with_resources_with_relative_paths(self, tmpfile):
+        base_path = test_helpers.fixture_path('')
+        metadata = {
+            'name': 'proverbs',
+            'base': base_path,
+            'resources': [
+                {'path': 'unicode.txt'}
+            ]
+        }
+        schema = {}
+        dp = datapackage.DataPackage(metadata, schema)
+        dp.save(tmpfile)
+
+    def test_should_raise_validation_error_if_datapackage_is_invalid(self,
+                                                                     tmpfile):
+        metadata = {}
+        schema = {
+            'properties': {
+                'name': {},
+            },
+            'required': ['name'],
+        }
+        dp = datapackage.DataPackage(metadata, schema)
+        with pytest.raises(datapackage.exceptions.ValidationError):
+            dp.save(tmpfile)
+
+    def test_should_raise_if_path_doesnt_exist(self):
+        dp = datapackage.DataPackage({}, {})
+
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp.save('/non/existent/file/path')
+
+    @mock.patch('zipfile.ZipFile')
+    def test_should_raise_if_zipfile_raised_BadZipfile(self,
+                                                       zipfile_mock,
+                                                       tmpfile):
+        zipfile_mock.side_effect = zipfile.BadZipfile()
+        dp = datapackage.DataPackage({}, {})
+
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp.save(tmpfile)
+
+    @mock.patch('zipfile.ZipFile')
+    def test_should_raise_if_zipfile_raised_LargeZipFile(self,
+                                                         zipfile_mock,
+                                                         tmpfile):
+        zipfile_mock.side_effect = zipfile.LargeZipFile()
+        dp = datapackage.DataPackage({}, {})
+
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp.save(tmpfile)

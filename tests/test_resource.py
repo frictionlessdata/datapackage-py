@@ -246,6 +246,39 @@ class TestResource(object):
         resource.metadata['data'] = ['bar']
         assert resource.data == ['bar']
 
+    def test_local_data_path_returns_the_unmodified_path(self):
+        resource_dict = {
+            'path': test_helpers.fixture_path('unicode.txt'),
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.local_data_path == resource_dict['path']
+
+    def test_local_data_path_returns_the_absolute_path_relative_to_base(self):
+        base_path = test_helpers.fixture_path('')
+        resource_dict = {
+            'path': 'unicode.txt',
+            'base': base_path,
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        abs_path = os.path.join(base_path, resource_dict['path'])
+        assert resource.local_data_path == abs_path
+
+    def test_local_data_path_returns_none_if_theres_no_file(self):
+        resource_dict = {
+            'data': 'foo',
+            'url': 'http://someplace.com/foo.txt'
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.local_data_path is None
+
+    def test_local_data_path_returns_none_if_path_isnt_a_file(self):
+        resource_dict = {
+            'data': 'foo',  # Avoid throwing error because path doesn't exist
+            'path': 'nonexistent.csv',
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.local_data_path is None
+
 
 class TestTabularResource(object):
     def test_load_inline_list(self):

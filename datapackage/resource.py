@@ -81,6 +81,13 @@ class Resource(object):
             self._data = self._parse_data(self.metadata)
         return self._data
 
+    @property
+    def local_data_path(self):
+        '''str: The absolute local path for the data, if it exists locally.'''
+        path = self._absolute_path(self.metadata.get('path'))
+        if path and os.path.isfile(path):
+            return path
+
     def _metadata_data_has_changed(self, metadata):
         metadata_data_ids = self._metadata_data_ids(metadata)
         return metadata_data_ids != self._original_metadata_data_ids
@@ -106,11 +113,11 @@ class Resource(object):
 
         if data is None and data_path:
             try:
-                path = self._absolute_path(data_path)
-                if os.path.isfile(path):
-                    data = self._load_data_from_path(path)
+                if self.local_data_path:
+                    data = self._load_data_from_path(self.local_data_path)
                 else:
-                    data = self._load_data_from_url(path)
+                    url = self._absolute_path(data_path)
+                    data = self._load_data_from_url(url)
             except ResourceError as e:
                 error = e
 
@@ -145,7 +152,7 @@ class Resource(object):
             six.raise_from(ResourceError(e), e)
 
     def _absolute_path(self, path):
-        if self._base_path is None:
+        if path is None or self._base_path is None:
             return path
         return os.path.join(self._base_path, path)
 

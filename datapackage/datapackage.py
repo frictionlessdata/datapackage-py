@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import os
 import json
 import copy
+import zipfile
 import six
 import requests
 import datapackage_registry
@@ -118,6 +119,56 @@ class DataPackage(object):
     def to_json(self):
         '''str: Convert this Data Package to a JSON string.'''
         return json.dumps(self.metadata)
+
+    def save(self, file_or_path):
+        '''Validates and saves this Data Package contents into a zip file.
+
+        It creates a zip file into ``file_or_path`` with the contents of this
+        Data Package and its resources. Every resource which content lives in
+        the local filesystem will be copied to the zip file. Consider the
+        following Data Package descriptor::
+
+            {
+                "name": "gdp",
+                "resources": [
+                    {"name": "local", "path": "local_resource.csv"},
+                    {"name": "inline", "data": [4, 8, 15, 16, 23, 42]},
+                    {"name": "remote", "url": "http://someplace.com/data.csv"}
+                ]
+            }
+
+        The final structure of the zip file will be::
+
+            ./datapackage.json
+            ./data/local_resource.csv
+
+        With the contents of `datapackage.json` being the same as returned by
+        :func:`to_json`.
+
+        Args:
+            file_or_path (string or file-like object): The file path or a
+                file-like object where the contents of this Data Package will
+                be saved into.
+
+        Raises:
+            DataPackageValidateException: If the Data Package is invalid.
+            DataPackageException: If there were some error writing the package.
+        '''
+        self.validate()
+
+        arcname = lambda path: os.path.join('data', os.path.basename(path))
+
+        try:
+            with zipfile.ZipFile(file_or_path, 'w') as z:
+                z.writestr('datapackage.json', self.to_json())
+                for resource in self.resources:
+                    path = resource.local_data_path
+                    if path:
+                        z.write(path, arcname(path))
+        except (IOError,
+                zipfile.BadZipfile,
+                zipfile.LargeZipFile) as e:
+            six.raise_from(DataPackageException(e), e)
 
     def validate(self):
         '''Validate this Data Package.
