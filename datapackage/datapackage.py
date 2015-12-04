@@ -115,6 +115,10 @@ class DataPackage(object):
         '''dict: Convert this Data Package to dict.'''
         return copy.deepcopy(self.metadata)
 
+    def to_json(self):
+        '''str: Convert this Data Package to a JSON string.'''
+        return json.dumps(self.metadata)
+
     def validate(self):
         '''Validate this Data Package.
 

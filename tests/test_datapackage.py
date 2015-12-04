@@ -10,6 +10,7 @@ except ImportError:
     import unittest.mock as mock
 
 import os
+import json
 import pytest
 import httpretty
 import tests.test_helpers as test_helpers
@@ -199,12 +200,19 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(schema=schema)
         assert dp.required_attributes == ()
 
-    def test_altering_dict_returned_by_to_dict_doesnt_change_the_dp(self):
+    def test_to_dict_value_can_be_altered_without_changing_the_dp(self):
         metadata = {}
         dp = datapackage.DataPackage(metadata)
         dp_dict = dp.to_dict()
         dp_dict['foo'] = 'bar'
         assert dp.metadata == {}
+
+    def test_to_json(self):
+        metadata = {
+            'foo': 'bar',
+        }
+        dp = datapackage.DataPackage(metadata)
+        assert json.loads(dp.to_json()) == metadata
 
 
 class TestDataPackageResources(object):

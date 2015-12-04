@@ -54,6 +54,7 @@ resource.metadata['data'] = [
     7, 8, 5, 6, 9, 7, 8
 ]
 
-print(dp.to_dict())
-# {'name': 'my_sleep_duration', 'resources': [{'data': [7, 8, 5, 6, 9, 7, 8], 'name': 'data'}]}
+with open('datapackage.json', 'w') as f:
+  f.write(dp.to_json())
+# {"name": "my_sleep_duration", "resources": [{"data": [7, 8, 5, 6, 9, 7, 8], "name": "data"}]}
 ```
