@@ -408,6 +408,37 @@ class TestSavingDataPackages(object):
             dp_json = z.read('datapackage.json').decode('utf-8')
         assert json.loads(dp_json) == json.loads(dp.to_json())
 
+    def test_generates_filenames_for_named_resources(self, tmpfile):
+        resource_path = test_helpers.fixture_path('unicode.txt')
+        metadata = {
+            'name': 'proverbs',
+            'resources': [
+                {'name': 'proverbs', 'format': 'TXT', 'path': resource_path},
+                {'name': 'proverbs_without_format', 'path': resource_path}
+            ]
+        }
+        schema = {}
+        dp = datapackage.DataPackage(metadata, schema)
+        dp.save(tmpfile)
+        with zipfile.ZipFile(tmpfile, 'r') as z:
+            assert 'data/proverbs.txt' in z.namelist()
+            assert 'data/proverbs_without_format' in z.namelist()
+
+    def test_generates_unique_filenames_for_unnamed_resources(self, tmpfile):
+        metadata = {
+            'name': 'proverbs',
+            'resources': [
+                {'path': test_helpers.fixture_path('unicode.txt')},
+                {'path': test_helpers.fixture_path('foo.txt')}
+            ]
+        }
+        schema = {}
+        dp = datapackage.DataPackage(metadata, schema)
+        dp.save(tmpfile)
+        with zipfile.ZipFile(tmpfile, 'r') as z:
+            files = z.namelist()
+            assert sorted(set(files)) == sorted(files)
+
     def test_adds_resources_inside_data_subfolder(self, tmpfile):
         resource_path = test_helpers.fixture_path('unicode.txt')
         metadata = {
@@ -420,7 +451,10 @@ class TestSavingDataPackages(object):
         dp = datapackage.DataPackage(metadata, schema)
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
-            resource_data = z.read('data/unicode.txt').decode('utf-8')
+            filename = [name for name in z.namelist()
+                        if name.startswith('data/')]
+            assert len(filename) == 1
+            resource_data = z.read(filename[0]).decode('utf-8')
         assert resource_data == '万事开头难\n'
 
     def test_works_with_resources_with_relative_paths(self, tmpfile):

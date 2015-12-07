@@ -131,7 +131,7 @@ class DataPackage(object):
             {
                 "name": "gdp",
                 "resources": [
-                    {"name": "local", "path": "local_resource.csv"},
+                    {"name": "local", "format": "CSV", "path": "data.csv"},
                     {"name": "inline", "data": [4, 8, 15, 16, 23, 42]},
                     {"name": "remote", "url": "http://someplace.com/data.csv"}
                 ]
@@ -140,10 +140,17 @@ class DataPackage(object):
         The final structure of the zip file will be::
 
             ./datapackage.json
-            ./data/local_resource.csv
+            ./data/local.csv
 
         With the contents of `datapackage.json` being the same as returned by
         :func:`to_json`.
+
+        The resources' file names are generated based on their `name` and
+        `format` fields if they exist. If the resource has no `name`, it'll be
+        used `resource-X`, where `X` is the index of the resource in the
+        `resources` list (starting at zero). If the resource has `format`,
+        it'll be lowercased and appended to the `name`, becoming
+        "`name.format`".
 
         Args:
             file_or_path (string or file-like object): The file path or a
@@ -156,7 +163,15 @@ class DataPackage(object):
         '''
         self.validate()
 
-        arcname = lambda path: os.path.join('data', os.path.basename(path))
+        def arcname(resource):
+            basename = resource.metadata.get('name')
+            resource_format = resource.metadata.get('format')
+            if not basename:
+                index = self.resources.index(resource)
+                basename = 'resource-{index}'.format(index=index)
+            if resource_format:
+                basename = '.'.join([basename, resource_format.lower()])
+            return os.path.join('data', basename)
 
         try:
             with zipfile.ZipFile(file_or_path, 'w') as z:
@@ -164,7 +179,7 @@ class DataPackage(object):
                 for resource in self.resources:
                     path = resource.local_data_path
                     if path:
-                        z.write(path, arcname(path))
+                        z.write(path, arcname(resource))
         except (IOError,
                 zipfile.BadZipfile,
                 zipfile.LargeZipFile) as e:
