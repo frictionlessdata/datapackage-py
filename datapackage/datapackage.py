@@ -175,11 +175,14 @@ class DataPackage(object):
 
         try:
             with zipfile.ZipFile(file_or_path, 'w') as z:
-                z.writestr('datapackage.json', self.to_json())
-                for resource in self.resources:
+                metadata = json.loads(self.to_json())
+                for i, resource in enumerate(self.resources):
                     path = resource.local_data_path
                     if path:
-                        z.write(path, arcname(resource))
+                        path_inside_dp = arcname(resource)
+                        z.write(path, path_inside_dp)
+                        metadata['resources'][i]['path'] = path_inside_dp
+                z.writestr('datapackage.json', json.dumps(metadata))
         except (IOError,
                 zipfile.BadZipfile,
                 zipfile.LargeZipFile) as e:

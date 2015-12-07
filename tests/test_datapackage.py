@@ -457,6 +457,22 @@ class TestSavingDataPackages(object):
             resource_data = z.read(filename[0]).decode('utf-8')
         assert resource_data == '万事开头难\n'
 
+    def test_fixes_resources_paths_to_be_relative_to_package(self, tmpfile):
+        resource_path = test_helpers.fixture_path('unicode.txt')
+        metadata = {
+            'name': 'proverbs',
+            'resources': [
+                {'name': 'unicode', 'format': 'txt', 'path': resource_path}
+            ]
+        }
+        schema = {}
+        dp = datapackage.DataPackage(metadata, schema)
+        dp.save(tmpfile)
+        with zipfile.ZipFile(tmpfile, 'r') as z:
+            json_string = z.read('datapackage.json').decode('utf-8')
+            generated_dp_dict = json.loads(json_string)
+        assert generated_dp_dict['resources'][0]['path'] == 'data/unicode.txt'
+
     def test_works_with_resources_with_relative_paths(self, tmpfile):
         base_path = test_helpers.fixture_path('')
         metadata = {
