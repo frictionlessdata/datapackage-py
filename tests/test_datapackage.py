@@ -10,6 +10,7 @@ except ImportError:
     import unittest.mock as mock
 
 import os
+import glob
 import json
 import tempfile
 import zipfile
@@ -524,3 +525,53 @@ class TestSavingDataPackages(object):
 
         with pytest.raises(datapackage.exceptions.DataPackageException):
             dp.save(tmpfile)
+
+
+class TestImportingDataPackageFromZip(object):
+    @pytest.yield_fixture
+    def datapackage_zip(self):
+        with tempfile.NamedTemporaryFile() as f:
+            metadata = {
+                'name': 'proverbs',
+                'resources': [
+                    {'path': test_helpers.fixture_path('unicode.txt')},
+                ]
+            }
+            dp = datapackage.DataPackage(metadata)
+            dp.save(f)
+            yield f
+
+    def test_it_works_with_local_paths(self, datapackage_zip):
+        dp = datapackage.DataPackage(datapackage_zip.name)
+        assert dp.metadata['name'] == 'proverbs'
+        assert len(dp.resources) == 1
+        assert dp.resources[0].data == '万事开头难\n'
+
+    def test_it_works_with_file_objects(self, datapackage_zip):
+        dp = datapackage.DataPackage(datapackage_zip)
+        assert dp.metadata['name'] == 'proverbs'
+        assert len(dp.resources) == 1
+        assert dp.resources[0].data == '万事开头难\n'
+
+    def test_it_works_with_remote_files(self, datapackage_zip):
+        httpretty.enable()
+
+        datapackage_zip.seek(0)
+        url = 'http://someplace.com/datapackage.zip'
+        httpretty.register_uri(httpretty.GET, url, body=datapackage_zip.read(),
+                               content_type='application/zip')
+
+        dp = datapackage.DataPackage(url)
+        assert dp.metadata['name'] == 'proverbs'
+        assert len(dp.resources) == 1
+        assert dp.resources[0].data == '万事开头难\n'
+
+        httpretty.disable()
+
+    def test_it_removes_temporary_directories(self, datapackage_zip):
+        tempdirs_glob = os.path.join(tempfile.gettempdir(), '*-datapackage')
+        original_tempdirs = glob.glob(tempdirs_glob)
+        dp = datapackage.DataPackage(datapackage_zip)
+        dp.save(datapackage_zip)
+
+        assert glob.glob(tempdirs_glob) == original_tempdirs

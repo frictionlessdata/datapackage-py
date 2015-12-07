@@ -4,8 +4,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import io
 import json
 import copy
+import tempfile
 import zipfile
 import six
 import requests
@@ -25,8 +27,9 @@ class DataPackage(object):
     Args:
         metadata (dict or str, optional): The contents of the
             `datapackage.json` file. It can be a ``dict`` with its contents,
-            the local path for the file or its URL. If you're passing a
-            ``dict``, it's a good practice to also set the
+            the local path for the file or its URL. It also can point to a
+            `ZIP` file with the `datapackage.json` in its root folder. If
+            you're passing a ``dict``, it's a good practice to also set the
             ``default_base_path`` parameter to the absolute `datapackage.json`
             path.
         schema (dict or str, optional): The schema to be used to validate this
@@ -49,10 +52,16 @@ class DataPackage(object):
     '''
 
     def __init__(self, metadata=None, schema='base', default_base_path=None):
-        self._metadata = self._load_metadata(metadata)
-        self._schema = self._load_schema(schema)
-        self._base_path = self._get_base_path(metadata, default_base_path)
-        self._resources = self._load_resources(self.metadata, self.base_path)
+        try:
+            metadata = self._extract_zip_if_possible(metadata)
+
+            self._metadata = self._load_metadata(metadata)
+            self._schema = self._load_schema(schema)
+            self._base_path = self._get_base_path(metadata, default_base_path)
+            self._resources = self._load_resources(self.metadata,
+                                                   self.base_path)
+        finally:
+            self._remove_tempdir_if_exists()
 
     @property
     def metadata(self):
@@ -196,6 +205,42 @@ class DataPackage(object):
         '''
         self.schema.validate(self.to_dict())
 
+    def _extract_zip_if_possible(self, metadata):
+        '''str: Path to the extracted datapackage.json if metadata points to
+        ZIP, or the unaltered metadata.'''
+        result = metadata
+        try:
+            if isinstance(metadata, six.string_types):
+                res = requests.get(metadata)
+                res.raise_for_status()
+                result = res.content
+        except (IOError,
+                ValueError,
+                requests.exceptions.RequestException):
+            pass
+
+        try:
+            the_zip = result
+            if isinstance(the_zip, bytes):
+                try:
+                    os.path.isfile(the_zip)
+                except (TypeError, ValueError):
+                    # the_zip contains the zip file contents
+                    the_zip = io.BytesIO(the_zip)
+
+            if zipfile.is_zipfile(the_zip):
+                with zipfile.ZipFile(the_zip, 'r') as z:
+                    self._tempdir = tempfile.mkdtemp('-datapackage')
+                    z.extractall(self._tempdir)
+                    result = os.path.join(self._tempdir, 'datapackage.json')
+            else:
+                result = metadata
+        except (TypeError,
+                zipfile.BadZipfile):
+            pass
+
+        return result
+
     def _load_metadata(self, metadata):
         the_metadata = metadata
 
@@ -267,3 +312,8 @@ class DataPackage(object):
                 new_resources.append(resource[0])
 
         return tuple(new_resources)
+
+    def _remove_tempdir_if_exists(self):
+        if hasattr(self, '_tempdir') and os.path.exists(self._tempdir):
+            import shutil
+            shutil.rmtree(self._tempdir, ignore_errors=True)
