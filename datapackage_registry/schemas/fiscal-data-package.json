@@ -52,75 +52,68 @@
         "measures": {
           "title": "Measures",
           "description": "Measures are numerical and correspond to financial amounts in the source data.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
+          "type": "object",
+          "patternProperties": {
+            "^\\w*$": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "resource": {
+                  "type": "string"
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                },
+                "factor": {
+                  "type": "number"
+                },
+                "direction": {
+                  "title": "Direction of the spending",
+                  "description": "A keyword that represents the direction of the spend, either expenditure or revenue.",
+                  "type": "string",
+                  "enum": ["expenditure", "revenue"]
+                },
+                "phase": {
+                  "title": "Budget phase",
+                  "description": "A keyword that represents the phase of the data, can be proposed for a budget proposal, approved for an approved budget, adjusted for modified budget or executed for the enacted budget",
+                  "type": "string",
+                  "enum": ["proposed", "approved", "adjusted", "executed"]
+                }
               },
-              "source": {
-                "type": "string"
-              },
-              "currency": {
-                "type": "string",
-                "pattern": "^[A-Z]{3}$"
-              },
-              "factor": {
-                "type": "number"
-              },
-              "resource": {
-                "type": "string"
-              },
-              "direction": {
-                "title": "Direction of the spending",
-                "description": "A keyword that represents the direction of the spend, either expenditure or revenue.",
-                "type": "string",
-                "enum": ["expenditure", "revenue"]
-              },
-              "phase": {
-                "title": "Budget phase",
-                "description": "A keyword that represents the phase of the data, can be proposed for a budget proposal, approved for an approved budget, adjusted for modified budget or executed for the enacted budget",
-                "type": "string",
-                "enum": ["proposed", "approved", "adjusted", "executed"]
-              }
-            },
-            "required": ["name", "source", "currency"]
+              "required": ["source", "currency"]
+            }
           }
         },
         "dimensions": {
           "title": "Dimensions",
           "description": "Dimensions are groups of related fields. Dimensions cover all items other than the measure.",
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "properties": {
-              "name": {
-                "title": "Name",
-                "description": "The dimension name in the logical model",
-                "type": "string"
-              },
-              "fields": {
-                "title": "Fields",
-                "description": "An array of field objects that make up the dimension",
+          "type": "object",
+          "patternProperties": {
+            "^\\w*$": {
+              "attributes": {
+                "title": "Attributes",
+                "description": "An array of attribute objects that make up the dimension",
                 "type": "array",
                 "minItems": 1,
                 "items": {
                   "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string"
-                    },
-                    "source": {
-                      "type": "string"
-                    },
-                    "resource": {
-                      "type": "string"
+                  "patternProperties": {
+                    "^\\w*$": {
+                      "type": "object",
+                      "properties": {
+                        "source": {
+                          "type": "string"
+                        },
+                        "resource": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["source"]
                     }
-                  },
-                  "required": ["name", "source"]
+                  }
                 }
               },
               "primaryKey": {
@@ -150,8 +143,7 @@
                 "description": "The type of the classification.",
                 "enum": ["functional","administrative","economic"]
               }
-            },
-            "required": ["name"]
+            }
           }
         }
       },

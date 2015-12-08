@@ -22,6 +22,22 @@
           ]
         }
       ]
+    },
+    "contributor": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string" },
+            "web": { "type": "string" }
+          },
+          "required": ["name"]
+        }
+      ]
     }
   },
   "properties": {
@@ -63,9 +79,9 @@
       "propertyOrder": 60
     },
     "author": {
+      "$ref": "#/definitions/contributor",
       "title": "Author",
       "description": "The main contributor to this package.",
-      "type": "string",
       "propertyOrder": 70
     },
     "contributors": {
@@ -77,26 +93,7 @@
         "hidden": true
       },
       "items": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "email": {
-                "type": "string"
-              },
-              "web": {
-                "type": "string"
-              }
-            },
-            "required": ["name"]
-          }
-        ]
+        "$ref": "#/definitions/contributor"
       }
     },
     "resources": {
@@ -217,7 +214,7 @@
               ]
             }
           },
-          "licence": {
+          "license": {
             "$ref": "#/definitions/license",
             "description": "The license under which the resource is published.",
             "propertyOrder": 140
