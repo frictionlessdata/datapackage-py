@@ -3,6 +3,43 @@
   "title": "Tabular Data Package",
   "description": "Tabular Data Package is a format and specification for convenient delivery, installation and management of tabular data.",
   "type": "object",
+  "definitions": {
+    "contributor": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "email": { "type": "string" },
+            "web": { "type": "string" }
+          },
+          "required": ["name"]
+        }
+      ]
+    },
+    "license": {
+      "title": "License",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "url": { "type": "string" }
+          },
+          "anyOf": [
+            { "title": "type required", "required": ["type"] },
+            { "title": "url required", "required": ["url"] }
+          ]
+        }
+      ]
+    }
+  },
   "properties": {
     "name": {
       "type": "string",
@@ -36,27 +73,15 @@
       "type": "string",
       "propertyOrder": 50
     },
-    "licences": {
-      "title": "Licenses",
-      "description": "The license(s) under which this package is published.",
-      "type": "array",
-      "propertyOrder": 60,
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "url": { "type": "string" }
-        },
-        "anyOf": [
-          { "title": "id required", "required": ["id"] },
-          { "title": "url required", "required": ["url"] }
-        ]
-      }
+    "license": {
+      "$ref": "#/definitions/license",
+      "description": "The license under which this package is published.",
+      "propertyOrder": 60
     },
     "author": {
+      "$ref": "#/definitions/contributor",
       "title": "Author",
       "description": "The main contributor to this package.",
-      "type": "string",
       "propertyOrder": 70
     },
     "contributors": {
@@ -65,19 +90,7 @@
       "type": "array",
       "propertyOrder": 80,
       "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "web": {
-            "type": "string"
-          }
-        },
-        "required": ["name"]
+        "$ref": "#/definitions/contributor"
       }
     },
     "resources": {
@@ -185,22 +198,10 @@
               ]
             }
           },
-          "licences": {
-            "title": "Licenses",
-            "description": "The license(s) under which this resource is released.",
-            "type": "array",
-            "propertyOrder": 140,
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": { "type": "string" },
-                "url": { "type": "string" }
-              },
-              "anyOf": [
-                { "title": "id required", "required": ["id"] },
-                { "title": "url required", "required": ["url"] }
-              ]
-            }
+          "license": {
+            "$ref": "#/definitions/license",
+            "description": "The license under which the resource is published.",
+            "propertyOrder": 140
           }
         },
         "anyOf": [
