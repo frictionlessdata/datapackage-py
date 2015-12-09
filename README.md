@@ -54,7 +54,7 @@ Developer notes
 These notes are intended to help people that want to contribute to this
 package itself. If you just want to use it, you can safely ignore this.
 
-### Upgrading the local schemas cache
+### Updating the local schemas cache
 
 We cache the schemas from <https://github.com/dataprotocols/schemas>
 using git-subtree. To update it, use:
