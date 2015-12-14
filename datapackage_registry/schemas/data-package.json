@@ -1,100 +1,42 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "DataPackage",
-  "description": "DataPackage is a format and specification for convenient delivery, installation and management of data. This is the base profile for DataPackage.",
+  "title": "Data Package",
+  "description": "Data Package is a simple specification for data access and delivery.",
   "type": "object",
-  "definitions": {
-    "license": {
-      "title": "License",
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "type": { "type": "string" },
-            "url": { "type": "string" }
-          },
-          "anyOf": [
-            { "title": "type required", "required": ["type"] },
-            { "title": "url required", "required": ["url"] }
-          ]
-        }
-      ]
-    },
-    "contributor": {
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "name": { "type": "string" },
-            "email": { "type": "string" },
-            "web": { "type": "string" }
-          },
-          "required": ["name"]
-        }
-      ]
-    }
-  },
+  "required": [ "name" ],
   "properties": {
     "name": {
-      "title": "Name",
-      "description": "A lower-case string with only alphanumeric characters along with '.', '_' or '-' characters.",
-      "type": "string",
-      "pattern": "^([a-z0-9._-])+$",
+      "$ref": "definitions.json#/define/name",
       "propertyOrder": 10
     },
     "title": {
-      "title": "Title",
-      "description": "A human-readable title for this package.",
-      "type": "string",
+      "$ref": "definitions.json#/define/license",
       "propertyOrder": 20
     },
     "description": {
-      "title": "Description",
-      "description": "A text description of the package.",
-      "type": "string",
-      "propertyOrder": 30,
+      "$ref": "definitions.json#/define/description",
       "format": "textarea"
     },
     "homepage": {
-      "title": "Home Page",
-      "description": "The URL for this data package's website.",
-      "type": "string",
+      "$ref": "definitions.json#/define/homepage",
       "propertyOrder": 40
     },
     "version": {
-      "title": "Version",
-      "description": "A semantic versioning string for this package.",
-      "type": "string",
+      "$ref": "definitions.json#/define/version",
       "propertyOrder": 50
     },
     "license": {
-      "$ref": "#/definitions/license",
-      "description": "The license under which this package is published",
+      "$ref": "definitions.json#/define/license",
       "propertyOrder": 60
     },
     "author": {
-      "$ref": "#/definitions/contributor",
-      "title": "Author",
-      "description": "The main contributor to this package.",
+      "$ref": "definitions.json#/define/author",
       "propertyOrder": 70
     },
     "contributors": {
-      "title": "Contributors",
-      "description": "The contributors to this package.",
-      "type": "array",
+      "$ref": "definitions.json#/define/contributors",
       "propertyOrder": 80,
-      "options": {
-        "hidden": true
-      },
-      "items": {
-        "$ref": "#/definitions/contributor"
-      }
+      "options": { "hidden": true }
     },
     "resources": {
       "title": "Resources",
@@ -106,184 +48,100 @@
         "type": "object",
         "properties": {
           "name": {
-            "title": "Name",
-            "description": "A lower-case string with only alphanumeric characters along with '.', '_' or '-' characters.",
-            "type": "string",
-            "pattern": "^([a-z0-9._-])+$",
+            "$ref": "definitions.json#/define/name",
             "propertyOrder": 10
           },
           "title": {
-            "title": "Title",
-            "description": "A human-readable title for this package.",
-            "type": "string",
+            "$ref": "definitions.json#/define/license",
             "propertyOrder": 20
           },
           "description": {
-            "title": "Description",
-            "description": "A text description of the package.",
-            "type": "string",
+            "$ref": "definitions.json#/define/description",
             "propertyOrder": 30,
             "format": "textarea"
           },
           "schema": {
-            "title": "Schema",
-            "description": "The schema of this resource.",
-            "oneOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "object"
-              }
-            ],
+            "$ref": "definitions.json#/define/schema",
             "propertyOrder": 40
           },
-
           "url": {
-            "title": "URL",
-            "description": "The URL for this resource.",
-            "type": "string",
+            "$ref": "definitions.json#/define/url",
             "propertyOrder": 50
           },
           "path": {
-            "title": "Path",
-            "description": "The relative path to this resource.",
-            "type": "string",
+            "$ref": "definitions.json#/define/path",
             "propertyOrder": 60
           },
-          "format": {
-            "title": "Format",
-            "description": "The file format of this resource.",
-            "type": "string",
+          "data": {
+            "$ref": "definitions.json#/define/data",
             "propertyOrder": 70
           },
-          "mediatype": {
-            "title": "Media Type",
-            "description": "The media type of this resource.",
-            "type": "string",
-            "propertyOrder": 80,
-            "pattern": "^(.+)/(.+)$"
+          "format": {
+            "$ref": "definitions.json#/define/format",
+            "propertyOrder": 80
           },
-          "encoding": {
-            "title": "Encoding",
-            "description": "The file encoding of this resource.",
-            "type": "string",
+          "mediatype": {
+            "$ref": "definitions.json#/define/mediatype",
             "propertyOrder": 90
           },
-          "bytes": {
-            "title": "Bytes",
-            "description": "The size of this resource in bytes.",
-            "type": "integer",
+          "encoding": {
+            "$ref": "definitions.json#/define/encoding",
             "propertyOrder": 100
           },
+          "bytes": {
+            "$ref": "definitions.json#/define/bytes",
+            "propertyOrder": 110
+          },
           "hash": {
-            "title": "Hash",
-            "type": "string",
-            "description": "The MD5 hash of this resource. Other hash algorithms can be used by prefixing the hash value with the algorithm name in lowercase, followed by a colon.",
-            "propertyOrder": 110,
-            "pattern": "^([^:]+:[a-fA-F0-9]+|[a-fA-F0-9]{32})$"
+            "$ref": "definitions.json#/define/hash",
+            "propertyOrder": 120
           },
           "dialect": {
-            "title": "Dialect",
-            "description": "The dialect of this resource file type.",
-            "type": "object",
-            "propertyOrder": 120,
-            "options": {
-              "hidden": true
-            }
+            "$ref": "definitions.json#/define/dialect",
+            "propertyOrder": 130,
+            "options": { "hidden": true }
           },
           "sources": {
-            "title": "Sources",
-            "description": "The raw sources for this resource.",
-            "type": "array",
-            "propertyOrder": 130,
-            "options": {
-              "hidden": true
-            },
-            "items": {
-              "type": "object",
-              "properties": {
-                "name": { "type": "string" },
-                "web": { "type": "string" },
-                "email": { "type": "string" }
-              },
-              "anyOf": [
-                { "title": "name required", "required": ["name"] },
-                { "title": "web required", "required": ["web"] },
-                { "title": "email required", "required": ["email"] }
-              ]
-            }
+            "$ref": "definitions.json#/define/sources",
+            "propertyOrder": 140,
+            "options": { "hidden": true }
           },
-          "license": {
-            "$ref": "#/definitions/license",
+          "licence": {
+            "$ref": "definitions.json#/define/license",
             "description": "The license under which the resource is published.",
-            "propertyOrder": 140
+            "propertyOrder": 150
           }
         },
         "anyOf": [
           { "title": "url required", "required": ["url"] },
-          { "title": "path required", "required": ["path"] }
+          { "title": "path required", "required": ["path"] },
+          { "title": "data required", "required": ["data"] }
         ]
       }
     },
     "keywords": {
-      "title": "Keywords",
-      "description": "A list of keywords that describe this package.",
-      "type": "array",
-      "propertyOrder": 100,
-      "items": {
-        "type": "string"
-      }
+      "$ref": "definitions.json#/define/keywords",
+      "propertyOrder": 100
     },
     "sources": {
-      "title": "Sources",
-      "description": "The raw sources for this package.",
-      "type": "array",
+      "$ref": "definitions.json#/define/sources",
       "propertyOrder": 110,
-      "options": {
-        "hidden": true
-      },
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": { "type": "string" },
-          "web": { "type": "string" },
-          "email": { "type": "string" }
-        },
-        "anyOf": [
-          { "title": "name required", "required": ["name"] },
-          { "title": "web required", "required": ["web"] },
-          { "title": "email required", "required": ["email"] }
-        ]
-      }
+      "options": { "hidden": true }
     },
     "image": {
-      "title": "Image",
-      "description": "A image to represent this package.",
-      "type": "string",
+      "$ref": "definitions.json#/define/image",
       "propertyOrder": 120,
-      "options": {
-        "hidden": true
-      }
+      "options": { "hidden": true }
     },
     "base": {
-      "title": "Base",
-      "description": "A base URI used to resolve resources that specify relative paths.",
-      "type": "string",
+      "$ref": "definitions.json#/define/base",
       "propertyOrder": 130,
-      "options": {
-        "hidden": true
-      }
+      "options": { "hidden": true }
     },
     "dataDependencies": {
-      "title": "Data Dependencies",
-      "description": "Pre-requisite Data Packages on which this package requires in order to install.",
-      "type": "object",
+      "$ref": "definitions.json#/define/dataDependencies",
       "propertyOrder": 140,
-      "options": {
-        "hidden": true
-      }
+      "options": { "hidden": true }
     }
-  },
-  "required": ["name"]
+  }
 }

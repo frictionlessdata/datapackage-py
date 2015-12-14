@@ -1,28 +1,33 @@
-#JSON Schemas for Data Protocol Formats
+# JSON Schemas for Data Protocol Formats
 
-[![Build Status](https://travis-ci.org/dataprotocols/schemas.svg?branch=master)](https://travis-ci.org/dataprotocols/schemas)
+[![Build Status](http://travis-ci.org/dataprotocols/schemas.svg?branch=master)](http://travis-ci.org/dataprotocols/schemas)
 
-This project provides schemas for several of the simple data formats published as part of the [Data Protocols](http://dataprotocols.org/) effort.
+JSON Schemas, and a registry, for the Data Package family of specifications. Read more about Data Packages at [Data Protocols](http://dataprotocols.org/).
 
-The schemas have been implemented using the [JSON Schema](http://json-schema.org/) specification which provides a simple declarative format for describing the structure of JSON documents.
+The schemas are implemented using [JSON Schema](http://json-schema.org/), a specification which provides a simple declarative format for describing the structure of JSON documents.
 
-The following schemas have been created:
+The registry is implemented as simple CSV file, and there are libraries in [Javascript](http://github.com/okfn/datapackage-registry-js) and [Python](http://github.com/okfn/datapackage-registry-py) that work with the registry directly.
 
-* `data-package.json` -- [datapackage.json](http://dataprotocols.org/data-packages/) package files
-* `json-table-schema.json` -- [JSON Table Schemas](http://dataprotocols.org/json-table-schema/) objects
-* `csv-dialect-description-format.json` -- for validating [CSV Dialect Description Format](http://dataprotocols.org/csv-dialect/) `dialect` objects
+## The schemas
 
-The schemas can be used as standalone schemas or combined to carry out validation of more complex documents, e.g. those that conform to the Tabular Data Package specification.
+Here you'll find schemas for [Data Package](http://dataprotocols.org/data-packages/), various Data Package Profiles, [JSON Table Schemas](http://dataprotocols.org/json-table-schema/), [CSV Dialect Description Format](http://dataprotocols.org/csv-dialect/) and more.
 
-## Registry
+Note that some of the schemas also feature information for [json-editor](http://github.com/jdorn/json-editor) - useful for building web forms and other UI components dynamically from a schema. We use this extensively in [DataPackagist](http://github.com/okfn/datapackagist) to build UIs for creating Data Packages.
 
-The registry is a CSV file ([registry.csv](registry.csv)) that contains
-metadata about the schemas. It has the following attributes:
+## The registry
 
-| name          | description                                         | example                                                                                  |
-| ------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| id            | locally unique identifier                           | tabular                                                                                  |
-| title         | human-readable name                                 | Tabular Data Package                                                                     |
-| schema        | URL to the related JSON Schema                      | https://raw.githubusercontent.com/dataprotocols/schemas/master/tabular-data-package.json |
-| schema_path   | Path to the schema relative to this registry's path | tabular-data-package.json                                                                |
-| specification | URL to the human-readable specification             | http://dataprotocols.org/tabular-data-package/                                           |
+The registry enables consumers to get access to schemas and documentation for the family of Data Package specifications, and related specifications like JSON Table Schema and CSV Dialect Description Format. See [Data Protocols](http://dataprotocols.org/) for more information.
+
+### Contributing
+
+Yes we welcome and encourage additions to the registry! Any spec that is added must meet the following criteria:
+
+* Be related to the Data Packages family of specifications.
+* Have a publicly -accessible web page describing the specification.
+* Have a JSON Schema file that describes the specification.
+
+See the existing entries in the registry, and then take the following steps to add a new entry:
+
+1. Make a new pull request called `registry/{NAME_OF_SPECIFICATION}`
+2. The pull request features a JSON Schema file for the new specification, and adds the spec to `registry.csv`
+3. Write a brief description of the spec as part of the pull request.

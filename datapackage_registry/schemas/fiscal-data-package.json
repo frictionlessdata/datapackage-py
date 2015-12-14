@@ -1,27 +1,149 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "title": "Fiscal Data Package",
-  "description": "Fiscal Data Package is a lightweight and user-oriented format for publishing and consuming fiscal data. Fiscal data packages are made of simple and universal components. They can be produced from ordinary spreadsheet software and used in any environment.",
+  "description": "Fiscal Data Package is a simple specification for data access and delivery of fiscal data.",
   "type": "object",
+  "required": [ "name", "title", "resources", "mapping" ],
   "properties": {
-    "countryCode": {
-      "title": "ISO 3166-1 Alpha-2 Country code",
-      "description": "A valid 2-digit ISO country code (ISO 3166-1 alpha-2), or, an array of valid ISO codes (if this relates to multiple countries). This field is for listing the country of countries associated to this data. For example, if this the budget for country then you would put that country’s ISO code.",
-      "oneOf": [
-        {
-          "type": "string",
-          "pattern": "^[A-Z]{2}$"
-        },
-        {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "pattern": "^[A-Z]{2}$"
-          }
-        }
-      ]
+    "name": {
+      "$ref": "definitions.json#/define/name",
+      "propertyOrder": 10
     },
+    "title": {
+      "$ref": "definitions.json#/define/license",
+      "propertyOrder": 20
+    },
+    "description": {
+      "$ref": "definitions.json#/define/description",
+      "format": "textarea"
+    },
+    "homepage": {
+      "$ref": "definitions.json#/define/homepage",
+      "propertyOrder": 40
+    },
+    "version": {
+      "$ref": "definitions.json#/define/version",
+      "propertyOrder": 50
+    },
+    "license": {
+      "$ref": "definitions.json#/define/license",
+      "propertyOrder": 60
+    },
+    "author": {
+      "$ref": "definitions.json#/define/author",
+      "propertyOrder": 70
+    },
+    "contributors": {
+      "$ref": "definitions.json#/define/contributors",
+      "propertyOrder": 80,
+      "options": { "hidden": true }
+    },
+    "resources": {
+      "title": "Resources",
+      "description": "The data resources that this package describes.",
+      "type": "array",
+      "propertyOrder": 90,
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "definitions.json#/define/name",
+            "propertyOrder": 10
+          },
+          "title": {
+            "$ref": "definitions.json#/define/license",
+            "propertyOrder": 20
+          },
+          "description": {
+            "$ref": "definitions.json#/define/description",
+            "propertyOrder": 30,
+            "format": "textarea"
+          },
+          "schema": {
+            "$ref": "definitions.json#/define/schema",
+            "propertyOrder": 40
+          },
+          "url": {
+            "$ref": "definitions.json#/define/url",
+            "propertyOrder": 50
+          },
+          "path": {
+            "$ref": "definitions.json#/define/path",
+            "propertyOrder": 60
+          },
+          "data": {
+            "$ref": "definitions.json#/define/data",
+            "propertyOrder": 70
+          },
+          "format": {
+            "$ref": "definitions.json#/define/format",
+            "propertyOrder": 80
+          },
+          "mediatype": {
+            "$ref": "definitions.json#/define/mediatype",
+            "propertyOrder": 90
+          },
+          "encoding": {
+            "$ref": "definitions.json#/define/encoding",
+            "propertyOrder": 100
+          },
+          "bytes": {
+            "$ref": "definitions.json#/define/bytes",
+            "propertyOrder": 110
+          },
+          "hash": {
+            "$ref": "definitions.json#/define/hash",
+            "propertyOrder": 120
+          },
+          "dialect": {
+            "$ref": "definitions.json#/define/dialect",
+            "propertyOrder": 130,
+            "options": { "hidden": true }
+          },
+          "sources": {
+            "$ref": "definitions.json#/define/sources",
+            "propertyOrder": 140,
+            "options": { "hidden": true }
+          },
+          "licence": {
+            "$ref": "definitions.json#/define/license",
+            "description": "The license under which the resource is published.",
+            "propertyOrder": 150
+          }
+        },
+        "anyOf": [
+          { "title": "url required", "required": ["url"] },
+          { "title": "path required", "required": ["path"] },
+          { "title": "data required", "required": ["data"] }
+        ]
+      }
+    },
+    "keywords": {
+      "$ref": "definitions.json#/define/keywords",
+      "propertyOrder": 100
+    },
+    "sources": {
+      "$ref": "definitions.json#/define/sources",
+      "propertyOrder": 110,
+      "options": { "hidden": true }
+    },
+    "image": {
+      "$ref": "definitions.json#/define/image",
+      "propertyOrder": 120,
+      "options": { "hidden": true }
+    },
+    "base": {
+      "$ref": "definitions.json#/define/base",
+      "propertyOrder": 130,
+      "options": { "hidden": true }
+    },
+    "dataDependencies": {
+      "$ref": "definitions.json#/define/dataDependencies",
+      "propertyOrder": 140,
+      "options": { "hidden": true }
+    },
+    "countryCode": { "$ref": "definitions.json#/define/countryCode" },
     "granularity": {
       "title": "Granularity of resources",
       "description": "A keyword that represents the type of spend data, eiter aggregated or transactional",
@@ -54,27 +176,18 @@
           "description": "Measures are numerical and correspond to financial amounts in the source data.",
           "type": "object",
           "patternProperties": {
-            "^\\w*$": {
+            "^\\w+": {
               "type": "object",
               "properties": {
-                "source": {
-                  "type": "string"
-                },
-                "resource": {
-                  "type": "string"
-                },
-                "currency": {
-                  "type": "string",
-                  "pattern": "^[A-Z]{3}$"
-                },
-                "factor": {
-                  "type": "number"
-                },
+                "source": { "type": "string" },
+                "resource": { "type": "string" },
+                "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+                "factor": { "type": "number" },
                 "direction": {
                   "title": "Direction of the spending",
                   "description": "A keyword that represents the direction of the spend, either expenditure or revenue.",
                   "type": "string",
-                  "enum": ["expenditure", "revenue"]
+                  "enum": [ "expenditure", "revenue" ]
                 },
                 "phase": {
                   "title": "Budget phase",
@@ -83,7 +196,7 @@
                   "enum": ["proposed", "approved", "adjusted", "executed"]
                 }
               },
-              "required": ["source", "currency"]
+              "required": [ "source", "currency" ]
             }
           }
         },
@@ -92,77 +205,71 @@
           "description": "Dimensions are groups of related fields. Dimensions cover all items other than the measure.",
           "type": "object",
           "patternProperties": {
-            "^\\w*$": {
-              "attributes": {
-                "title": "Attributes",
-                "description": "An array of attribute objects that make up the dimension",
-                "type": "array",
-                "minItems": 1,
-                "items": {
+            "^\\w+": {
+              "type": "object",
+              "properties": {
+                "attributes": {
+                  "title": "Attributes",
+                  "description": "Attribute objects that make up the dimension",
                   "type": "object",
+                  "minItems": 1,
                   "patternProperties": {
-                    "^\\w*$": {
+                    "^\\w+": {
                       "type": "object",
                       "properties": {
-                        "source": {
-                          "type": "string"
+                        "source": { "type": "string" },
+                        "resource": { "type": "string" },
+                        "constant": {
+                          "oneOf": [
+                            { "type": "string" },
+                            { "type": "number" }
+                          ]
                         },
-                        "resource": {
-                          "type": "string"
-                        }
+                        "parent": { "type": "string" },
+                        "labelfor": { "type": "string" }
                       },
-                      "required": ["source"]
+                      "required": [ "source" ]
                     }
                   }
+                },
+                "primaryKey": {
+                  "title": "Primary Key",
+                  "description": "Either an array of strings corresponding to the name attributes in a set of field objects in the fields array or a single string corresponding to one of these names. The value of primaryKey indicates the primary key or primary keys for the dimension.",
+                  "oneOf": [
+                    { "type": "string" },
+                    {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "type": "string" }
+                    }
+                  ]
+                },
+                "dimensionType": {
+                  "title": "Dimension Type",
+                  "description": "Describes what kind of a dimension it is.",
+                  "type": "string",
+                  "enum": [
+                    "datetime",
+                    "entity",
+                    "classification",
+                    "activity",
+                    "fact",
+                    "location",
+                    "other"
+                  ]
+                },
+                "classificationType": {
+                  "title": "Classification Type",
+                  "description": "The type of the classification.",
+                  "enum": [ "functional", "administrative", "economic" ]
                 }
               },
-              "primaryKey": {
-                "title": "Primary Key",
-                "description": "Either an array of strings corresponding to the name attributes in a set of field objects in the fields array or a single string corresponding to one of these names. The value of primaryKey indicates the primary key or primary keys for the dimension.",
-                "oneOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                ]
-              },
-              "dimensionType": {
-                "title": "Dimension Type",
-                "description": "Describes what kind of a dimension it is.",
-                "type": "string",
-                "enum": ["datetime","entity","classification","activity","fact","location","other"]
-              },
-              "classificationType": {
-                "title": "Classification Type",
-                "description": "The type of the classification.",
-                "enum": ["functional","administrative","economic"]
-              }
+              "required": [ "attributes", "primaryKey" ]
             }
           }
         }
       },
-      "required": ["measures","dimensions"]
-    },
-    "title": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/title" },
-    "name": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/name" },
-    "description": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/description" },
-    "license": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/license" },
-    "homepage": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/homepage" },
-    "version": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/version" },
-    "author": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/author" },
-    "contributors": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/contributors" },
-    "resources": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/tabular-data-package.json#/properties/resources" },
-    "keywords": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/keywords" },
-    "sources": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/sources" },
-    "image": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/image" },
-    "base": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/base" },
-    "dataDependencies": { "$ref": "https://raw.githubusercontent.com/dataprotocols/schemas/master/data-package.json#/properties/dataDependencies" }
-  },
-  "required": ["name", "title", "resources", "mapping"]
+      "required": [ "measures", "dimensions" ]
+    }
+  }
 }
