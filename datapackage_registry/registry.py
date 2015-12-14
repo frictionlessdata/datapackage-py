@@ -43,6 +43,27 @@ class Registry(object):
             self._profiles[profile_id] = self._get_profile(profile_id)
         return self._profiles[profile_id]
 
+    def get_external(self, schema_path_or_url):
+        '''Return the schema at the received local path or URL as a dict
+
+        If there was some error getting the schema, returns None.
+        '''
+        result = None
+
+        try:
+            if os.path.isfile(schema_path_or_url):
+                with open(schema_path_or_url, 'r') as f:
+                    result = json.load(f)
+            else:
+                res = requests.get(schema_path_or_url)
+                res.raise_for_status()
+                result = res.json()
+        except (ValueError,
+                requests.exceptions.RequestException):
+            pass
+
+        return result
+
     def _get_profile(self, profile_id):
         '''Return the profile with the received ID as a dict'''
         profile_metadata = self._registry.get(profile_id)
