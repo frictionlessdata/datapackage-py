@@ -573,5 +573,15 @@ class TestImportingDataPackageFromZip(object):
         original_tempdirs = glob.glob(tempdirs_glob)
         dp = datapackage.DataPackage(datapackage_zip)
         dp.save(datapackage_zip)
+        del dp
 
         assert glob.glob(tempdirs_glob) == original_tempdirs
+
+    def test_local_data_path(self, datapackage_zip):
+        dp = datapackage.DataPackage(datapackage_zip)
+
+        assert dp.resources[0].local_data_path is not None
+
+        with open(test_helpers.fixture_path('unicode.txt')) as data_file:
+            with open(dp.resources[0].local_data_path) as local_data_file:
+                assert local_data_file.read() == data_file.read()

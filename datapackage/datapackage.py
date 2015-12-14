@@ -8,6 +8,7 @@ import io
 import json
 import copy
 import tempfile
+import shutil
 import zipfile
 import six
 import requests
@@ -52,16 +53,16 @@ class DataPackage(object):
     '''
 
     def __init__(self, metadata=None, schema='base', default_base_path=None):
-        try:
-            metadata = self._extract_zip_if_possible(metadata)
+        metadata = self._extract_zip_if_possible(metadata)
 
-            self._metadata = self._load_metadata(metadata)
-            self._schema = self._load_schema(schema)
-            self._base_path = self._get_base_path(metadata, default_base_path)
-            self._resources = self._load_resources(self.metadata,
-                                                   self.base_path)
-        finally:
-            self._remove_tempdir_if_exists()
+        self._metadata = self._load_metadata(metadata)
+        self._schema = self._load_schema(schema)
+        self._base_path = self._get_base_path(metadata, default_base_path)
+        self._resources = self._load_resources(self.metadata,
+                                               self.base_path)
+
+    def __del__(self):
+        self._remove_tempdir_if_exists()
 
     @property
     def metadata(self):
@@ -315,5 +316,4 @@ class DataPackage(object):
 
     def _remove_tempdir_if_exists(self):
         if hasattr(self, '_tempdir') and os.path.exists(self._tempdir):
-            import shutil
             shutil.rmtree(self._tempdir, ignore_errors=True)
