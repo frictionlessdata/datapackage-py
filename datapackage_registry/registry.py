@@ -64,6 +64,27 @@ class Registry(object):
                 six.raise_from(DataPackageRegistryException(e), e)
         return self._profiles[profile_id]
 
+    def get_external(self, schema_path_or_url):
+        '''Return the schema at the received local path or URL as a dict
+
+        If there was some error getting the schema, returns None.
+        '''
+        result = None
+
+        try:
+            if os.path.isfile(schema_path_or_url):
+                with open(schema_path_or_url, 'r') as f:
+                    result = json.load(f)
+            else:
+                res = requests.get(schema_path_or_url)
+                res.raise_for_status()
+                result = res.json()
+        except (ValueError,
+                requests.exceptions.RequestException):
+            pass
+
+        return result
+
     def _get_profile(self, profile_id):
         '''Return the profile with the received ID as a dict'''
         profile_metadata = self._registry.get(profile_id)
@@ -71,9 +92,9 @@ class Registry(object):
             return
 
         path = self._get_absolute_path(profile_metadata.get('schema_path'))
-        if path:
-            if os.path.isfile(path):
-                return json.load(open(path, 'r'))
+        if path and os.path.isfile(path):
+            with open(path, 'r') as f:
+                return json.load(f)
 
         url = profile_metadata.get('schema')
         if url:
@@ -83,14 +104,13 @@ class Registry(object):
     def _get_registry(self, registry_path_or_url):
         '''Return a dict with objects mapped by their id from a CSV endpoint'''
         if os.path.isfile(registry_path_or_url):
-            data = open(registry_path_or_url, 'r')
+            with open(registry_path_or_url, 'r') as f:
+                reader = compat.csv_dict_reader(f.readlines())
         else:
             res = requests.get(registry_path_or_url)
             res.raise_for_status()
 
-            data = StringIO(res.text)
-
-        reader = compat.csv_dict_reader(data)
+            reader = compat.csv_dict_reader(StringIO(res.text))
 
         return dict([(o['id'], o) for o in reader])
 

@@ -24,6 +24,7 @@ class TestRegistry(unittest.TestCase):
     EMPTY_REGISTRY_PATH = test_helpers.fixture_path('empty_registry.csv')
     BASE_AND_TABULAR_REGISTRY_PATH = test_helpers.fixture_path('base_and_tabular_registry.csv')
     UNICODE_REGISTRY_PATH = test_helpers.fixture_path('unicode_registry.csv')
+    BASE_PROFILE_PATH = test_helpers.fixture_path('base_profile.json')
 
     def test_return_empty_dict_when_registry_is_empty(self):
         '''Return an empty dict when registry csv is empty'''
@@ -223,3 +224,49 @@ class TestRegistry(unittest.TestCase):
             registry.get('base')
 
         assert not m.called, '.get() should memoize the profiles'
+
+    @httpretty.activate
+    def test_get_external_url(self):
+        registry = datapackage_registry.Registry()
+        url = 'http://www.someplace.com/schema.json'
+        body = (
+            '{'
+            '"name": "my-schema"'
+            '}'
+        )
+        httpretty.register_uri(httpretty.GET, url, body=body)
+
+        schema = registry.get_external(url)
+
+        assert schema['name'] == 'my-schema'
+
+    @httpretty.activate
+    def test_get_external_url_returns_none_if_failure(self):
+        registry = datapackage_registry.Registry()
+        url = 'http://www.someplace.com/schema.json'
+        httpretty.register_uri(httpretty.GET, url, status=500)
+
+        schema = registry.get_external(url)
+
+        assert schema is None
+
+    def test_get_external_local_file(self):
+        registry = datapackage_registry.Registry()
+
+        schema = registry.get_external(self.BASE_PROFILE_PATH)
+
+        assert schema is not None
+
+    def test_get_external_local_file_doesnt_exist_returns_none(self):
+        registry = datapackage_registry.Registry()
+
+        schema = registry.get_external('this-path-doesnt-exist.json')
+
+        assert schema is None
+
+    def test_get_external_local_file_isnt_json_returns_none(self):
+        registry = datapackage_registry.Registry()
+
+        schema = registry.get_external(self.EMPTY_REGISTRY_PATH)
+
+        assert schema is None
