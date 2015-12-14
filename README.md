@@ -48,6 +48,18 @@ import datapackage_registry
 registry = datapackage_registry.Registry('http://someplace.com/my-registry.csv')
 ```
 
+If you’d like to get a schema that's not in the registry, you can pass its URL
+or local path to `Registry().get_external()` method, as in:
+
+```python
+import datapackage_registry
+registry = datapackage_registry.Registry()
+
+schema = registry.get_external('http://someplace.com/schema.json')
+if schema is None:
+    pass  # There was some error loading the schema
+```
+
 Developer notes
 ---------------
 
