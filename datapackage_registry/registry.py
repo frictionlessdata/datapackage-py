@@ -50,9 +50,9 @@ class Registry(object):
             return
 
         path = self._get_absolute_path(profile_metadata.get('schema_path'))
-        if path:
-            if os.path.isfile(path):
-                return json.load(open(path, 'r'))
+        if path and os.path.isfile(path):
+            with open(path, 'r') as f:
+                return json.load(f)
 
         url = profile_metadata.get('schema')
         if url:
@@ -62,14 +62,13 @@ class Registry(object):
     def _get_registry(self, registry_path_or_url):
         '''Return an array of objects from a CSV endpoint'''
         if os.path.isfile(registry_path_or_url):
-            data = open(registry_path_or_url, 'r')
+            with open(registry_path_or_url, 'r') as f:
+                reader = compat.csv_dict_reader(f.readlines())
         else:
             res = requests.get(registry_path_or_url)
             res.raise_for_status()
 
-            data = StringIO(res.text)
-
-        reader = compat.csv_dict_reader(data)
+            reader = compat.csv_dict_reader(StringIO(res.text))
 
         return dict([(o['id'], o) for o in reader])
 
