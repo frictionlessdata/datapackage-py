@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import unittest
 try:
     import mock
@@ -270,3 +271,30 @@ class TestRegistry(unittest.TestCase):
         schema = registry.get_external(self.EMPTY_REGISTRY_PATH)
 
         assert schema is None
+
+    def test_base_path_default(self):
+        registry = datapackage_registry.Registry()
+        base_path = os.path.dirname(registry.DEFAULT_REGISTRY_PATH)
+
+        assert registry.base_path == base_path
+
+    def test_base_path_uses_received_registry_base_path(self):
+        registry = datapackage_registry.Registry(self.EMPTY_REGISTRY_PATH)
+        base_path = os.path.dirname(self.EMPTY_REGISTRY_PATH)
+
+        assert registry.base_path == base_path
+
+    @httpretty.activate
+    def test_base_path_is_none_if_registry_is_remote(self):
+        url = 'http://some-place.com/registry.csv'
+        httpretty.register_uri(httpretty.GET, url, body='')
+        registry = datapackage_registry.Registry(url)
+
+        assert registry.base_path is None
+
+    @httpretty.activate
+    def test_base_path_cant_be_set(self):
+        registry = datapackage_registry.Registry()
+
+        with assert_raises(AttributeError):
+            registry.base_path = '/another/path'

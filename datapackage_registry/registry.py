@@ -45,6 +45,14 @@ class Registry(object):
         '''Return the available profiles' metadata as a dict of dicts'''
         return self._registry
 
+    @property
+    def base_path(self):
+        '''Return the Registry cache's absolute base path, if it exists'''
+        try:
+            return self._BASE_PATH
+        except AttributeError:
+            pass
+
     def get(self, profile_id):
         '''Return the profile with the received ID as a dict
 
@@ -120,6 +128,6 @@ class Registry(object):
         It'll return None if something goes wrong.
         '''
         try:
-            return os.path.join(self._BASE_PATH, relative_path)
+            return os.path.join(self.base_path, relative_path)
         except:
             pass
