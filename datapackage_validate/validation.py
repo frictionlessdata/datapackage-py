@@ -33,6 +33,7 @@ def validate(datapackage, schema='base'):
     errors = []
     schema_obj = None
     datapackage_obj = None
+    registry = None
 
     # Sanity check datapackage
     # If datapackage is a str, check json is well formed
@@ -75,7 +76,8 @@ def validate(datapackage, schema='base'):
     # Validate datapackage against the schema
     if datapackage_obj is not None and schema_obj is not None:
         try:
-            jsonschema.validate(datapackage_obj, schema_obj)
+            validator = _get_validator_for(schema_obj, registry)
+            validator.validate(datapackage_obj)
         except jsonschema.ValidationError as e:
             errors.append(ValidationError(e.message))
 
@@ -83,3 +85,13 @@ def validate(datapackage, schema='base'):
         exception = DataPackageValidateException()
         exception.errors = errors
         raise exception
+
+
+def _get_validator_for(schema, registry=None):
+    resolver = None
+    if registry and registry.base_path is not None:
+        path = 'file://{base_path}/'.format(base_path=registry.base_path)
+        resolver = jsonschema.RefResolver(path, schema)
+
+    validator = jsonschema.validators.validator_for(schema)
+    return validator(schema, resolver=resolver)

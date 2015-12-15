@@ -17,7 +17,7 @@ with io.open('README.md') as readme:
 dependencies = [
     'requests>=2.8.0',
     'jsonschema>=2.5.1',
-    'datapackage-registry>=0.1.3'
+    'datapackage-registry>=0.3.0'
 ]
 
 setup(
