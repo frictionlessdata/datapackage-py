@@ -55,9 +55,10 @@ or local path to `Registry().get_external()` method, as in:
 import datapackage_registry
 registry = datapackage_registry.Registry()
 
-schema = registry.get_external('http://someplace.com/schema.json')
-if schema is None:
-    pass  # There was some error loading the schema
+try:
+  schema = registry.get_external('http://someplace.com/schema.json')
+except datapackage_registry.exceptions.DataPackageRegistryException:
+  pass  # handle error
 ```
 
 Developer notes

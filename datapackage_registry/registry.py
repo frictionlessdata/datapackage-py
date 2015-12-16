@@ -75,7 +75,8 @@ class Registry(object):
     def get_external(self, schema_path_or_url):
         '''Return the schema at the received local path or URL as a dict
 
-        If there was some error getting the schema, returns None.
+        This method raises DataPackageRegistryException if there were any
+        errors.
         '''
         result = None
 
@@ -88,8 +89,8 @@ class Registry(object):
                 res.raise_for_status()
                 result = res.json()
         except (ValueError,
-                requests.exceptions.RequestException):
-            pass
+                requests.exceptions.RequestException) as e:
+            six.raise_from(DataPackageRegistryException(e), e)
 
         return result
 
