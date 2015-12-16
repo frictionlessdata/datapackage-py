@@ -78,8 +78,6 @@ class Registry(object):
         This method raises DataPackageRegistryException if there were any
         errors.
         '''
-        result = None
-
         try:
             if os.path.isfile(schema_path_or_url):
                 with open(schema_path_or_url, 'r') as f:
@@ -88,11 +86,12 @@ class Registry(object):
                 res = requests.get(schema_path_or_url)
                 res.raise_for_status()
                 result = res.json()
+
+            return result
+
         except (ValueError,
                 requests.exceptions.RequestException) as e:
             six.raise_from(DataPackageRegistryException(e), e)
-
-        return result
 
     def _get_profile(self, profile_id):
         '''Return the profile with the received ID as a dict'''
