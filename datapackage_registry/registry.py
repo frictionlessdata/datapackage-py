@@ -102,13 +102,11 @@ class Registry(object):
 
         path = self._get_absolute_path(profile_metadata.get('schema_path'))
         if path and os.path.isfile(path):
-            with open(path, 'r') as f:
-                return json.load(f)
+            return self.get_external(path)
 
         url = profile_metadata.get('schema')
         if url:
-            resp = requests.get(url)
-            return resp.json()
+            return self.get_external(url)
 
     def _get_registry(self, registry_path_or_url):
         '''Return a dict with objects mapped by their id from a CSV endpoint'''
