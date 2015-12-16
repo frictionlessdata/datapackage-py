@@ -9,8 +9,8 @@ import six
 import requests
 import json
 import jsonschema
-import datapackage_validate
-from datapackage_validate.exceptions import DataPackageValidateException
+import datapackage_registry
+from datapackage_registry.exceptions import DataPackageRegistryException
 from .exceptions import (
     SchemaError, ValidationError
 )
@@ -31,9 +31,9 @@ class Schema(object):
         change any of its attributes after creation.
     '''
     def __init__(self, schema):
-        self._schema = self._load_schema(schema)
-        validator_class = jsonschema.validators.validator_for(self._schema)
-        self._validator = validator_class(self._schema)
+        self._registry = self._load_registry()
+        self._schema = self._load_schema(schema, self._registry)
+        self._validator = self._load_validator(self._schema, self._registry)
         self._check_schema()
 
     def to_dict(self):
@@ -50,26 +50,35 @@ class Schema(object):
             ValidationError: If the data is invalid.
         '''
         try:
-            datapackage_validate.validate(data, self.to_dict())
-        except DataPackageValidateException as e:
+            self._validator.validate(data)
+        except jsonschema.ValidationError as e:
             six.raise_from(ValidationError(e), e)
 
-    def _load_schema(self, schema):
+    def _load_registry(self):
+        try:
+            return datapackage_registry.Registry()
+        except DataPackageRegistryException as e:
+            six.raise_from(SchemaError(e), e)
+
+    def _load_schema(self, schema, registry):
         the_schema = schema
 
         if isinstance(schema, six.string_types):
             try:
-                if os.path.isfile(schema):
-                    with open(schema, 'r') as f:
-                        the_schema = json.load(f)
-                else:
-                    req = requests.get(schema)
-                    req.raise_for_status()
-                    the_schema = req.json()
+                the_schema = registry.get(schema)
+                if not the_schema:
+                    if os.path.isfile(schema):
+                        with open(schema, 'r') as f:
+                            the_schema = json.load(f)
+                    else:
+                        req = requests.get(schema)
+                        req.raise_for_status()
+                        the_schema = req.json()
             except (IOError,
                     ValueError,
+                    DataPackageRegistryException,
                     requests.exceptions.RequestException) as e:
-                msg = 'Unable to load JSON at "{0}"'
+                msg = 'Unable to load schema at "{0}"'
                 six.raise_from(SchemaError(msg.format(schema)), e)
         elif isinstance(the_schema, dict):
             the_schema = copy.deepcopy(the_schema)
@@ -78,6 +87,17 @@ class Schema(object):
             raise SchemaError(msg.format(type(the_schema).__name__))
 
         return the_schema
+
+    def _load_validator(self, schema, registry):
+        resolver = None
+
+        if registry.base_path:
+            path = 'file://{base_path}/'.format(base_path=registry.base_path)
+            resolver = jsonschema.RefResolver(path, schema)
+
+        validator_class = jsonschema.validators.validator_for(schema)
+
+        return validator_class(schema, resolver=resolver)
 
     def _check_schema(self):
         try:

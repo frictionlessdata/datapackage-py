@@ -12,13 +12,10 @@ import shutil
 import zipfile
 import six
 import requests
-import datapackage_registry
-from datapackage_registry.exceptions import DataPackageRegistryException
 from .schema import Schema
 from .resource import Resource
 from .exceptions import (
     DataPackageException,
-    SchemaError
 )
 
 
@@ -56,7 +53,7 @@ class DataPackage(object):
         metadata = self._extract_zip_if_possible(metadata)
 
         self._metadata = self._load_metadata(metadata)
-        self._schema = self._load_schema(schema)
+        self._schema = Schema(schema)
         self._base_path = self._get_base_path(metadata, default_base_path)
         self._resources = self._load_resources(self.metadata,
                                                self.base_path)
@@ -268,20 +265,6 @@ class DataPackage(object):
             raise DataPackageException(msg.format(type(metadata).__name__))
 
         return the_metadata
-
-    def _load_schema(self, schema):
-        the_schema = schema
-
-        if isinstance(schema, six.string_types):
-            try:
-                registry = datapackage_registry.Registry()
-                registry_schema = registry.get(schema)
-                if registry_schema is not None:
-                    the_schema = registry_schema
-            except DataPackageRegistryException as e:
-                six.raise_from(SchemaError(e), e)
-
-        return Schema(the_schema)
 
     def _get_base_path(self, metadata, default_base_path):
         base_path = default_base_path

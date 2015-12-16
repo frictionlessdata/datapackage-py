@@ -24,7 +24,7 @@ import datapackage
 class TestDataPackage(object):
     def test_init_uses_base_schema_by_default(self):
         dp = datapackage.DataPackage()
-        assert dp.schema.title == 'DataPackage'
+        assert dp.schema.title == 'Data Package'
 
     def test_init_accepts_dicts(self):
         metadata = {
