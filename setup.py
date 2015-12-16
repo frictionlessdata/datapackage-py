@@ -46,7 +46,7 @@ def schema_files():
 
 setup(
     name='datapackage-registry',
-    version='0.3.0',
+    version='0.4.0',
     url='https://github.com/okfn/datapackage-registry-py',
     license='MIT',
     description=description,
