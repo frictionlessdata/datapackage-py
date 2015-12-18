@@ -310,7 +310,7 @@ class TestDataPackageResources(object):
         }
 
         with pytest.raises(datapackage.exceptions.ResourceError):
-            datapackage.DataPackage(metadata)
+            datapackage.DataPackage(metadata).resources[0].data
 
     @httpretty.activate
     def test_remote_resource_is_loaded(self):
@@ -338,7 +338,7 @@ class TestDataPackageResources(object):
         }
 
         with pytest.raises(datapackage.exceptions.ResourceError):
-            datapackage.DataPackage(metadata)
+            datapackage.DataPackage(metadata).resources[0].data
 
     def test_changing_resource_metadata_changes_it_in_the_datapackage(self):
         metadata = {

@@ -50,6 +50,19 @@ class TestResource(object):
         with pytest.raises(AttributeError):
             resource.data = 'foo'
 
+    @httpretty.activate
+    def test_data_is_lazily_loaded(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        resource_dict = {
+            'url': 'http://someplace.com/somefile.txt',
+        }
+        resource = datapackage.Resource.load(resource_dict)
+
+        body = '万事开头难'
+        httpretty.register_uri(httpretty.GET, resource_dict['url'], body=body)
+
+        assert resource.data == body
+
     def test_load_inline_string(self):
         resource_dict = {
             'data': '万事开头难'
@@ -140,7 +153,7 @@ class TestResource(object):
         }
 
         with pytest.raises(datapackage.exceptions.ResourceError):
-            datapackage.Resource.load(resource_dict)
+            datapackage.Resource.load(resource_dict).data
 
     def test_load_accepts_absolute_paths(self):
         path = test_helpers.fixture_path('unicode.txt')
@@ -208,7 +221,7 @@ class TestResource(object):
         }
 
         with pytest.raises(datapackage.exceptions.ResourceError):
-            datapackage.Resource.load(resource_dict)
+            datapackage.Resource.load(resource_dict).data
 
     def test_can_change_data_path_after_creation(self):
         original_path = test_helpers.fixture_path('unicode.txt')
@@ -347,23 +360,23 @@ class TestTabularResource(object):
         }
 
         with pytest.raises(ValueError):
-            TabularResource(resource_dict)
+            TabularResource(resource_dict).data
 
     def test_raises_valueerror_if_data_is_number(self):
         resource_dict = {
             'data': 51,
         }
         with pytest.raises(ValueError):
-            TabularResource(resource_dict)
+            TabularResource(resource_dict).data
 
     def test_raises_valueerror_if_data_is_none(self):
         resource_dict = {
             'data': None,
         }
         with pytest.raises(ValueError):
-            TabularResource(resource_dict)
+            TabularResource(resource_dict).data
 
     def test_raises_valueerror_if_theres_no_data(self):
         resource_dict = {}
         with pytest.raises(ValueError):
-            TabularResource(resource_dict)
+            TabularResource(resource_dict).data

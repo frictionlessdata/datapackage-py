@@ -48,16 +48,16 @@ class Resource(object):
         Raises:
             ResourceError: If the resource couldn't be loaded.
         '''
-        try:
-            resource = TabularResource(metadata, default_base_path)
-        except ValueError:
-            resource = cls(metadata, default_base_path)
-        return resource
+        if TabularResource.can_handle(metadata):
+            resource_class = TabularResource
+        else:
+            resource_class = Resource
+
+        return resource_class(metadata, default_base_path)
 
     def __init__(self, metadata, default_base_path=None):
         self._metadata = metadata
         self._base_path = self.metadata.get('base', default_base_path)
-        self._data = self._parse_data(metadata)
 
     @property
     def metadata(self):
@@ -77,7 +77,8 @@ class Resource(object):
             ResourceError: If the resource couldn't be loaded. This will only
                 happen if you've changed the data pointed by :data:`metadata`.
         '''
-        if self._metadata_data_has_changed(self.metadata):
+        if not hasattr(self, '_data') or \
+           self._metadata_data_has_changed(self.metadata):
             self._data = self._parse_data(self.metadata)
         return self._data
 
@@ -163,6 +164,49 @@ class TabularResource(Resource):
     It currently only supports CSVs.
     '''
 
+    @classmethod
+    def can_handle(cls, metadata):
+        '''bool: Returns True if this class can handle the resource in
+        metadata.'''
+        TABULAR_RESOURCE_FORMATS = ('csv', 'tsv')
+        get_extension = lambda x: x.split('.')[-1].lower()
+
+        metadata_format = metadata.get('format', '').lower()
+        metadata_path = metadata.get('path', '')
+        metadata_url = metadata.get('url', '')
+        if metadata_format in TABULAR_RESOURCE_FORMATS or \
+           get_extension(metadata_path) in TABULAR_RESOURCE_FORMATS or \
+           get_extension(metadata_url) in TABULAR_RESOURCE_FORMATS:
+            return True
+
+        metadata_data = metadata.get('data')
+        if metadata_data:
+            try:
+                cls._raise_if_isnt_tabular_data(metadata_data)
+                return True
+            except ValueError:
+                pass
+
+        return False
+
+    @staticmethod
+    def _raise_if_isnt_tabular_data(data):
+        tabular_types = (
+            list,
+            tuple,
+        )
+        valid = False
+
+        for tabular_type in tabular_types:
+            if isinstance(data, tabular_type):
+                valid = True
+                break
+
+        if not valid:
+            types_str = ', '.join([t.__name__ for t in tabular_types])
+            msg = 'Expected data type to be any of \'{0}\' but it was \'{1}\''
+            raise ValueError(msg.format(types_str, type(data).__name__))
+
     def _parse_data(self, metadata):
         '''Parses the data defined in ``metadata``
 
@@ -187,23 +231,6 @@ class TabularResource(Resource):
         self._raise_if_isnt_tabular_data(data)
 
         return data
-
-    def _raise_if_isnt_tabular_data(self, data):
-        tabular_types = (
-            list,
-            tuple,
-        )
-        valid = False
-
-        for tabular_type in tabular_types:
-            if isinstance(data, tabular_type):
-                valid = True
-                break
-
-        if not valid:
-            types_str = ', '.join([t.__name__ for t in tabular_types])
-            msg = 'Expected data type to be any of \'{0}\' but it was \'{1}\''
-            raise ValueError(msg.format(types_str, type(data).__name__))
 
 
 if six.PY2:
