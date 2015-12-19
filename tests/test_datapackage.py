@@ -285,7 +285,7 @@ class TestDataPackageResources(object):
         assert dp.resources[1].data == 'bar'
 
     def test_local_resource_with_absolute_path_is_loaded(self):
-        path = test_helpers.fixture_path('unicode.txt')
+        path = test_helpers.fixture_path('foo.txt')
         metadata = {
             'resources': [
                 {'path': path},
@@ -293,14 +293,14 @@ class TestDataPackageResources(object):
         }
         dp = datapackage.DataPackage(metadata)
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == '万事开头难\n'
+        assert dp.resources[0].data == b'foo\n'
 
     def test_local_resource_with_relative_path_is_loaded(self):
-        datapackage_filename = 'datapackage_with_unicode.txt_resource.json'
+        datapackage_filename = 'datapackage_with_foo.txt_resource.json'
         path = test_helpers.fixture_path(datapackage_filename)
         dp = datapackage.DataPackage(path)
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == '万事开头难\n'
+        assert dp.resources[0].data == b'foo\n'
 
     def test_raises_if_local_resource_path_doesnt_exist(self):
         metadata = {
@@ -315,8 +315,7 @@ class TestDataPackageResources(object):
     @httpretty.activate
     def test_remote_resource_is_loaded(self):
         url = 'http://someplace.com/resource.txt'
-        body = '万事开头难'
-        httpretty.register_uri(httpretty.GET, url, body=body)
+        httpretty.register_uri(httpretty.GET, url, body='foo')
         metadata = {
             'resources': [
                 {'url': url},
@@ -325,7 +324,7 @@ class TestDataPackageResources(object):
 
         dp = datapackage.DataPackage(metadata)
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == body
+        assert dp.resources[0].data == b'foo'
 
     @httpretty.activate
     def test_raises_if_remote_resource_url_doesnt_exist(self):
@@ -534,7 +533,7 @@ class TestImportingDataPackageFromZip(object):
             metadata = {
                 'name': 'proverbs',
                 'resources': [
-                    {'path': test_helpers.fixture_path('unicode.txt')},
+                    {'path': test_helpers.fixture_path('foo.txt')},
                 ]
             }
             dp = datapackage.DataPackage(metadata)
@@ -545,13 +544,13 @@ class TestImportingDataPackageFromZip(object):
         dp = datapackage.DataPackage(datapackage_zip.name)
         assert dp.metadata['name'] == 'proverbs'
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == '万事开头难\n'
+        assert dp.resources[0].data == b'foo\n'
 
     def test_it_works_with_file_objects(self, datapackage_zip):
         dp = datapackage.DataPackage(datapackage_zip)
         assert dp.metadata['name'] == 'proverbs'
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == '万事开头难\n'
+        assert dp.resources[0].data == b'foo\n'
 
     def test_it_works_with_remote_files(self, datapackage_zip):
         httpretty.enable()
@@ -564,7 +563,7 @@ class TestImportingDataPackageFromZip(object):
         dp = datapackage.DataPackage(url)
         assert dp.metadata['name'] == 'proverbs'
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == '万事开头难\n'
+        assert dp.resources[0].data == b'foo\n'
 
         httpretty.disable()
 
@@ -582,6 +581,6 @@ class TestImportingDataPackageFromZip(object):
 
         assert dp.resources[0].local_data_path is not None
 
-        with open(test_helpers.fixture_path('unicode.txt')) as data_file:
+        with open(test_helpers.fixture_path('foo.txt')) as data_file:
             with open(dp.resources[0].local_data_path) as local_data_file:
                 assert local_data_file.read() == data_file.read()

@@ -7,9 +7,13 @@ from __future__ import unicode_literals
 import os
 import csv
 import json
-import requests
 import six
 
+from .resource_file import (
+    InlineResourceFile,
+    LocalResourceFile,
+    RemoteResourceFile,
+)
 from .exceptions import (
     ResourceError
 )
@@ -71,14 +75,16 @@ class Resource(object):
         The data should not be changed.
 
         Returns:
-            str: This resource's data.
+            bytes or data's type: This resource's data. If the data was
+                inlined, the return type will have the data's type. If not,
+                it'll be bytes.
 
         Raises:
-            ResourceError: If the resource couldn't be loaded. This will only
-                happen if you've changed the data pointed by :data:`metadata`.
+            ResourceError: If the data couldn't be loaded.
         '''
         if not hasattr(self, '_data') or \
            self._metadata_data_has_changed(self.metadata):
+            self._resource_file = self._load_resource_file()
             self._data = self._parse_data(self.metadata)
         return self._data
 
@@ -100,57 +106,34 @@ class Resource(object):
             'data_url_id': id(metadata.get('url'))
         }
 
+    def _load_resource_file(self):
+        inline_data = self.metadata.get('data')
+        data_path = self.metadata.get('path')
+        data_url = self.metadata.get('url')
+
+        if inline_data:
+            return InlineResourceFile(inline_data)
+        if self.local_data_path:
+            return LocalResourceFile(self.local_data_path)
+        elif data_path and self._absolute_path(data_path) != data_path:
+            try:
+                return RemoteResourceFile(self._absolute_path(data_path))
+            except ResourceError:
+                if data_url:
+                    return RemoteResourceFile(data_url)
+        elif data_url:
+            return RemoteResourceFile(data_url)
+
+        if inline_data or data_path or data_url:
+            raise ResourceError('Couldn\'t load resource.')
+
     def _parse_data(self, metadata):
         self._original_metadata_data_ids = self._metadata_data_ids(metadata)
-        return self._load_data(metadata)
+        return self._load_data()
 
-    def _load_data(self, metadata):
-        inline_data = metadata.get('data')
-        data_path = metadata.get('path')
-        data_url = metadata.get('url')
-        error = None
-
-        data = inline_data
-
-        if data is None and data_path:
-            try:
-                if self.local_data_path:
-                    data = self._load_data_from_path(self.local_data_path)
-                else:
-                    url = self._absolute_path(data_path)
-                    data = self._load_data_from_url(url)
-            except ResourceError as e:
-                error = e
-
-        if data is None and data_url:
-            try:
-                data = self._load_data_from_url(data_url)
-            except ResourceError as e:
-                if not error:
-                    error = e
-
-        if data is None and error:
-            raise error
-
-        return data
-
-    def _load_data_from_path(self, path):
-        try:
-            with open(path, 'r') as f:
-                data = f.read()
-                if six.PY2:
-                    data = unicode(data, 'utf-8')
-                return data
-        except IOError as e:
-            six.raise_from(ResourceError(e), e)
-
-    def _load_data_from_url(self, url):
-        try:
-            req = requests.get(url)
-            req.raise_for_status()
-            return req.text
-        except requests.exceptions.RequestException as e:
-            six.raise_from(ResourceError(e), e)
+    def _load_data(self):
+        if self._resource_file:
+            return self._resource_file.read()
 
     def _absolute_path(self, path):
         if path is None or self._base_path is None:
@@ -219,6 +202,9 @@ class TabularResource(Resource):
                 its root content must be an array.
         '''
         data = super(TabularResource, self)._parse_data(metadata)
+
+        if isinstance(data, bytes):
+            data = data.decode('utf-8')
 
         if isinstance(data, six.string_types):
             try:

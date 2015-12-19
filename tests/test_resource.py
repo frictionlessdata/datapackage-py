@@ -58,10 +58,9 @@ class TestResource(object):
         }
         resource = datapackage.Resource.load(resource_dict)
 
-        body = '万事开头难'
-        httpretty.register_uri(httpretty.GET, resource_dict['url'], body=body)
+        httpretty.register_uri(httpretty.GET, resource_dict['url'], body='foo')
 
-        assert resource.data == body
+        assert resource.data == b'foo'
 
     def test_load_inline_string(self):
         resource_dict = {
@@ -103,11 +102,11 @@ class TestResource(object):
     def test_load_prefers_loading_local_data_over_url(self):
         httpretty.HTTPretty.allow_net_connect = False
         resource_dict = {
-            'path': test_helpers.fixture_path('unicode.txt'),
+            'path': test_helpers.fixture_path('foo.txt'),
             'url': 'http://someplace.com/inexistent-file.json',
         }
         resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == '万事开头难\n'
+        assert resource.data == b'foo\n'
 
     @httpretty.activate
     def test_load_loads_from_url_if_local_path_doesnt_exist(self):
@@ -115,8 +114,7 @@ class TestResource(object):
         base_url = 'http://someplace.com'
         path = 'resource.txt'
         url = '{base_url}/{path}'.format(base_url=base_url, path=path)
-        body = '万事开头难'
-        httpretty.register_uri(httpretty.GET, url, body=body)
+        httpretty.register_uri(httpretty.GET, url, body='foo')
         httpretty.register_uri(httpretty.GET,
                                '{0}/nonexistent-file.txt'.format(base_url),
                                status=404)
@@ -128,20 +126,19 @@ class TestResource(object):
 
         resource = datapackage.Resource.load(resource_dict,
                                              default_base_path=base_url)
-        assert resource.data == body
+        assert resource.data == b'foo'
 
     @httpretty.activate
     def test_load_accepts_url(self):
         url = 'http://someplace/resource.txt'
-        body = '万事开头难'
-        httpretty.register_uri(httpretty.GET, url, body=body)
+        httpretty.register_uri(httpretty.GET, url, body='foo')
 
         resource_dict = {
             'url': url,
         }
 
         resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == body
+        assert resource.data == b'foo'
 
     @httpretty.activate
     def test_load_raises_if_url_doesnt_exist(self):
@@ -156,15 +153,15 @@ class TestResource(object):
             datapackage.Resource.load(resource_dict).data
 
     def test_load_accepts_absolute_paths(self):
-        path = test_helpers.fixture_path('unicode.txt')
+        path = test_helpers.fixture_path('foo.txt')
         resource_dict = {
             'path': path,
         }
         resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == '万事开头难\n'
+        assert resource.data == b'foo\n'
 
     def test_load_accepts_relative_paths(self):
-        filename = 'unicode.txt'
+        filename = 'foo.txt'
         base_path = os.path.dirname(
             test_helpers.fixture_path(filename)
         )
@@ -172,10 +169,10 @@ class TestResource(object):
             'path': filename,
         }
         resource = datapackage.Resource.load(resource_dict, base_path)
-        assert resource.data == '万事开头难\n'
+        assert resource.data == b'foo\n'
 
     def test_load_accepts_relative_paths_with_base_defined_in_metadata(self):
-        filename = 'unicode.txt'
+        filename = 'foo.txt'
         base_path = os.path.dirname(
             test_helpers.fixture_path(filename)
         )
@@ -184,10 +181,10 @@ class TestResource(object):
             'base': base_path,
         }
         resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == '万事开头难\n'
+        assert resource.data == b'foo\n'
 
     def test_load_base_path_in_metadata_overloads_base_passed_in_args(self):
-        filename = 'unicode.txt'
+        filename = 'foo.txt'
         base_path = os.path.dirname(
             test_helpers.fixture_path(filename)
         )
@@ -197,15 +194,14 @@ class TestResource(object):
         }
         resource = datapackage.Resource.load(resource_dict,
                                              'invalid_base_path')
-        assert resource.data == '万事开头难\n'
+        assert resource.data == b'foo\n'
 
     @httpretty.activate
     def test_load_accepts_relative_urls(self):
         base_url = 'http://someplace.com'
         path = 'resource.txt'
         url = '{base_url}/{path}'.format(base_url=base_url, path=path)
-        body = '万事开头难'
-        httpretty.register_uri(httpretty.GET, url, body=body)
+        httpretty.register_uri(httpretty.GET, url, body='foo')
 
         resource_dict = {
             'path': path,
@@ -213,7 +209,7 @@ class TestResource(object):
 
         resource = datapackage.Resource.load(resource_dict,
                                              default_base_path=base_url)
-        assert resource.data == body
+        assert resource.data == b'foo'
 
     def test_load_raises_if_path_doesnt_exist(self):
         resource_dict = {
@@ -231,25 +227,23 @@ class TestResource(object):
         }
         resource = datapackage.Resource.load(resource_dict)
         resource.metadata['path'] = new_path
-        assert resource.data == 'foo\n'
+        assert resource.data == b'foo\n'
 
     @httpretty.activate
     def test_can_change_data_url_after_creation(self):
         original_url = 'http://someplace.com/foo.txt'
-        original_body = 'foo'
         httpretty.register_uri(httpretty.GET, original_url,
-                               body=original_body)
+                               body='foo')
         new_url = 'http://someplace.com/bar.txt'
-        new_body = 'bar'
         httpretty.register_uri(httpretty.GET, new_url,
-                               body=new_body)
+                               body='bar')
 
         resource_dict = {
             'url': original_url
         }
         resource = datapackage.Resource.load(resource_dict)
         resource.metadata['url'] = new_url
-        assert resource.data == new_body
+        assert resource.data == b'bar'
 
     def test_can_change_the_data_after_creation(self):
         resource_dict = {
