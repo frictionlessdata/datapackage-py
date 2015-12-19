@@ -196,6 +196,15 @@ class TestResource(object):
                                              'invalid_base_path')
         assert resource.data == b'foo\n'
 
+    def test_load_binary_data(self):
+        resource_dict = {
+            'path': test_helpers.fixture_path('image.gif'),
+        }
+        resource = datapackage.Resource.load(resource_dict)
+
+        with open(resource_dict['path'], 'rb') as f:
+            assert resource.data == f.read()
+
     @httpretty.activate
     def test_load_accepts_relative_urls(self):
         base_url = 'http://someplace.com'
