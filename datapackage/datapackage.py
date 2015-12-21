@@ -23,11 +23,12 @@ class DataPackage(object):
     '''Class for loading, validating and working with a Data Package.
 
     Args:
-        metadata (dict or str, optional): The contents of the
+        metadata (dict, str or file-like object, optional): The contents of the
             `datapackage.json` file. It can be a ``dict`` with its contents,
-            the local path for the file or its URL. It also can point to a
-            `ZIP` file with the `datapackage.json` in its root folder. If
-            you're passing a ``dict``, it's a good practice to also set the
+            a ``string`` with the local path for the file or its URL, or a
+            file-like object. It also can point to a `ZIP` file with the
+            `datapackage.json` in its root folder. If you're passing a
+            ``dict``, it's a good practice to also set the
             ``default_base_path`` parameter to the absolute `datapackage.json`
             path.
         schema (dict or str, optional): The schema to be used to validate this
@@ -257,6 +258,11 @@ class DataPackage(object):
                 zipfile.BadZipfile):
             pass
 
+        if hasattr(metadata, 'seek'):
+            # Rewind metadata if it's a file, as we read it for testing if it's
+            # a zip file
+            metadata.seek(0)
+
         return result
 
     def _load_metadata(self, metadata):
@@ -279,6 +285,9 @@ class DataPackage(object):
                     requests.exceptions.RequestException) as e:
                 msg = 'Unable to load JSON at \'{0}\''.format(metadata)
                 six.raise_from(DataPackageException(msg), e)
+
+        if hasattr(the_metadata, 'read'):
+            the_metadata = json.load(the_metadata)
 
         if not isinstance(the_metadata, dict):
             msg = 'Data must be a \'dict\', but was a \'{0}\''

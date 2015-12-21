@@ -14,6 +14,7 @@ import glob
 import json
 import tempfile
 import zipfile
+import six
 import pytest
 import httpretty
 import tests.test_helpers as test_helpers
@@ -31,6 +32,14 @@ class TestDataPackage(object):
             'foo': 'bar',
         }
         dp = datapackage.DataPackage(metadata)
+        assert dp.metadata == metadata
+
+    def test_init_accepts_filelike_object(self):
+        metadata = {
+            'foo': 'bar',
+        }
+        filelike_metadata = six.StringIO(json.dumps(metadata))
+        dp = datapackage.DataPackage(filelike_metadata)
         assert dp.metadata == metadata
 
     def test_init_accepts_file_paths(self):
