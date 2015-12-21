@@ -93,7 +93,7 @@ class Resource(object):
         '''str: The absolute local path for the data, if it exists locally.'''
         path = self._absolute_path(self.metadata.get('path'))
         if path and os.path.isfile(path):
-            return path
+            return os.path.abspath(path)
 
     def _metadata_data_has_changed(self, metadata):
         metadata_data_ids = self._metadata_data_ids(metadata)

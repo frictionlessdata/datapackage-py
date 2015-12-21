@@ -269,6 +269,16 @@ class TestResource(object):
         resource = datapackage.Resource.load(resource_dict)
         assert resource.local_data_path == resource_dict['path']
 
+    def test_local_data_path_returns_the_absolute_path(self):
+        base_path = test_helpers.fixture_path('')
+        path = os.path.join(base_path, '..', 'fixtures', 'unicode.txt')
+        resource_dict = {
+            'path': path,
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        abs_path = os.path.join(base_path, 'unicode.txt')
+        assert resource.local_data_path == abs_path
+
     def test_local_data_path_returns_the_absolute_path_relative_to_base(self):
         base_path = test_helpers.fixture_path('')
         resource_dict = {
