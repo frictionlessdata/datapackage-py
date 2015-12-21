@@ -35,7 +35,7 @@ class LocalResourceFile(object):
             six.raise_from(datapackage.exceptions.ResourceError(e), e)
 
     def __del__(self):
-        if self._file and not self._file.closed:
+        if hasattr(self, '_file'):
             self._file.close()
 
     def __iter__(self):
@@ -62,7 +62,7 @@ class RemoteResourceFile(object):
             six.raise_from(datapackage.exceptions.ResourceError(e), e)
 
     def __del__(self):
-        if hasattr(self, '_file') and self._file:
+        if hasattr(self, '_file'):
             self._file.close()
 
     def __iter__(self):
