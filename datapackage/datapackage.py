@@ -127,6 +127,26 @@ class DataPackage(object):
         '''str: Convert this Data Package to a JSON string.'''
         return json.dumps(self.metadata)
 
+    def safe(self):
+        '''bool: Return if it's safe to load this datapackage's resources.
+
+        A Data Package is safe if it has no resources, or if all of its
+        resources are either:
+            * Inline;
+            * Remote;
+            * Local relative to the Data Package's base path.
+        '''
+        local_resources = [resource for resource in self.resources
+                           if resource.local_data_path]
+        if not self.base_path:
+            return len(local_resources) == 0
+        else:
+            for resource in local_resources:
+                if not resource.local_data_path.startswith(self.base_path):
+                    return False
+
+        return True
+
     def save(self, file_or_path):
         '''Validates and saves this Data Package contents into a zip file.
 

@@ -379,11 +379,6 @@ class TestDataPackageResources(object):
 
 
 class TestSavingDataPackages(object):
-    @pytest.yield_fixture
-    def tmpfile(self):
-        with tempfile.NamedTemporaryFile() as f:
-            yield f
-
     def test_saves_as_zip(self, tmpfile):
         dp = datapackage.DataPackage(schema={})
         dp.save(tmpfile)
@@ -527,19 +522,6 @@ class TestSavingDataPackages(object):
 
 
 class TestImportingDataPackageFromZip(object):
-    @pytest.yield_fixture
-    def datapackage_zip(self):
-        with tempfile.NamedTemporaryFile() as f:
-            metadata = {
-                'name': 'proverbs',
-                'resources': [
-                    {'path': test_helpers.fixture_path('foo.txt')},
-                ]
-            }
-            dp = datapackage.DataPackage(metadata)
-            dp.save(f)
-            yield f
-
     def test_it_works_with_local_paths(self, datapackage_zip):
         dp = datapackage.DataPackage(datapackage_zip.name)
         assert dp.metadata['name'] == 'proverbs'
@@ -584,3 +566,85 @@ class TestImportingDataPackageFromZip(object):
         with open(test_helpers.fixture_path('foo.txt')) as data_file:
             with open(dp.resources[0].local_data_path) as local_data_file:
                 assert local_data_file.read() == data_file.read()
+
+
+class TestSafeDataPackage(object):
+    def test_without_resources_is_safe(self):
+        metadata = {}
+        dp = datapackage.DataPackage(metadata, {})
+        assert dp.safe()
+
+    def test_metadata_dict_with_local_resources_isnt_safe(self):
+        metadata = {
+            'resources': [
+                {'path': '/etc/shadow'},
+            ]
+        }
+        dp = datapackage.DataPackage(metadata, {})
+        assert not dp.safe()
+
+    def test_metadata_dict_without_local_resources_is_safe(self):
+        metadata = {
+            'resources': [
+                {'data': 42},
+                {'url': 'http://someplace.com/data.csv'},
+            ]
+        }
+        dp = datapackage.DataPackage(metadata, {})
+        assert dp.safe()
+
+    def test_local_with_relative_resources_paths_is_safe(self):
+        fixture_name = 'datapackage_with_foo.txt_resource.json'
+        path = test_helpers.fixture_path(fixture_name)
+        dp = datapackage.DataPackage(path, {})
+        assert dp.safe()
+
+    def test_local_with_resources_outside_base_path_isnt_safe(self, tmpfile):
+        base_path = os.path.dirname(__file__)
+        metadata = {
+            'base': base_path,
+            'resources': [
+                {'path': '../setup.py'},
+            ]
+        }
+        tmpfile.write(json.dumps(metadata).encode('utf-8'))
+        tmpfile.flush()
+        dp = datapackage.DataPackage(tmpfile.name, {})
+        assert not dp.safe()
+
+    def test_zip_with_relative_resources_paths_is_safe(self, datapackage_zip):
+        dp = datapackage.DataPackage(datapackage_zip.name, {})
+        assert dp.safe()
+
+    def test_zip_with_resources_outside_base_path_isnt_safe(self, tmpfile):
+        base_path = os.path.dirname(__file__)
+        metadata = {
+            'base': base_path,
+            'resources': [
+                {'path': '../setup.py'},
+            ]
+        }
+        with zipfile.ZipFile(tmpfile.name, 'w') as z:
+            z.writestr('datapackage.json', json.dumps(metadata))
+        dp = datapackage.DataPackage(tmpfile.name, {})
+        assert not dp.safe()
+
+
+@pytest.yield_fixture
+def tmpfile():
+    with tempfile.NamedTemporaryFile() as f:
+        yield f
+
+
+@pytest.yield_fixture
+def datapackage_zip():
+    with tempfile.NamedTemporaryFile() as f:
+        metadata = {
+            'name': 'proverbs',
+            'resources': [
+                {'path': test_helpers.fixture_path('foo.txt')},
+            ]
+        }
+        dp = datapackage.DataPackage(metadata)
+        dp.save(f)
+        yield f
