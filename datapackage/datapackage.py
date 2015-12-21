@@ -291,7 +291,7 @@ class DataPackage(object):
 
         if not isinstance(the_metadata, dict):
             msg = 'Data must be a \'dict\', but was a \'{0}\''
-            raise DataPackageException(msg.format(type(metadata).__name__))
+            raise DataPackageException(msg.format(type(the_metadata).__name__))
 
         return the_metadata
 
