@@ -52,7 +52,7 @@ class Schema(object):
         try:
             self._validator.validate(data)
         except jsonschema.ValidationError as e:
-            six.raise_from(ValidationError(e), e)
+            six.raise_from(ValidationError.create_from(e), e)
 
     def _load_registry(self):
         try:
