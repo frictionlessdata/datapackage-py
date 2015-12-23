@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import tempfile
 import pytest
 import httpretty
 import tests.test_helpers as test_helpers
@@ -103,7 +104,7 @@ class TestResource(object):
         httpretty.HTTPretty.allow_net_connect = False
         resource_dict = {
             'path': test_helpers.fixture_path('foo.txt'),
-            'url': 'http://someplace.com/inexistent-file.json',
+            'url': 'http://someplace.com/inexistent-file.txt',
         }
         resource = datapackage.Resource.load(resource_dict)
         assert resource.data == b'foo\n'
@@ -393,3 +394,88 @@ class TestTabularResource(object):
         resource_dict = {}
         with pytest.raises(ValueError):
             TabularResource(resource_dict).data
+
+    def test_iterator_with_inline_data(self):
+        data = (
+            '['
+            '{"country": "China", "value": "中国"},'
+            '{"country": "Brazil", "value": "Brasil"}'
+            ']'
+        )
+        resource = TabularResource({'data': data})
+
+        assert [row for row in resource.iter()] == [
+            {'country': 'China', 'value': '中国'},
+            {'country': 'Brazil', 'value': 'Brasil'},
+        ]
+
+    def test_iterator_with_local_data(self):
+        csv_contents = (
+            'country,value\n'
+            'China,中国\n'
+            'Brazil,Brasil\n'
+        ).encode('utf-8')
+
+        with tempfile.NamedTemporaryFile(suffix='.csv') as tmpfile:
+            tmpfile.write(csv_contents)
+            tmpfile.flush()
+            resource = TabularResource({'path': tmpfile.name})
+            data = [row for row in resource.iter()]
+
+        assert data == [
+            {'country': 'China', 'value': '中国'},
+            {'country': 'Brazil', 'value': 'Brasil'},
+        ]
+
+    @httpretty.activate
+    def test_iterator_with_remote_data(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        csv_contents = (
+            'country,value\n'
+            'China,中国\n'
+            'Brazil,Brasil\n'
+        ).encode('utf-8')
+        resource_dict = {
+            'url': 'http://someplace.com/data.csv',
+        }
+        httpretty.register_uri(httpretty.GET, resource_dict['url'],
+                               body=csv_contents)
+
+        resource = TabularResource(resource_dict)
+
+        assert [row for row in resource.iter()] == [
+            {'country': 'China', 'value': '中国'},
+            {'country': 'Brazil', 'value': 'Brasil'},
+        ]
+
+    def test_iterator_with_inline_non_tabular_data(self):
+        resource = TabularResource({'data': 'foo'})
+        with pytest.raises(ValueError):
+            [row for row in resource.iter()]
+
+    def test_iterator_with_local_non_tabular_data(self):
+        with tempfile.NamedTemporaryFile(suffix='.txt') as tmpfile:
+            tmpfile.write('foo'.encode('utf-8'))
+            tmpfile.flush()
+            resource = TabularResource({'path': tmpfile.name})
+            with pytest.raises(ValueError):
+                [row for row in resource.iter()]
+
+    @httpretty.activate
+    def test_iterator_with_remote_non_tabular_data(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        resource_dict = {
+            'url': 'http://someplace.com/data.txt',
+        }
+        httpretty.register_uri(httpretty.GET, resource_dict['url'],
+                               body='foo')
+
+        resource = TabularResource(resource_dict)
+
+        with pytest.raises(ValueError):
+            [row for row in resource.iter()]
+
+    def test_iterator_raises_valueerror_if_theres_no_data(self):
+        resource = TabularResource({})
+        with pytest.raises(ValueError):
+            [row for row in resource.iter()]

@@ -8,6 +8,8 @@ import os
 import csv
 import json
 import six
+import tabulator
+import tabulator.processors
 
 from .resource_file import (
     InlineResourceFile,
@@ -95,6 +97,10 @@ class Resource(object):
         if path and os.path.isfile(path):
             return os.path.abspath(path)
 
+    def iter(self):
+        # FIXME: Delegate this to self._resource_file
+        pass
+
     def _metadata_data_has_changed(self, metadata):
         metadata_data_ids = self._metadata_data_ids(metadata)
         return metadata_data_ids != self._original_metadata_data_ids
@@ -144,14 +150,14 @@ class Resource(object):
 class TabularResource(Resource):
     '''Subclass of :class:`Resource` that deals with tabular data.
 
-    It currently only supports CSVs.
+    It currently supports CSV, XLS, XLSX and JSON.
     '''
 
     @classmethod
     def can_handle(cls, metadata):
         '''bool: Returns True if this class can handle the resource in
         metadata.'''
-        TABULAR_RESOURCE_FORMATS = ('csv', 'tsv')
+        TABULAR_RESOURCE_FORMATS = ('csv', 'xls', 'xlsx', 'json')
         get_extension = lambda x: x.split('.')[-1].lower()
 
         metadata_data = metadata.get('data')
@@ -190,18 +196,45 @@ class TabularResource(Resource):
             msg = 'Expected data type to be any of \'{0}\' but it was \'{1}\''
             raise ValueError(msg.format(types_str, type(data).__name__))
 
-    def _parse_data(self, metadata):
-        '''Parses the data defined in ``metadata``
+    def iter(self):
+        '''Lazily-iterates over rows in data.
+
+        This method is useful when you don't want to load all data in memory at
+        once.
 
         Returns:
-            tuple of dicts: The parsed rows of this resource.
+            iter: An iterator that yields each row in this resource.
 
         Raises:
-            ValueError: If the data isn't tabular. We consider tabular data as
-                a ``list``, ``tuple``, ``CSV`` or ``JSON``. If it's a ``JSON``,
-                its root content must be an array.
+            ValueError: If the data isn't tabular or if the resource has
+                no data.
         '''
-        data = super(TabularResource, self)._parse_data(metadata)
+        result = None
+        inline_data = self.metadata.get('data')
+        data_path_or_url = self.metadata.get('path', self.metadata.get('url'))
+
+        if inline_data:
+            inline_data = self._parse_inline_data()
+            result = iter(inline_data)
+        elif data_path_or_url:
+            try:
+                table = tabulator.topen(data_path_or_url)
+                table.add_processor(tabulator.processors.Headers())
+                result = table.readrow(with_headers=True)
+            except tabulator.errors.Error:
+                msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
+                raise ValueError(msg.format(data_path_or_url))
+
+        if result is None:
+            raise ValueError()
+
+        return result
+
+    def _load_data(self):
+        return [row for row in self.iter()]
+
+    def _parse_inline_data(self):
+        data = self.metadata.get('data')
 
         if isinstance(data, bytes):
             data = data.decode('utf-8')

@@ -44,5 +44,10 @@ setup(
         'jsonschema >= 2.5',
         'six >= 1.10.0',
         'datapackage_registry >= 0.3.0',
+        'tabulator',
+    ],
+
+    dependency_links=[
+        'https://github.com/okfn/tabulator-py/tarball/master#egg=tabulator'
     ],
 )
