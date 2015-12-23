@@ -154,14 +154,6 @@ class TabularResource(Resource):
         TABULAR_RESOURCE_FORMATS = ('csv', 'tsv')
         get_extension = lambda x: x.split('.')[-1].lower()
 
-        metadata_format = metadata.get('format', '').lower()
-        metadata_path = metadata.get('path', '')
-        metadata_url = metadata.get('url', '')
-        if metadata_format in TABULAR_RESOURCE_FORMATS or \
-           get_extension(metadata_path) in TABULAR_RESOURCE_FORMATS or \
-           get_extension(metadata_url) in TABULAR_RESOURCE_FORMATS:
-            return True
-
         metadata_data = metadata.get('data')
         if metadata_data:
             try:
@@ -169,6 +161,14 @@ class TabularResource(Resource):
                 return True
             except ValueError:
                 pass
+
+        metadata_format = metadata.get('format', '').lower()
+        metadata_path = metadata.get('path', '')
+        metadata_url = metadata.get('url', '')
+        if metadata_format in TABULAR_RESOURCE_FORMATS or \
+           get_extension(metadata_path) in TABULAR_RESOURCE_FORMATS or \
+           get_extension(metadata_url) in TABULAR_RESOURCE_FORMATS:
+            return True
 
         return False
 
