@@ -256,7 +256,7 @@ class TabularResource(Resource):
             try:
                 table = tabulator.topen(data_path_or_url)
                 table.add_processor(tabulator.processors.Headers())
-                result = table.readrow(with_headers=True)
+                result = table
             except tabulator.errors.Error:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
                 raise ValueError(msg.format(data_path_or_url))
