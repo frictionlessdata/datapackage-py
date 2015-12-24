@@ -86,7 +86,6 @@ class Resource(object):
         '''
         if not hasattr(self, '_data') or \
            self._metadata_data_has_changed(self.metadata):
-            self._resource_file = self._load_resource_file()
             self._data = self._parse_data(self.metadata)
         return self._data
 
@@ -97,13 +96,50 @@ class Resource(object):
         if path and os.path.isfile(path):
             return os.path.abspath(path)
 
+    @property
+    def _resource_file(self):
+        if self._metadata_data_has_changed(self.metadata):
+            resource_file = self._load_resource_file()
+
+        try:
+            resource_file = self.__resource_file
+        except AttributeError:
+            resource_file = self._load_resource_file()
+
+        self.__resource_file = resource_file
+        return self.__resource_file
+
     def iter(self):
-        # FIXME: Delegate this to self._resource_file
-        pass
+        '''Lazily-iterates over the data.
+
+        This method is useful when you don't want to load all data in memory at
+        once. The returned iterator behaviour depends on the type of the data.
+
+        If it's a string, it'll iterate over rows **without removing the
+        newlines**. The returned data type will be bytes, not string. If it's
+        any other type, the iterator will simply return it.
+
+        Returns:
+            iter: An iterator that yields this resource.
+
+        Raises:
+            ValueError: If the data isn't tabular or if the resource has
+                no data.
+            IOError: If the data file doesn't exist.
+        '''
+        if self._resource_file:
+            return iter(self._resource_file)
+        else:
+            raise ValueError('Resource has no data')
 
     def _metadata_data_has_changed(self, metadata):
+        changed = False
         metadata_data_ids = self._metadata_data_ids(metadata)
-        return metadata_data_ids != self._original_metadata_data_ids
+        try:
+            changed = metadata_data_ids != self._original_metadata_data_ids
+        except AttributeError:
+            self._original_metadata_data_ids = metadata_data_ids
+        return changed
 
     def _metadata_data_ids(self, metadata):
         return {
@@ -134,7 +170,6 @@ class Resource(object):
             raise ResourceError('Couldn\'t load resource.')
 
     def _parse_data(self, metadata):
-        self._original_metadata_data_ids = self._metadata_data_ids(metadata)
         return self._load_data()
 
     def _load_data(self):
@@ -208,6 +243,7 @@ class TabularResource(Resource):
         Raises:
             ValueError: If the data isn't tabular or if the resource has
                 no data.
+            IOError: If the data file doesn't exist.
         '''
         result = None
         inline_data = self.metadata.get('data')
@@ -224,9 +260,11 @@ class TabularResource(Resource):
             except tabulator.errors.Error:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
                 raise ValueError(msg.format(data_path_or_url))
+            except IOError as e:
+                six.raise_from(ResourceError(e), e)
 
         if result is None:
-            raise ValueError()
+            raise ValueError('Resource has no data')
 
         return result
 

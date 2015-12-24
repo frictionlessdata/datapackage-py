@@ -18,8 +18,8 @@ RemoteResourceFile = datapackage.resource_file.RemoteResourceFile
 
 class BasicResourceFileTests(object):
     def test_it_loads_a_file(self):
-        resource_file = self._create_resource_file_with('foo.txt')
-        assert resource_file.read() == b'foo\n'
+        resource_file = self._create_resource_file_with('foo_newline_bar.txt')
+        assert resource_file.read() == b'foo\nbar\n'
 
     def test_read_can_be_called_multiple_times(self):
         resource_file = self._create_resource_file_with('foo.txt')
@@ -34,9 +34,9 @@ class BasicResourceFileTests(object):
         assert resource_file.read().decode('utf-8') == '万事开头难\n'
 
     def test_iterator(self):
-        resource_file = self._create_resource_file_with('foo.txt')
+        resource_file = self._create_resource_file_with('foo_newline_bar.txt')
         content = [row for row in resource_file]
-        assert content == [b'foo\n']
+        assert content == [b'foo\n', b'bar\n']
 
     def test_binary_data(self):
         resource_file = self._create_resource_file_with('image.gif')

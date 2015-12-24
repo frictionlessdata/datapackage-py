@@ -4,6 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import io
 import six
 import requests
 
@@ -17,7 +18,12 @@ class InlineResourceFile(object):
         self._data = data
 
     def __iter__(self):
-        return iter([self._data])
+        data = [self._data]
+        if isinstance(self._data, six.binary_type):
+            data = io.BytesIO(self._data)
+        elif isinstance(self._data, six.string_types):
+            data = io.BytesIO(self._data.encode('utf-8'))
+        return iter(data)
 
     def read(self):
         return self._data

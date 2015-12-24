@@ -306,6 +306,72 @@ class TestResource(object):
         resource = datapackage.Resource.load(resource_dict)
         assert resource.local_data_path is None
 
+    def test_iterator_with_inline_data(self):
+        contents = (
+            'first line\n'
+            'second line\n'
+        )
+        resource = datapackage.Resource.load({'data': contents})
+
+        data = [row for row in resource.iter()]
+        assert data == [b'first line\n', b'second line\n']
+
+    def test_iterator_with_inline_numerical_data(self):
+        contents = 51
+        resource = datapackage.Resource.load({'data': contents})
+
+        assert [row for row in resource.iter()] == [51]
+
+    def test_iterator_with_local_data(self):
+        contents = (
+            'first line\n'
+            'second line\n'
+        )
+
+        with tempfile.NamedTemporaryFile(suffix='.txt') as tmpfile:
+            tmpfile.write(contents.encode('utf-8'))
+            tmpfile.flush()
+            resource = datapackage.Resource.load({'path': tmpfile.name})
+            data = [row for row in resource.iter()]
+
+        assert data == [b'first line\n', b'second line\n']
+
+    @httpretty.activate
+    def test_iterator_with_remote_data(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        contents = (
+            'first line\n'
+            'second line\n'
+        )
+        resource_dict = {
+            'url': 'http://someplace.com/data.txt',
+        }
+        httpretty.register_uri(httpretty.GET, resource_dict['url'],
+                               body=contents)
+
+        resource = datapackage.Resource.load(resource_dict)
+
+        data = [row for row in resource.iter()]
+        assert data == [b'first line\n', b'second line\n']
+
+    def test_iterator_raises_valueerror_if_theres_no_data(self):
+        resource = datapackage.Resource.load({})
+        with pytest.raises(ValueError):
+            [row for row in resource.iter()]
+
+    def test_iterator_raises_resourceerror_if_file_doesnt_exist(self):
+        resource = datapackage.Resource.load({'path': 'inexistent-file.txt'})
+        with pytest.raises(datapackage.exceptions.ResourceError):
+            [row for row in resource.iter()]
+
+    @httpretty.activate
+    def test_iterator_raises_resourceerror_if_url_doesnt_exist(self):
+        url = 'http://someplace.com/inexistent-file.txt'
+        httpretty.register_uri(httpretty.GET, url, status=404)
+        resource = datapackage.Resource.load({'url': url})
+        with pytest.raises(datapackage.exceptions.ResourceError):
+            [row for row in resource.iter()]
+
 
 class TestTabularResource(object):
     def test_load_inline_list(self):
@@ -478,4 +544,17 @@ class TestTabularResource(object):
     def test_iterator_raises_valueerror_if_theres_no_data(self):
         resource = TabularResource({})
         with pytest.raises(ValueError):
+            [row for row in resource.iter()]
+
+    def test_iterator_raises_resourceerror_if_file_doesnt_exist(self):
+        resource = TabularResource({'path': 'inexistent-file.csv'})
+        with pytest.raises(datapackage.exceptions.ResourceError):
+            [row for row in resource.iter()]
+
+    @httpretty.activate
+    def test_iterator_raises_resourceerror_if_url_doesnt_exist(self):
+        url = 'http://someplace.com/inexistent-file.csv'
+        httpretty.register_uri(httpretty.GET, url, status=404)
+        resource = TabularResource({'url': url})
+        with pytest.raises(datapackage.exceptions.ResourceError):
             [row for row in resource.iter()]
