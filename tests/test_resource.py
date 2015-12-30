@@ -306,6 +306,29 @@ class TestResource(object):
         resource = datapackage.Resource.load(resource_dict)
         assert resource.local_data_path is None
 
+    def test_remote_data_path_returns_the_unmodified_url(self):
+        resource_dict = {
+            'url': 'http://somewhere.com/data.txt',
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.remote_data_path == resource_dict['url']
+
+    def test_remote_data_path_returns_the_base(self):
+        resource_dict = {
+            'path': 'data.txt',
+            'base': 'http://somewhere.com/',
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.remote_data_path == 'http://somewhere.com/data.txt'
+
+    def test_remote_data_path_returns_none_if_theres_no_remote_data(self):
+        resource_dict = {
+            'data': 'foo',
+            'path': test_helpers.fixture_path('unicode.txt'),
+        }
+        resource = datapackage.Resource.load(resource_dict)
+        assert resource.remote_data_path is None
+
     def test_iterator_with_inline_data(self):
         contents = (
             'first line\n'

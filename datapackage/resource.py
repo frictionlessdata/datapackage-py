@@ -97,6 +97,17 @@ class Resource(object):
             return os.path.abspath(path)
 
     @property
+    def remote_data_path(self):
+        '''str: The remote path for the data, if it exists.'''
+        url = self.metadata.get('url')
+        if url:
+            return url
+        else:
+            path = self._absolute_path(self.metadata.get('path'))
+            if path and not os.path.isfile(path):
+                return path
+
+    @property
     def _resource_file(self):
         if self._metadata_data_has_changed(self.metadata):
             resource_file = self._load_resource_file()
@@ -157,9 +168,9 @@ class Resource(object):
             return InlineResourceFile(inline_data)
         if self.local_data_path:
             return LocalResourceFile(self.local_data_path)
-        elif data_path and self._absolute_path(data_path) != data_path:
+        elif self.remote_data_path:
             try:
-                return RemoteResourceFile(self._absolute_path(data_path))
+                return RemoteResourceFile(self.remote_data_path)
             except ResourceError:
                 if data_url:
                     return RemoteResourceFile(data_url)
@@ -247,7 +258,7 @@ class TabularResource(Resource):
         '''
         result = None
         inline_data = self.metadata.get('data')
-        data_path_or_url = self.metadata.get('path', self.metadata.get('url'))
+        data_path_or_url = self.local_data_path or self.remote_data_path
 
         if inline_data:
             inline_data = self._parse_inline_data()
