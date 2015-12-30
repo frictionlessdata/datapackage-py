@@ -247,7 +247,12 @@ class TabularResource(Resource):
         '''
         result = None
         inline_data = self.metadata.get('data')
-        data_path_or_url = self.metadata.get('path', self.metadata.get('url'))
+        data_path_or_url = self.metadata.get('path')
+        if data_path_or_url is None:
+            data_path_or_url = self.metadata.get('url')
+        else:
+            if self._base_path is not None:
+                data_path_or_url = os.path.join(self._base_path, data_path_or_url)
 
         if inline_data:
             inline_data = self._parse_inline_data()
