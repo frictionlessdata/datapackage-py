@@ -91,9 +91,9 @@ class Resource(object):
 
     @property
     def local_data_path(self):
-        '''str: The absolute local path for the data, if it exists locally.'''
+        '''str: The absolute local path for the data.'''
         path = self._absolute_path(self.metadata.get('path'))
-        if path and os.path.isfile(path):
+        if path:
             return os.path.abspath(path)
 
     @property
@@ -172,7 +172,7 @@ class Resource(object):
 
         if inline_data:
             return InlineResourceFile(inline_data)
-        if self.local_data_path:
+        if self.local_data_path and os.path.isfile(self.local_data_path):
             return LocalResourceFile(self.local_data_path)
         elif self.remote_data_path:
             try:
@@ -265,7 +265,10 @@ class TabularResource(Resource):
         '''
         result = None
         inline_data = self.metadata.get('data')
-        data_path_or_url = self.local_data_path or self.remote_data_path
+        if self.local_data_path and os.path.isfile(self.local_data_path):
+            data_path_or_url = self.local_data_path
+        else:
+            data_path_or_url = self.remote_data_path
 
         if inline_data:
             inline_data = self._parse_inline_data()

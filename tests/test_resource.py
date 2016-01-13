@@ -298,13 +298,14 @@ class TestResource(object):
         resource = datapackage.Resource.load(resource_dict)
         assert resource.local_data_path is None
 
-    def test_local_data_path_returns_none_if_path_isnt_a_file(self):
+    def test_local_data_path_returns_abs_path_even_if_it_doesnt_exist(self):
+        path = 'nonexistent.csv'
         resource_dict = {
             'data': 'foo',  # Avoid throwing error because path doesn't exist
-            'path': 'nonexistent.csv',
+            'path': path,
         }
         resource = datapackage.Resource.load(resource_dict)
-        assert resource.local_data_path is None
+        assert resource.local_data_path == os.path.abspath(path)
 
     def test_remote_data_path_returns_the_unmodified_url(self):
         resource_dict = {
