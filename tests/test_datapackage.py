@@ -590,10 +590,19 @@ class TestSafeDataPackage(object):
         dp = datapackage.DataPackage(metadata, {})
         assert dp.safe()
 
-    def test_metadata_dict_with_local_resources_isnt_safe(self):
+    def test_with_local_resources_with_inexistent_path_isnt_safe(self):
         metadata = {
             'resources': [
-                {'path': '/etc/shadow'},
+                {'path': '/foo/bar'},
+            ]
+        }
+        dp = datapackage.DataPackage(metadata, {})
+        assert not dp.safe()
+
+    def test_with_local_resources_with_existent_path_isnt_safe(self):
+        metadata = {
+            'resources': [
+                {'path': test_helpers.fixture_path('foo.txt')},
             ]
         }
         dp = datapackage.DataPackage(metadata, {})

@@ -138,7 +138,7 @@ class DataPackage(object):
             * Local relative to the Data Package's base path.
         '''
         local_resources = [resource for resource in self.resources
-                           if resource.local_data_path]
+                           if resource.metadata.get('path')]
         if not self.base_path:
             return len(local_resources) == 0
         else:
