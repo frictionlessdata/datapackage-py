@@ -287,7 +287,11 @@ class DataPackage(object):
                 six.raise_from(DataPackageException(msg), e)
 
         if hasattr(the_metadata, 'read'):
-            the_metadata = json.load(the_metadata)
+            try:
+                the_metadata = json.load(the_metadata)
+            except ValueError as e:
+                msg = 'Unable to load JSON at \'{0}\''.format(metadata)
+                six.raise_from(DataPackageException(msg), e)
 
         if not isinstance(the_metadata, dict):
             msg = 'Data must be a \'dict\', but was a \'{0}\''

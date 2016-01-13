@@ -62,6 +62,13 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.DataPackageException):
             datapackage.DataPackage(empty_array_path)
 
+    def test_init_raises_if_filelike_object_isnt_a_json(self):
+        invalid_json = six.StringIO(
+            '{"foo"}'
+        )
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(invalid_json)
+
     @httpretty.activate
     def test_init_accepts_urls(self):
         url = 'http://someplace.com/datapackage.json'
