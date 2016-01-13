@@ -98,13 +98,18 @@ class Resource(object):
 
     @property
     def remote_data_path(self):
-        '''str: The remote path for the data, if it exists.'''
+        '''str: The remote path for the data, if it exists.
+
+        The URL will only be returned if it has a scheme (e.g. http, https,
+        etc.) by itself or when considering the datapackage's or resource's
+        base path.
+        '''
         url = self.metadata.get('url')
         if url:
             return url
         else:
             path = self._absolute_path(self.metadata.get('path'))
-            if path and not os.path.isfile(path):
+            if path and _is_url(path):
                 return path
 
     @property
@@ -136,7 +141,8 @@ class Resource(object):
         Raises:
             ValueError: If the data isn't tabular or if the resource has
                 no data.
-            IOError: If the data file doesn't exist.
+            IOError: If there was some problem opening the data file (e.g. it
+                doesn't exist or we don't have permissions to read it).
         '''
         if self._resource_file:
             return iter(self._resource_file)
@@ -254,7 +260,8 @@ class TabularResource(Resource):
         Raises:
             ValueError: If the data isn't tabular or if the resource has
                 no data.
-            IOError: If the data file doesn't exist.
+            IOError: If there was some problem opening the data file (e.g. it
+                doesn't exist or we don't have permissions to read it).
         '''
         result = None
         inline_data = self.metadata.get('data')
@@ -268,13 +275,18 @@ class TabularResource(Resource):
                 table = tabulator.topen(data_path_or_url)
                 table.add_processor(tabulator.processors.Headers())
                 result = table
-            except tabulator.errors.Error:
+            except tabulator.errors.Error as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
-                raise ValueError(msg.format(data_path_or_url))
-            except IOError as e:
-                six.raise_from(ResourceError(e), e)
+                six.raise_from(ValueError(msg.format(data_path_or_url)), e)
 
         if result is None:
+            if self.metadata.get('path'):
+                # FIXME: This is a hack to throw an IOError when local data
+                # exists but couldn't be loaded for some reason. If "path"
+                # existed and there were no issues opening it, "result" would
+                # never be None.
+                raise IOError('Resource\'s data couldn\'t be loaded.')
+
             raise ValueError('Resource has no data')
 
         return result
@@ -315,3 +327,8 @@ if six.PY2:
                         for (k, v) in row.items()])
 else:
     _csv_dictreader = csv.DictReader
+
+
+def _is_url(path):
+    parts = six.moves.urllib.parse.urlsplit(path)
+    return bool(parts.scheme and parts.netloc)

@@ -325,7 +325,7 @@ class TestDataPackageResources(object):
             ],
         }
 
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             datapackage.DataPackage(metadata).resources[0].data
 
     @httpretty.activate
@@ -352,7 +352,7 @@ class TestDataPackageResources(object):
             ],
         }
 
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             datapackage.DataPackage(metadata).resources[0].data
 
     def test_changing_resource_metadata_changes_it_in_the_datapackage(self):

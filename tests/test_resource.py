@@ -226,7 +226,7 @@ class TestResource(object):
             'path': 'inexistent-file.json',
         }
 
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             datapackage.Resource.load(resource_dict).data
 
     def test_can_change_data_path_after_creation(self):
@@ -382,7 +382,7 @@ class TestResource(object):
         with pytest.raises(ValueError):
             [row for row in resource.iter()]
 
-    def test_iterator_raises_resourceerror_if_file_doesnt_exist(self):
+    def test_iterator_raises_if_file_doesnt_exist(self):
         resource = datapackage.Resource.load({'path': 'inexistent-file.txt'})
         with pytest.raises(datapackage.exceptions.ResourceError):
             [row for row in resource.iter()]
@@ -569,15 +569,15 @@ class TestTabularResource(object):
         with pytest.raises(ValueError):
             [row for row in resource.iter()]
 
-    def test_iterator_raises_resourceerror_if_file_doesnt_exist(self):
+    def test_iterator_raises_if_file_doesnt_exist(self):
         resource = TabularResource({'path': 'inexistent-file.csv'})
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             [row for row in resource.iter()]
 
     @httpretty.activate
-    def test_iterator_raises_resourceerror_if_url_doesnt_exist(self):
+    def test_iterator_raises_if_url_doesnt_exist(self):
         url = 'http://someplace.com/inexistent-file.csv'
         httpretty.register_uri(httpretty.GET, url, status=404)
         resource = TabularResource({'url': url})
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             [row for row in resource.iter()]
