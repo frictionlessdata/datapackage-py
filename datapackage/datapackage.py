@@ -290,7 +290,7 @@ class DataPackage(object):
             try:
                 the_metadata = json.load(the_metadata)
             except ValueError as e:
-                six.raise_from(DataPackageException(e.message), e)
+                six.raise_from(DataPackageException(str(e)), e)
 
         if not isinstance(the_metadata, dict):
             msg = 'Data must be a \'dict\', but was a \'{0}\''
