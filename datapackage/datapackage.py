@@ -26,9 +26,9 @@ class DataPackage(object):
         metadata (dict, str or file-like object, optional): The contents of the
             `datapackage.json` file. It can be a ``dict`` with its contents,
             a ``string`` with the local path for the file or its URL, or a
-            file-like object. It also can point to a `ZIP` file with the
-            `datapackage.json` in its root folder. If you're passing a
-            ``dict``, it's a good practice to also set the
+            file-like object. It also can point to a `ZIP` file with one and
+            only one `datapackage.json` (it can be in a subfolder). If
+            you're passing a ``dict``, it's a good practice to also set the
             ``default_base_path`` parameter to the absolute `datapackage.json`
             path.
         schema (dict or str, optional): The schema to be used to validate this
@@ -226,7 +226,7 @@ class DataPackage(object):
 
     def _extract_zip_if_possible(self, metadata):
         '''str: Path to the extracted datapackage.json if metadata points to
-        ZIP, or the unaltered metadata.'''
+        ZIP, or the unaltered metadata otherwise.'''
         result = metadata
         try:
             if isinstance(metadata, six.string_types):
