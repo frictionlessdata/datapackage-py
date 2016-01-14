@@ -249,9 +249,14 @@ class DataPackage(object):
 
             if zipfile.is_zipfile(the_zip):
                 with zipfile.ZipFile(the_zip, 'r') as z:
+                    self._validate_zip(z)
+
+                    descriptor_path = [f for f in z.namelist()
+                                       if f.endswith('datapackage.json')][0]
+
                     self._tempdir = tempfile.mkdtemp('-datapackage')
                     z.extractall(self._tempdir)
-                    result = os.path.join(self._tempdir, 'datapackage.json')
+                    result = os.path.join(self._tempdir, descriptor_path)
             else:
                 result = metadata
         except (TypeError,
@@ -264,6 +269,13 @@ class DataPackage(object):
             metadata.seek(0)
 
         return result
+
+    def _validate_zip(self, the_zip):
+        datapackage_jsons = [f for f in the_zip.namelist()
+                             if f.endswith('datapackage.json')]
+        if len(datapackage_jsons) != 1:
+            msg = 'DataPackage must have only one "datapackage.json" (had %d).'
+            raise DataPackageException(msg.format(len(datapackage_jsons)))
 
     def _load_metadata(self, metadata):
         the_metadata = metadata

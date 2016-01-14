@@ -583,6 +583,34 @@ class TestImportingDataPackageFromZip(object):
             with open(dp.resources[0].local_data_path) as local_data_file:
                 assert local_data_file.read() == data_file.read()
 
+    def test_it_can_load_from_zip_files_inner_folders(self, tmpfile):
+        metadata = {
+            'name': 'foo',
+        }
+        with zipfile.ZipFile(tmpfile.name, 'w') as z:
+            z.writestr('foo/datapackage.json', json.dumps(metadata))
+        dp = datapackage.DataPackage(tmpfile.name, {})
+        assert dp.metadata == metadata
+
+    def test_it_breaks_if_theres_no_datapackage_json(self, tmpfile):
+        with zipfile.ZipFile(tmpfile.name, 'w') as z:
+            z.writestr('data.txt', 'foobar')
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(tmpfile.name, {})
+
+    def test_it_breaks_if_theres_more_than_one_datapackage_json(self, tmpfile):
+        metadata_foo = {
+            'name': 'foo',
+        }
+        metadata_bar = {
+            'name': 'bar',
+        }
+        with zipfile.ZipFile(tmpfile.name, 'w') as z:
+            z.writestr('foo/datapackage.json', json.dumps(metadata_foo))
+            z.writestr('bar/datapackage.json', json.dumps(metadata_bar))
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            datapackage.DataPackage(tmpfile.name, {})
+
 
 class TestSafeDataPackage(object):
     def test_without_resources_is_safe(self):
