@@ -136,6 +136,12 @@ class DataPackage(object):
             * Inline;
             * Remote;
             * Local relative to the Data Package's base path.
+
+        Even though we don't check the remote resources' URLs, keep in mind
+        that they can be an attack vector as well. For example, a malicious
+        user may set a resource URL to an address only accessible by the
+        machine that's parsing the datapackage. That might be a problem or not,
+        depending on your specific usage.
         '''
         local_resources = [resource for resource in self.resources
                            if resource.local_data_path]
