@@ -116,11 +116,11 @@ class Resource(object):
     def _resource_file(self):
         if self._metadata_data_has_changed(self.metadata):
             resource_file = self._load_resource_file()
-
-        try:
-            resource_file = self.__resource_file
-        except AttributeError:
-            resource_file = self._load_resource_file()
+        else:
+            try:
+                resource_file = self.__resource_file
+            except AttributeError:
+                resource_file = self._load_resource_file()
 
         self.__resource_file = resource_file
         return self.__resource_file
