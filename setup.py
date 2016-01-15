@@ -42,7 +42,7 @@ setup(
 
     install_requires=[
         'six >= 1.10.0',
-        'datapackage_validate >= 0.3.0',
+        'datapackage_validate >= 0.3.1',
         'tabulator',
     ],
 
