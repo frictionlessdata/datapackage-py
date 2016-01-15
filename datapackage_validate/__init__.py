@@ -4,7 +4,5 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from .validation import validate
 
-
-__all__ = ['validate']
+__all__ = ['schema']

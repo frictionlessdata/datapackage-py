@@ -1,16 +1,20 @@
-class DataPackageValidateException(Exception):
-    def __init__(self, *args, **kwargs):
-        super(DataPackageValidateException, self).__init__(*args, **kwargs)
-        self.errors = []
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import jsonschema.exceptions
 
 
-class SchemaError(DataPackageValidateException):
+class DataPackageException(Exception):
     pass
 
 
-class ValidationError(DataPackageValidateException):
+class SchemaError(DataPackageException,
+                  jsonschema.exceptions.SchemaError):
     pass
 
 
-class RegistryError(DataPackageValidateException):
+class ValidationError(DataPackageException,
+                      jsonschema.exceptions.ValidationError):
     pass
