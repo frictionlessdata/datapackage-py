@@ -6,22 +6,19 @@ from __future__ import unicode_literals
 import jsonschema.exceptions
 
 
-class DataPackageException(Exception):
-    pass
-
-
 class DataPackageValidateException(Exception):
     pass
 
 
-class SchemaError(DataPackageException,
+class SchemaError(DataPackageValidateException,
                   jsonschema.exceptions.SchemaError):
     pass
 
 
-class ValidationError(DataPackageException,
+class ValidationError(DataPackageValidateException,
                       jsonschema.exceptions.ValidationError):
     pass
 
-class RegistryError(Exception):
+
+class RegistryError(DataPackageValidateException):
     pass

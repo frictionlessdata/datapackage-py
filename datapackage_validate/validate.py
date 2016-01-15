@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import json
 import six
 
-from .schema import Schema
+from ._schema import Schema
 
 from .exceptions import (
     DataPackageValidateException,
@@ -19,13 +19,19 @@ from .exceptions import (
 def validate(datapackage, schema='base'):
     '''Validate Data Package datapackage.json files against a jsonschema.
 
-    `datapackage` - a json string or python dict
-    `schema` - a schema string id, json string, or python dict
+    Args:
+        datapackage (str or dict): The Data Package descriptor file (i.e.
+            datapackage.json) as a dict or its contents in a string.
+        schema (str or dict): If a string, it can be the schema ID in the
+            registry, a local path, a URL or the schema's JSON as a string. If
+            a dict, it must be the JSON Schema itself.
 
-    Returns None.
+    Returns:
+        None
 
-    Raises a `datapackage_validate.exceptions.DataPackageValidateException`
-    with a list of the validation errors in its `.errors` attribute.
+    Raises:
+        DataPackageValidateException: This exception has the list of the
+            validation errors in its `.errors` attribute.
     '''
 
     errors = []
