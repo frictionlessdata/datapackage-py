@@ -10,6 +10,10 @@ class DataPackageException(Exception):
     pass
 
 
+class DataPackageValidateException(Exception):
+    pass
+
+
 class SchemaError(DataPackageException,
                   jsonschema.exceptions.SchemaError):
     pass
@@ -17,4 +21,7 @@ class SchemaError(DataPackageException,
 
 class ValidationError(DataPackageException,
                       jsonschema.exceptions.ValidationError):
+    pass
+
+class RegistryError(Exception):
     pass

@@ -12,7 +12,9 @@ import jsonschema
 import datapackage_registry
 from datapackage_registry.exceptions import DataPackageRegistryException
 from .exceptions import (
-    SchemaError, ValidationError
+    SchemaError,
+    ValidationError,
+    RegistryError,
 )
 
 
@@ -20,7 +22,7 @@ class Schema(object):
     '''Abstracts a JSON Schema and allows validation of data against it.
 
     Args:
-        schema (str or dict): The JSON Schema itself as a dict, or a local path
+        schema (str or dict): The JSON Schema itself as a dict, a local path
             or URL to it.
 
     Raises:
@@ -58,7 +60,7 @@ class Schema(object):
         try:
             return datapackage_registry.Registry()
         except DataPackageRegistryException as e:
-            six.raise_from(SchemaError(e), e)
+            six.raise_from(RegistryError(str(e)), e)
 
     def _load_schema(self, schema, registry):
         the_schema = schema

@@ -1,0 +1,258 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "DataPackage",
+  "description": "DataPackage is a format and specification for convenient delivery, installation and management of data. This is the base profile for DataPackage.",
+  "type": "object",
+  "definitions": {
+    "license": {
+      "title": "License",
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "url": { "type": "string" }
+          },
+          "anyOf": [
+            { "title": "type required", "required": ["type"] },
+            { "title": "url required", "required": ["url"] }
+          ]
+        }
+      ]
+    }
+  },
+  "properties": {
+    "name": {
+      "title": "Name",
+      "description": "A lower-case string with only alphanumeric characters along with '.', '_' or '-' characters.",
+      "type": "string",
+      "pattern": "^([a-z0-9._-])+$",
+      "propertyOrder": 10
+    },
+    "title": {
+      "title": "Title",
+      "description": "A human-readable title for this package.",
+      "type": "string",
+      "propertyOrder": 20
+    },
+    "description": {
+      "title": "Description",
+      "description": "A text description of the package.",
+      "type": "string",
+      "propertyOrder": 30,
+      "format": "textarea"
+    },
+    "homepage": {
+      "title": "Home Page",
+      "description": "The URL for this data package's website.",
+      "type": "string",
+      "propertyOrder": 40
+    },
+    "version": {
+      "title": "Version",
+      "description": "A semantic versioning string for this package.",
+      "type": "string",
+      "propertyOrder": 50
+    },
+    "license": {
+      "$ref": "#/definitions/license",
+      "description": "The license under which this package is published",
+      "propertyOrder": 60
+    },
+    "author": {
+      "title": "Author",
+      "description": "The main contributor to this package.",
+      "type": "string",
+      "propertyOrder": 70
+    },
+    "contributors": {
+      "title": "Contributors",
+      "description": "The contributors to this package.",
+      "type": "array",
+      "propertyOrder": 80,
+      "hideFromForms": true,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "web": {
+            "type": "string"
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    "resources": {
+      "title": "Resources",
+      "description": "The data resources that this package describes.",
+      "type": "array",
+      "propertyOrder": 90,
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "description": "A lower-case string with only alphanumeric characters along with '.', '_' or '-' characters.",
+            "type": "string",
+            "pattern": "^([a-z0-9._-])+$",
+            "propertyOrder": 10
+          },
+          "title": {
+            "title": "Title",
+            "description": "A human-readable title for this package.",
+            "type": "string",
+            "propertyOrder": 20
+          },
+          "description": {
+            "title": "Description",
+            "description": "A text description of the package.",
+            "type": "string",
+            "propertyOrder": 30,
+            "format": "textarea"
+          },
+          "schema": {
+            "title": "Schema",
+            "description": "The schema of this resource.",
+            "type": "object",
+            "propertyOrder": 40
+          },
+
+          "url": {
+            "title": "URL",
+            "description": "The URL for this resource.",
+            "type": "string",
+            "propertyOrder": 50
+          },
+          "path": {
+            "title": "Path",
+            "description": "The relative path to this resource.",
+            "type": "string",
+            "propertyOrder": 60
+          },
+          "format": {
+            "title": "Format",
+            "description": "The file format of this resource.",
+            "type": "string",
+            "propertyOrder": 70
+          },
+          "mediatype": {
+            "title": "Media Type",
+            "description": "The media type of this resource.",
+            "type": "string",
+            "propertyOrder": 80,
+            "pattern": "^(.+)/(.+)$"
+          },
+          "encoding": {
+            "title": "Encoding",
+            "description": "The file encoding of this resource.",
+            "type": "string",
+            "propertyOrder": 90
+          },
+          "bytes": {
+            "title": "Bytes",
+            "description": "The size of this resource in bytes.",
+            "type": "integer",
+            "propertyOrder": 100
+          },
+          "hash": {
+            "title": "Hash",
+            "type": "string",
+            "description": "The MD5 hash of this resource. Other hash algorithms can be used by prefxing the hash value with the algorithm name in lowercase, followed by a colon.",
+            "propertyOrder": 110,
+            "pattern": "^([^:]+:[a-fA-F0-9]+|[a-fA-F0-9]{32})$"
+          },
+          "dialect": {
+            "title": "Dialect",
+            "description": "The dialect of this resource file type.",
+            "type": "object",
+            "propertyOrder": 120
+          },
+          "sources": {
+            "title": "Sources",
+            "description": "The raw sources for this resource.",
+            "type": "array",
+            "propertyOrder": 130,
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "web": { "type": "string" },
+                "email": { "type": "string" }
+              },
+              "anyOf": [
+                { "title": "name required", "required": ["name"] },
+                { "title": "web required", "required": ["web"] },
+                { "title": "email required", "required": ["email"] }
+              ]
+            }
+          },
+          "licence": {
+            "$ref": "#/definitions/license",
+            "description": "The license under which the resource is published.",
+            "propertyOrder": 140
+          }
+        },
+        "anyOf": [
+          { "title": "url required", "required": ["url"] },
+          { "title": "path required", "required": ["path"] }
+        ]
+      }
+    },
+    "keywords": {
+      "title": "Keywords",
+      "description": "A list of keywords that describe this package.",
+      "type": "array",
+      "propertyOrder": 100,
+      "items": {
+        "type": "string"
+      }
+    },
+    "sources": {
+      "title": "Sources",
+      "description": "The raw sources for this package.",
+      "type": "array",
+      "propertyOrder": 110,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "web": { "type": "string" },
+          "email": { "type": "string" }
+        },
+        "anyOf": [
+          { "title": "name required", "required": ["name"] },
+          { "title": "web required", "required": ["web"] },
+          { "title": "email required", "required": ["email"] }
+        ]
+      }
+    },
+    "image": {
+      "title": "Image",
+      "description": "A image to represent this package.",
+      "type": "string",
+      "propertyOrder": 120
+    },
+    "base": {
+      "title": "Base",
+      "description": "A base URI used to resolve resources that specify relative paths.",
+      "type": "string",
+      "propertyOrder": 130
+    },
+    "dataDependencies": {
+      "title": "Data Dependencies",
+      "description": "Pre-requisite Data Packages on which this package requires in order to install.",
+      "type": "object",
+      "propertyOrder": 140
+    }
+  },
+  "required": ["name"]
+}
