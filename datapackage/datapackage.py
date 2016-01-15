@@ -32,7 +32,7 @@ class DataPackage(object):
             ``default_base_path`` parameter to the absolute `datapackage.json`
             path.
         schema (dict or str, optional): The schema to be used to validate this
-            data package. If can be a ``dict`` with the schema's contents or a
+            data package. It can be a ``dict`` with the schema's contents or a
             ``str``. The string can contain the schema's ID if it's in the
             registry, a local path, or an URL.
         default_base_path (str, optional): The default path to be used to load
