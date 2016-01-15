@@ -6,15 +6,12 @@ from __future__ import unicode_literals
 import os
 import io
 import json
-import unittest
+import pytest
 try:
     import mock
 except ImportError:
     import unittest.mock as mock
 
-from nose.tools import (assert_true,
-                        assert_is_instance,
-                        assert_raises)
 import httpretty
 
 import datapackage_registry
@@ -38,7 +35,7 @@ def _get_local_base_datapackage_schema():
         return stream.read()
 
 
-class TestValidDatapackageJson(unittest.TestCase):
+class TestValidDatapackageJson(object):
 
     '''The datapackage json itself is well formed'''
 
@@ -72,12 +69,12 @@ class TestValidDatapackageJson(unittest.TestCase):
   "name": "basic-data-package",
   "title": "Basic Data Package"
 """
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
+        with pytest.raises(exceptions.DataPackageValidateException) as excinfo:
             datapackage_validate.validate(invalid_datapackage_json_str)
 
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0],
-                           exceptions.DataPackageValidateException)
+        assert excinfo.value.errors
+        assert isinstance(excinfo.value.errors[0],
+                          exceptions.DataPackageValidateException)
 
     @httpretty.activate
     def test_invalid_json_not_string(self):
@@ -91,12 +88,12 @@ class TestValidDatapackageJson(unittest.TestCase):
 
         # not a string
         invalid_datapackage_json_str = 123
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
+        with pytest.raises(exceptions.DataPackageValidateException) as excinfo:
             datapackage_validate.validate(invalid_datapackage_json_str)
 
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0],
-                           exceptions.DataPackageValidateException)
+        assert excinfo.value.errors
+        assert isinstance(excinfo.value.errors[0],
+                          exceptions.DataPackageValidateException)
 
     @httpretty.activate
     def test_valid_json_obj(self):
@@ -131,13 +128,12 @@ class TestValidDatapackageJson(unittest.TestCase):
   "qwer": "abcd"
 }"""
         datapackage_obj = json.loads(datapackage_json_str)
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
+        with pytest.raises(exceptions.DataPackageValidateException) as excinfo:
             datapackage_validate.validate(datapackage_obj)
 
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0], exceptions.ValidationError)
-        assert_true("'name' is a required property" in
-                    str(cm.exception.errors[0]))
+        assert excinfo.value.errors
+        assert isinstance(excinfo.value.errors[0], exceptions.ValidationError)
+        assert "'name' is a required property" in str(excinfo.value.errors[0])
 
     def test_validate_empty_data_package(self):
         datapackage = {}
@@ -145,23 +141,23 @@ class TestValidDatapackageJson(unittest.TestCase):
             'required': ['name'],
         }
 
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
+        with pytest.raises(exceptions.DataPackageValidateException) as excinfo:
             datapackage_validate.validate(datapackage, schema)
 
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0], exceptions.ValidationError)
+        assert excinfo.value.errors
+        assert isinstance(excinfo.value.errors[0], exceptions.ValidationError)
 
 
-class TestValidateWithSchemaAsArgument(unittest.TestCase):
+class TestValidateWithSchemaAsArgument(object):
 
-    '''Validate datapackage with a schema passed as an argument'''
-
-    def setUp(self):
+    def setup_class(self):
         # a simple valid datapackage
-        self.dp = """{
-  "name": "basic-data-package",
-  "title": "Basic Data Package"
-}"""
+        self.dp = (
+            '{'
+            '"name": "basic-data-package",'
+            '"title": "Basic Data Package"'
+            '}'
+        )
 
     def test_schema_as_string(self):
         '''Pass schema as json string to validate()'''
@@ -173,11 +169,11 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
         '''Pass schema as not an expected object type (should be string or
         dict).'''
 
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
+        with pytest.raises(exceptions.DataPackageValidateException) as excinfo:
             datapackage_validate.validate(self.dp, schema=123)
 
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0], exceptions.SchemaError)
+        assert excinfo.value.errors
+        assert isinstance(excinfo.value.errors[0], exceptions.SchemaError)
 
     def test_schema_as_dict(self):
         '''Pass schema as python dict to validate()'''
@@ -203,11 +199,11 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
         httpretty.register_uri(httpretty.GET, REGISTRY_BACKEND_URL,
                                body=REGISTRY_BODY)
 
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
+        with pytest.raises(exceptions.DataPackageValidateException) as excinfo:
             datapackage_validate.validate(self.dp, schema='not-a-valid-id')
 
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0], exceptions.SchemaError)
+        assert excinfo.value.errors
+        assert isinstance(excinfo.value.errors[0], exceptions.SchemaError)
 
     @mock.patch('datapackage_registry.Registry')
     def test_raises_error_when_registry_raises_error(self, registry_mock):
@@ -215,8 +211,8 @@ class TestValidateWithSchemaAsArgument(unittest.TestCase):
         registry_excep = datapackage_registry.exceptions
         registry_mock.side_effect = registry_excep.DataPackageRegistryException
 
-        with assert_raises(exceptions.DataPackageValidateException) as cm:
+        with pytest.raises(exceptions.DataPackageValidateException) as excinfo:
             datapackage_validate.validate(self.dp)
 
-        assert_true(cm.exception.errors)
-        assert_is_instance(cm.exception.errors[0], exceptions.RegistryError)
+        assert excinfo.value.errors
+        assert isinstance(excinfo.value.errors[0], exceptions.RegistryError)
