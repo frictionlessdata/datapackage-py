@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import json
 import six
 
-from ._schema import Schema
+from .schema import Schema
 
 from .exceptions import (
     DataPackageValidateException,

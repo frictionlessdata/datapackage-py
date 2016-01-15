@@ -4,7 +4,7 @@ import httpretty
 import tests.test_helpers as test_helpers
 
 import datapackage_validate.exceptions
-from datapackage_validate._schema import Schema
+from datapackage_validate.schema import Schema
 
 
 class TestSchema(object):
