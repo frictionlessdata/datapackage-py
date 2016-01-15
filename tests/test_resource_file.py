@@ -77,7 +77,7 @@ class TestLocalResourceFile(BasicResourceFileTests):
 
     def test_inexistent_path_raises_resourceerror(self):
         path = 'inexistent-file.csv'
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             LocalResourceFile(path)
 
 
@@ -112,5 +112,5 @@ class TestRemoteResourceFile(BasicResourceFileTests):
     def test_inexistent_url_raises_resourceerror(self):
         url = 'http://www.nowhere.com/inexistent-file.csv'
         httpretty.register_uri(httpretty.GET, url, status=404)
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             RemoteResourceFile(url)

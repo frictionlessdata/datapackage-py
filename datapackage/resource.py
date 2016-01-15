@@ -16,9 +16,6 @@ from .resource_file import (
     LocalResourceFile,
     RemoteResourceFile,
 )
-from .exceptions import (
-    ResourceError
-)
 
 
 class Resource(object):
@@ -50,9 +47,6 @@ class Resource(object):
             Resource: The returned resource's class will depend on the type of
                 resource. If it was tabular, a :class:`TabularResource` will be
                 returned, otherwise, it'll be a :class:`Resource`.
-
-        Raises:
-            ResourceError: If the resource couldn't be loaded.
         '''
         if TabularResource.can_handle(metadata):
             resource_class = TabularResource
@@ -82,7 +76,8 @@ class Resource(object):
                 it'll be bytes.
 
         Raises:
-            ResourceError: If the data couldn't be loaded.
+            IOError: If there was some problem opening the data file (e.g. it
+                doesn't exist or we don't have permissions to read it).
         '''
         if not hasattr(self, '_data') or \
            self._metadata_data_has_changed(self.metadata):
@@ -126,7 +121,7 @@ class Resource(object):
         return self.__resource_file
 
     def iter(self):
-        '''Lazily-iterates over the data.
+        '''Lazily iterates over the data.
 
         This method is useful when you don't want to load all data in memory at
         once. The returned iterator behaviour depends on the type of the data.
@@ -139,8 +134,6 @@ class Resource(object):
             iter: An iterator that yields this resource.
 
         Raises:
-            ValueError: If the data isn't tabular or if the resource has
-                no data.
             IOError: If there was some problem opening the data file (e.g. it
                 doesn't exist or we don't have permissions to read it).
         '''
@@ -177,14 +170,15 @@ class Resource(object):
         elif self.remote_data_path:
             try:
                 return RemoteResourceFile(self.remote_data_path)
-            except ResourceError:
+            except IOError as e:
                 if data_url:
                     return RemoteResourceFile(data_url)
+                raise e
         elif data_url:
             return RemoteResourceFile(data_url)
 
         if inline_data or data_path or data_url:
-            raise ResourceError('Couldn\'t load resource.')
+            raise IOError('Couldn\'t load resource.')
 
     def _parse_data(self, metadata):
         return self._load_data()

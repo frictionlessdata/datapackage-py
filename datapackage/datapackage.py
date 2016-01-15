@@ -46,8 +46,6 @@ class DataPackage(object):
         DataPackageException: If the :data:`metadata` couldn't be loaded or was
             invalid.
         SchemaError: If the :data:`schema` couldn't be loaded or was invalid.
-        ResourceError: If any resource defined in :data:`metadata` couldn't be
-            loaded.
     '''
 
     def __init__(self, metadata=None, schema='base', default_base_path=None):
@@ -87,11 +85,6 @@ class DataPackage(object):
 
         :returns: The resources.
         :rtype: tuple of :class:`.Resource`
-
-        Raises:
-            ResourceError: If any resource couldn't be loaded. This will only
-                happen if you've changed the resources in the :data:`metadata`
-                after this :class:`DataPackage` was created.
         '''
         self._resources = self._update_resources(self._resources,
                                                  self.metadata,

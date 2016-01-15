@@ -35,10 +35,7 @@ class LocalResourceFile(object):
         self._file_content = None
 
     def _load_file(self, path):
-        try:
-            return open(path, 'rb')
-        except IOError as e:
-            six.raise_from(datapackage.exceptions.ResourceError(e), e)
+        return open(path, 'rb')
 
     def __del__(self):
         if hasattr(self, '_file'):
@@ -65,7 +62,7 @@ class RemoteResourceFile(object):
             res.raise_for_status()
             return res
         except requests.exceptions.RequestException as e:
-            six.raise_from(datapackage.exceptions.ResourceError(e), e)
+            six.raise_from(IOError(e), e)
 
     def __del__(self):
         if hasattr(self, '_file'):

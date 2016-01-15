@@ -141,18 +141,6 @@ class TestResource(object):
         resource = datapackage.Resource.load(resource_dict)
         assert resource.data == b'foo'
 
-    @httpretty.activate
-    def test_load_raises_if_url_doesnt_exist(self):
-        url = 'http://someplace/resource.txt'
-        httpretty.register_uri(httpretty.GET, url, status=404)
-
-        resource_dict = {
-            'url': url,
-        }
-
-        with pytest.raises(datapackage.exceptions.ResourceError):
-            datapackage.Resource.load(resource_dict).data
-
     def test_load_accepts_absolute_paths(self):
         path = test_helpers.fixture_path('foo.txt')
         resource_dict = {
@@ -221,7 +209,19 @@ class TestResource(object):
                                              default_base_path=base_url)
         assert resource.data == b'foo'
 
-    def test_load_raises_if_path_doesnt_exist(self):
+    @httpretty.activate
+    def test_data_raises_if_url_doesnt_exist(self):
+        url = 'http://someplace/resource.txt'
+        httpretty.register_uri(httpretty.GET, url, status=404)
+
+        resource_dict = {
+            'url': url,
+        }
+
+        with pytest.raises(IOError):
+            datapackage.Resource.load(resource_dict).data
+
+    def test_data_raises_if_path_doesnt_exist(self):
         resource_dict = {
             'path': 'inexistent-file.json',
         }
@@ -385,7 +385,7 @@ class TestResource(object):
 
     def test_iterator_raises_if_file_doesnt_exist(self):
         resource = datapackage.Resource.load({'path': 'inexistent-file.txt'})
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             [row for row in resource.iter()]
 
     @httpretty.activate
@@ -393,7 +393,7 @@ class TestResource(object):
         url = 'http://someplace.com/inexistent-file.txt'
         httpretty.register_uri(httpretty.GET, url, status=404)
         resource = datapackage.Resource.load({'url': url})
-        with pytest.raises(datapackage.exceptions.ResourceError):
+        with pytest.raises(IOError):
             [row for row in resource.iter()]
 
 
