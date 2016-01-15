@@ -22,7 +22,7 @@ dependencies = [
 
 setup(
     name='datapackage-validate',
-    version='0.3.0',
+    version='0.3.1',
     url='https://github.com/okfn/datapackage-validate-py',
     license='MIT',
     description=description,
