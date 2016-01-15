@@ -6,10 +6,6 @@ from __future__ import unicode_literals
 import json
 import six
 
-import jsonschema
-import datapackage_registry
-from datapackage_registry.exceptions import DataPackageRegistryException
-
 from .schema import Schema
 
 from .exceptions import (
@@ -35,7 +31,6 @@ def validate(datapackage, schema='base'):
     errors = []
     schema_obj = None
     datapackage_obj = None
-    registry = None
 
     # Sanity check datapackage
     # If datapackage is a str, check json is well formed
@@ -75,13 +70,3 @@ def validate(datapackage, schema='base'):
         exception = DataPackageValidateException()
         exception.errors = errors
         raise exception
-
-
-def _get_validator_for(schema, registry=None):
-    resolver = None
-    if registry and registry.base_path is not None:
-        path = 'file://{base_path}/'.format(base_path=registry.base_path)
-        resolver = jsonschema.RefResolver(path, schema)
-
-    validator = jsonschema.validators.validator_for(schema)
-    return validator(schema, resolver=resolver)
