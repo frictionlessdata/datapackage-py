@@ -12,11 +12,14 @@ import shutil
 import zipfile
 import six
 import requests
-from .schema import Schema
+import datapackage_validate
 from .resource import Resource
 from .exceptions import (
     DataPackageException,
+    SchemaError,
 )
+
+Schema = datapackage_validate.schema.Schema
 
 
 class DataPackage(object):
@@ -52,7 +55,7 @@ class DataPackage(object):
         metadata = self._extract_zip_if_possible(metadata)
 
         self._metadata = self._load_metadata(metadata)
-        self._schema = Schema(schema)
+        self._schema = self._load_schema(schema)
         self._base_path = self._get_base_path(metadata, default_base_path)
         self._resources = self._load_resources(self.metadata,
                                                self.base_path)
@@ -68,7 +71,11 @@ class DataPackage(object):
 
     @property
     def schema(self):
-        ''':class:`.Schema`: The schema of this data package.'''
+        ''':class:`.Schema`: This data package's schema.
+
+        Check https://github.com/okfn/datapackage-validate-py for documentation
+        on its attributes.
+        '''
         return self._schema
 
     @property
@@ -308,6 +315,13 @@ class DataPackage(object):
             raise DataPackageException(msg.format(type(the_metadata).__name__))
 
         return the_metadata
+
+    def _load_schema(self, schema):
+        try:
+            dpkg_validate = datapackage_validate
+            return Schema(schema)
+        except dpkg_validate.exceptions.DataPackageValidateException as e:
+            six.raise_from(SchemaError(e), e)
 
     def _get_base_path(self, metadata, default_base_path):
         base_path = default_base_path
