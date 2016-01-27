@@ -278,8 +278,8 @@ class DataPackage(object):
         datapackage_jsons = [f for f in the_zip.namelist()
                              if f.endswith('datapackage.json')]
         if len(datapackage_jsons) != 1:
-            msg = 'DataPackage must have only one "datapackage.json" (had %d).'
-            raise DataPackageException(msg.format(len(datapackage_jsons)))
+            msg = 'DataPackage must have only one "datapackage.json" (had {n})'
+            raise DataPackageException(msg.format(n=len(datapackage_jsons)))
 
     def _load_metadata(self, metadata):
         the_metadata = metadata
