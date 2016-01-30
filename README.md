@@ -6,8 +6,8 @@ datapackage-registry-py
 
 A Python library for working with a Data Package Registry.
 
-The default registry backend is currently located at:
-<https://rawgit.com/dataprotocols/registry/master/registry.csv>
+It comes with a cached version of the registry and schemas from
+<https://github.com/dataprotocols/schemas>.
 
 Usage
 -----
