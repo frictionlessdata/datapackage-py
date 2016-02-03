@@ -72,27 +72,6 @@ class Registry(object):
                 six.raise_from(DataPackageRegistryException(e), e)
         return self._profiles[profile_id]
 
-    def get_external(self, schema_path_or_url):
-        '''Return the schema at the received local path or URL as a dict
-
-        This method raises DataPackageRegistryException if there were any
-        errors.
-        '''
-        try:
-            if os.path.isfile(schema_path_or_url):
-                with open(schema_path_or_url, 'r') as f:
-                    result = json.load(f)
-            else:
-                res = requests.get(schema_path_or_url)
-                res.raise_for_status()
-                result = res.json()
-
-            return result
-
-        except (ValueError,
-                requests.exceptions.RequestException) as e:
-            six.raise_from(DataPackageRegistryException(e), e)
-
     def _get_profile(self, profile_id):
         '''Return the profile with the received ID as a dict'''
         profile_metadata = self._registry.get(profile_id)
@@ -101,11 +80,11 @@ class Registry(object):
 
         path = self._get_absolute_path(profile_metadata.get('schema_path'))
         if path and os.path.isfile(path):
-            return self.get_external(path)
+            return self._load_json_file_or_url(path)
 
         url = profile_metadata.get('schema')
         if url:
-            return self.get_external(url)
+            return self._load_json_file_or_url(url)
 
     def _get_registry(self, registry_path_or_url):
         '''Return a dict with objects mapped by their id from a CSV endpoint'''
@@ -129,3 +108,24 @@ class Registry(object):
             return os.path.join(self.base_path, relative_path)
         except:
             pass
+
+    def _load_json_file_or_url(self, json_path_or_url):
+        '''Return the JSON at the local path or URL as a dict
+
+        This method raises DataPackageRegistryException if there were any
+        errors.
+        '''
+        try:
+            if os.path.isfile(json_path_or_url):
+                with open(json_path_or_url, 'r') as f:
+                    result = json.load(f)
+            else:
+                res = requests.get(json_path_or_url)
+                res.raise_for_status()
+                result = res.json()
+
+            return result
+
+        except (ValueError,
+                requests.exceptions.RequestException) as e:
+            six.raise_from(DataPackageRegistryException(e), e)

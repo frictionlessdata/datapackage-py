@@ -226,49 +226,6 @@ class TestRegistry(unittest.TestCase):
 
         assert not m.called, '.get() should memoize the profiles'
 
-    @httpretty.activate
-    def test_get_external_url(self):
-        registry = datapackage_registry.Registry()
-        url = 'http://www.someplace.com/schema.json'
-        body = (
-            '{'
-            '"name": "my-schema"'
-            '}'
-        )
-        httpretty.register_uri(httpretty.GET, url, body=body)
-
-        schema = registry.get_external(url)
-
-        assert schema['name'] == 'my-schema'
-
-    @httpretty.activate
-    def test_get_external_url_raises_exception_if_failure(self):
-        registry = datapackage_registry.Registry()
-        url = 'http://www.someplace.com/schema.json'
-        httpretty.register_uri(httpretty.GET, url, status=500)
-
-        with assert_raises(DataPackageRegistryException):
-            registry.get_external(url)
-
-    def test_get_external_local_file(self):
-        registry = datapackage_registry.Registry()
-
-        schema = registry.get_external(self.BASE_PROFILE_PATH)
-
-        assert schema is not None
-
-    def test_get_external_local_file_doesnt_exist_raises_exception(self):
-        registry = datapackage_registry.Registry()
-
-        with assert_raises(DataPackageRegistryException):
-            registry.get_external('this-path-doesnt-exist.json')
-
-    def test_get_external_local_file_isnt_json_raises_exception(self):
-        registry = datapackage_registry.Registry()
-
-        with assert_raises(DataPackageRegistryException):
-            registry.get_external(self.EMPTY_REGISTRY_PATH)
-
     def test_base_path_default(self):
         registry = datapackage_registry.Registry()
         base_path = os.path.dirname(registry.DEFAULT_REGISTRY_PATH)
