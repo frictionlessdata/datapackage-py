@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/okfn/datapackage-registry-py.svg)](https://travis-ci.org/okfn/datapackage-registry-py)
-[![Coverage Status](https://coveralls.io/repos/okfn/datapackage-registry-py/badge.svg?branch=master&service=github)](https://coveralls.io/github/okfn/datapackage-registry-py?branch=master)
-
 datapackage-registry-py
 =======================
+
+[![Build Status](https://travis-ci.org/okfn/datapackage-registry-py.svg)](https://travis-ci.org/okfn/datapackage-registry-py)
+[![Coverage Status](https://coveralls.io/repos/okfn/datapackage-registry-py/badge.svg?branch=master&service=github)](https://coveralls.io/github/okfn/datapackage-registry-py?branch=master)
 
 A Python library for working with a Data Package Registry.
 
