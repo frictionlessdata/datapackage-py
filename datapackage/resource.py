@@ -267,8 +267,7 @@ class TabularResource(Resource):
             result = iter(inline_data)
         elif data_path_or_url:
             try:
-                table = tabulator.topen(data_path_or_url)
-                table.add_processor(tabulator.processors.Headers())
+                table = tabulator.topen(data_path_or_url, with_headers=True)
                 result = TabulatorIterator(table)
             except tabulator.errors.Error as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
