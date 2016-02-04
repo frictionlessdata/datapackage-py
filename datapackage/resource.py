@@ -5,8 +5,6 @@ from __future__ import unicode_literals
 
 
 import os
-import csv
-import json
 import six
 import tabulator
 import tabulator.processors
@@ -294,36 +292,9 @@ class TabularResource(Resource):
     def _parse_inline_data(self):
         data = self.metadata.get('data')
 
-        if isinstance(data, bytes):
-            data = data.decode('utf-8')
-
-        if isinstance(data, six.string_types):
-            try:
-                data = json.loads(data)
-            except ValueError:
-                data = [row for row in _csv_dictreader(six.StringIO(data))]
-                if not data:
-                    data = None
-
         self._raise_if_isnt_tabular_data(data)
 
         return data
-
-
-if six.PY2:
-    def _csv_dictreader(data, dialect=csv.excel, **kwargs):
-        '''Read text stream (unicode on Py2.7) as CSV.'''
-
-        def iterenc_utf8(data):
-            for line in data:
-                yield line.encode('utf-8')
-
-        reader = csv.DictReader(iterenc_utf8(data), dialect=dialect, **kwargs)
-        for row in reader:
-            yield dict([(unicode(k, 'utf-8'), unicode(v, 'utf-8'))
-                        for (k, v) in row.items()])
-else:
-    _csv_dictreader = csv.DictReader
 
 
 def _is_url(path):

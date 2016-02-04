@@ -408,33 +408,6 @@ class TestTabularResource(object):
         resource = TabularResource(resource_dict)
         assert resource.data == resource_dict['data']
 
-    def test_load_inline_csv(self):
-        resource_dict = {
-            'data': (
-                'country,value\r\n'
-                'China,中国\r\n'
-                'Brazil,Brasil\r\n'
-            )
-        }
-        resource = TabularResource(resource_dict)
-        assert len(resource.data) == 2
-        assert resource.data[0] == {'country': 'China', 'value': '中国'}
-        assert resource.data[1] == {'country': 'Brazil', 'value': 'Brasil'}
-
-    def test_load_inline_json(self):
-        resource_dict = {
-            'data': (
-                '['
-                '{"country": "China", "value": "中国"},'
-                '{"country": "Brazil", "value": "Brasil"}'
-                ']'
-            )
-        }
-        resource = TabularResource(resource_dict)
-        assert len(resource.data) == 2
-        assert resource.data[0] == {'country': 'China', 'value': '中国'}
-        assert resource.data[1] == {'country': 'Brazil', 'value': 'Brasil'}
-
     @httpretty.activate
     def test_load_url(self):
         url = 'http://someplace/resource.json'
@@ -486,18 +459,13 @@ class TestTabularResource(object):
             TabularResource(resource_dict).data
 
     def test_iterator_with_inline_data(self):
-        data = (
-            '['
-            '{"country": "China", "value": "中国"},'
-            '{"country": "Brazil", "value": "Brasil"}'
-            ']'
-        )
-        resource = TabularResource({'data': data})
-
-        assert [row for row in resource.iter()] == [
+        data = [
             {'country': 'China', 'value': '中国'},
             {'country': 'Brazil', 'value': 'Brasil'},
         ]
+        resource = TabularResource({'data': data})
+
+        assert [row for row in resource.iter()] == data
 
     def test_iterator_with_local_data(self):
         csv_contents = (
