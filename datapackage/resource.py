@@ -269,7 +269,7 @@ class TabularResource(Resource):
             try:
                 table = tabulator.topen(data_path_or_url)
                 table.add_processor(tabulator.processors.Headers())
-                result = table
+                result = TabulatorIterator(table)
             except tabulator.errors.Error as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
                 six.raise_from(ValueError(msg.format(data_path_or_url)), e)
@@ -300,3 +300,21 @@ class TabularResource(Resource):
 def _is_url(path):
     parts = six.moves.urllib.parse.urlsplit(path)
     return bool(parts.scheme and parts.netloc)
+
+
+class TabulatorIterator(object):
+    # FIXME: This is a workaround because Tabulator doesn't support returning a
+    # list of keyed dicts yet. When it does, we can remove this.
+    def __init__(self, tabulator_iter):
+        self._tabulator_iter = tabulator_iter
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        row = next(self._tabulator_iter)
+        return dict(zip(row.headers, row.values))
+
+    def next(self):
+        # For Py27 compatibility
+        return self.__next__()
