@@ -1,0 +1,4 @@
+id,title,schema,schema_path,specification
+base,Data Package,http://schemas.datapackages.org/data-package.json,data-package.json,http://dataprotocols.org/data-packages
+tabular,Tabular Data Package,http://schemas.datapackages.org/tabular-data-package.json,tabular-data-package.json,http://dataprotocols.org/tabular-data-package/
+fiscal,Fiscal Data Package,http://schemas.datapackages.org/fiscal-data-package.json,fiscal-data-package.json,http://fiscal.dataprotocols.org/spec/
