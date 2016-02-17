@@ -429,6 +429,14 @@ class TestTabularResource(object):
         assert resource.data[0] == {'country': 'China', 'value': '中国'}
         assert resource.data[1] == {'country': 'Brazil', 'value': 'Brasil'}
 
+    def test_accepts_urls_with_query_components_and_fragments(self):
+        url = 'http://someplace.com/resource.csv?foo=bar#foobar'
+        resource_dict = {
+            'url': url,
+        }
+
+        assert TabularResource.can_handle(resource_dict)
+
     def test_raises_valueerror_if_data_is_dict(self):
         resource_dict = {
             'data': {

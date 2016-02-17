@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 import six
+import six.moves.urllib as urllib
 import tabulator
 import tabulator.processors
 
@@ -201,9 +202,11 @@ class TabularResource(Resource):
     def can_handle(cls, metadata):
         '''bool: Returns True if this class can handle the resource in
         metadata.'''
-        TABULAR_RESOURCE_FORMATS = ('csv', 'xls', 'xlsx', 'json')
-        get_extension = lambda x: x.split('.')[-1].lower()
+        def get_extension(path_or_url):
+            path = urllib.parse.urlparse(path_or_url).path
+            return path.split('.')[-1].lower()
 
+        TABULAR_RESOURCE_FORMATS = ('csv', 'xls', 'xlsx', 'json')
         metadata_data = metadata.get('data')
         if metadata_data:
             try:
