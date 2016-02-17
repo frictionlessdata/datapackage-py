@@ -13,6 +13,15 @@ from .exceptions import RegistryError
 
 
 class Registry(object):
+    '''Allow loading Data Package profiles from a registry.
+
+    Args:
+        registry_path_or_url (str): Path or URL to the registry's CSV file. It
+            defaults to the local registry cache path.
+
+    Raises:
+        RegistryError: If there was some error loading the registry.
+    '''
     DEFAULT_REGISTRY_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         'schemas',
@@ -20,11 +29,6 @@ class Registry(object):
     )
 
     def __init__(self, registry_path_or_url=DEFAULT_REGISTRY_PATH):
-        '''Allows interfacing with a dataprotocols schema registry
-
-        This method raises RegistryError if there were any
-        errors.
-        '''
         if os.path.isfile(registry_path_or_url):
             self._BASE_PATH = os.path.dirname(
                 os.path.abspath(registry_path_or_url)
@@ -40,26 +44,29 @@ class Registry(object):
 
     @property
     def available_profiles(self):
-        '''Return the available profiles' metadata as a dict of dicts'''
+        '''dict: The available profiles' metadata keyed by their ids.'''
         return self._registry
 
     @property
     def base_path(self):
-        '''Return the Registry cache's absolute base path, if it exists'''
+        '''str: The base path of this Registry (None if it's remote).'''
         try:
             return self._BASE_PATH
         except AttributeError:
             pass
 
     def get(self, profile_id):
-        '''Return the profile with the received ID as a dict
+        '''Returns the profile with the received ID as a dict
 
         If a local copy of the profile exists, it'll be returned. If not, it'll
         be downloaded from the web. The results are cached, so any subsequent
         calls won't hit the filesystem or the web.
 
-        This method raises RegistryError if there were any
-        errors.
+        Args:
+            profile_id (str): The ID of the profile you want.
+
+        Raises:
+            RegistryError: If there were any errors loading the profile.
         '''
         if profile_id not in self._profiles:
             try:
@@ -85,7 +92,7 @@ class Registry(object):
             return self._load_json_file_or_url(url)
 
     def _get_registry(self, registry_path_or_url):
-        '''Return a dict with objects mapped by their id from a CSV endpoint'''
+        '''dict: Return the registry as dict with profiles keyed by id.'''
         table = tabulator.topen(registry_path_or_url, with_headers=True)
         # FIXME: Remove this when
         # https://github.com/datapackages/tabulator-py/issues/39 is done.
@@ -95,32 +102,21 @@ class Registry(object):
         return dict([(o['id'], o) for o in rows_as_dict])
 
     def _get_absolute_path(self, relative_path):
-        '''Return the received relative_path joined with the base path
-
-        It'll return None if something goes wrong.
-        '''
+        '''str: Return the received relative_path joined with the base path
+        (None if there were some error).'''
         try:
             return os.path.join(self.base_path, relative_path)
-        except:
+        except (AttributeError, TypeError):
             pass
 
     def _load_json_file_or_url(self, json_path_or_url):
-        '''Return the JSON at the local path or URL as a dict
+        '''dict: Return the JSON at the local path or URL as a dict.'''
+        if os.path.isfile(json_path_or_url):
+            with open(json_path_or_url, 'r') as f:
+                result = json.load(f)
+        else:
+            res = requests.get(json_path_or_url)
+            res.raise_for_status()
+            result = res.json()
 
-        This method raises RegistryError if there were any
-        errors.
-        '''
-        try:
-            if os.path.isfile(json_path_or_url):
-                with open(json_path_or_url, 'r') as f:
-                    result = json.load(f)
-            else:
-                res = requests.get(json_path_or_url)
-                res.raise_for_status()
-                result = res.json()
-
-            return result
-
-        except (ValueError,
-                requests.exceptions.RequestException) as e:
-            six.raise_from(RegistryError(e), e)
+        return result
