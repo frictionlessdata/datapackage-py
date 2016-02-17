@@ -42,7 +42,9 @@ setup(
 
     install_requires=[
         'six >= 1.10.0',
-        'datapackage_validate >= 0.3.1',
+        'requests >= 2.8.0',
+        'jsonschema >= 2.5.1',
+        'datapackage_registry >= 0.3.0',
         'tabulator',
     ],
 

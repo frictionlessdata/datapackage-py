@@ -1,6 +1,7 @@
 [run]
 source =
     datapackage/*
+    datapackage_validate/*
 
 [xml]
 output = shippable/codecoverage/coverage.xml
