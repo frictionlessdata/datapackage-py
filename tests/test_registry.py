@@ -4,24 +4,20 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
-import unittest
 try:
     import mock
 except ImportError:
     import unittest.mock as mock
 
+import os
+import pytest
 import httpretty
-from nose.tools import (assert_true,
-                        assert_equal,
-                        assert_raises)
-
 import tests.test_helpers as test_helpers
 import datapackage_registry
 from datapackage_registry.exceptions import DataPackageRegistryException
 
 
-class TestRegistry(unittest.TestCase):
+class TestRegistry(object):
     EMPTY_REGISTRY_PATH = test_helpers.fixture_path('empty_registry.csv')
     BASE_AND_TABULAR_REGISTRY_PATH = test_helpers.fixture_path('base_and_tabular_registry.csv')
     UNICODE_REGISTRY_PATH = test_helpers.fixture_path('unicode_registry.csv')
@@ -32,18 +28,17 @@ class TestRegistry(unittest.TestCase):
         registry_path = self.EMPTY_REGISTRY_PATH
         registry = datapackage_registry.Registry(registry_path)
 
-        assert_equal(registry.available_profiles, {},
-                     'Registry is not an empty dict')
+        assert registry.available_profiles == {}
 
     def test_return_non_empty_dict_when_registry_is_not_empty(self):
         '''Return an dict of dicts when registry csv is not empty'''
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
         registry = datapackage_registry.Registry(registry_path)
 
-        assert_equal(len(registry.available_profiles), 2)
+        assert len(registry.available_profiles) == 2
         # each member in dict is a dict
         for profile in registry.available_profiles.values():
-            assert_equal(type(profile), dict)
+            assert type(profile) == dict
 
     def test_dicts_have_expected_keys(self):
         '''The returned dicts have the expected keys'''
@@ -52,35 +47,33 @@ class TestRegistry(unittest.TestCase):
 
         # each dict in profiles has the expected keys
         for profile in registry.available_profiles.values():
-            assert_true('id' in profile)
-            assert_true('title' in profile)
-            assert_true('schema' in profile)
-            assert_true('specification' in profile)
+            assert sorted(profile.keys()) == \
+                   sorted(['id', 'title', 'schema', 'schema_path', 'specification'])
 
     def test_dicts_have_expected_values(self):
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
         registry = datapackage_registry.Registry(registry_path)
 
-        assert_equal(len(registry.available_profiles), 2)
-        base_profile_metadata = registry.available_profiles.get('base')
+        assert len(registry.available_profiles) == 2
 
         # base profile has the expected values
-        assert_equal(base_profile_metadata['id'], 'base')
-        assert_equal(base_profile_metadata['title'], 'Data Package')
-        assert_equal(base_profile_metadata['schema'],
-                     'http://example.com/one.json')
-        assert_equal(base_profile_metadata['specification'],
-                     'http://example.com')
+        assert registry.available_profiles.get('base') == {
+            'id': 'base',
+            'title': 'Data Package',
+            'schema': 'http://example.com/one.json',
+            'schema_path': 'base_profile.json',
+            'specification': 'http://example.com',
+        }
 
     def test_unicode_in_registry(self):
         '''A utf-8 encoded string in the registry csv won't break the code.'''
         registry_path = self.UNICODE_REGISTRY_PATH
         registry = datapackage_registry.Registry(registry_path)
 
-        assert_equal(len(registry.available_profiles), 2)
+        assert len(registry.available_profiles) == 2
         base_profile_metadata = registry.available_profiles.get('base')
-        assert_equal(base_profile_metadata['id'], 'base')
-        assert_equal(base_profile_metadata['title'], 'Iñtërnâtiônàlizætiøn')
+        assert base_profile_metadata['id'] == 'base'
+        assert base_profile_metadata['title'] == 'Iñtërnâtiônàlizætiøn'
 
     @httpretty.activate
     def test_it_handles_remote_registry_files_over_http(self):
@@ -94,14 +87,13 @@ class TestRegistry(unittest.TestCase):
 
         registry = datapackage_registry.Registry(url)
 
-        assert_equal(len(registry.available_profiles), 1)
-        base_profile_metadata = registry.available_profiles.get('base')
-        assert_equal(base_profile_metadata['id'], 'base')
-        assert_equal(base_profile_metadata['title'], 'Data Package')
-        assert_equal(base_profile_metadata['schema'],
-                     'http://example.com/one.json')
-        assert_equal(base_profile_metadata['specification'],
-                     'http://example.com')
+        assert len(registry.available_profiles) == 1
+        assert registry.available_profiles.get('base') == {
+            'id': 'base',
+            'title': 'Data Package',
+            'schema': 'http://example.com/one.json',
+            'specification': 'http://example.com',
+        }
 
     @httpretty.activate
     def test_raises_error_if_registry_has_no_id_field(self):
@@ -110,7 +102,7 @@ class TestRegistry(unittest.TestCase):
         httpretty.register_uri(httpretty.GET, url,
                                body="foo\nbar")
 
-        with assert_raises(DataPackageRegistryException):
+        with pytest.raises(DataPackageRegistryException):
             datapackage_registry.Registry(url)
 
     @httpretty.activate
@@ -120,7 +112,7 @@ class TestRegistry(unittest.TestCase):
         httpretty.register_uri(httpretty.GET, url,
                                body="404", status=404)
 
-        with assert_raises(DataPackageRegistryException):
+        with pytest.raises(DataPackageRegistryException):
             datapackage_registry.Registry(url)
 
     @httpretty.activate
@@ -130,7 +122,7 @@ class TestRegistry(unittest.TestCase):
         httpretty.register_uri(httpretty.GET, url,
                                body="500", status=500)
 
-        with assert_raises(DataPackageRegistryException):
+        with pytest.raises(DataPackageRegistryException):
             datapackage_registry.Registry(url)
 
     @httpretty.activate
@@ -146,19 +138,19 @@ class TestRegistry(unittest.TestCase):
 
         registry = datapackage_registry.Registry(url)
 
-        with assert_raises(DataPackageRegistryException):
+        with pytest.raises(DataPackageRegistryException):
             registry.get('notajson')
 
     def test_raises_if_profile_in_local_file_isnt_a_json(self):
         registry_path = test_helpers.fixture_path('registry_with_notajson_profile.csv')
         registry = datapackage_registry.Registry(registry_path)
 
-        with assert_raises(DataPackageRegistryException):
+        with pytest.raises(DataPackageRegistryException):
             registry.get('notajson')
 
     def test_available_profiles_arent_writable(self):
         registry = datapackage_registry.Registry()
-        with assert_raises(AttributeError):
+        with pytest.raises(AttributeError):
             registry.available_profiles = {}
 
     @httpretty.activate
@@ -250,5 +242,5 @@ class TestRegistry(unittest.TestCase):
     def test_base_path_cant_be_set(self):
         registry = datapackage_registry.Registry()
 
-        with assert_raises(AttributeError):
+        with pytest.raises(AttributeError):
             registry.base_path = '/another/path'
