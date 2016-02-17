@@ -8,7 +8,6 @@ import os
 import six
 import six.moves.urllib as urllib
 import tabulator
-import tabulator.processors
 
 from .resource_file import (
     InlineResourceFile,

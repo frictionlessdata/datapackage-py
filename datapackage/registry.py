@@ -5,12 +5,10 @@ from __future__ import unicode_literals
 
 import os
 import json
-from io import StringIO
-
 import six
 import requests
+import tabulator
 
-from . import compat
 from .exceptions import RegistryError
 
 
@@ -37,7 +35,7 @@ class Registry(object):
         except (IOError,
                 ValueError,
                 KeyError,
-                requests.exceptions.RequestException) as e:
+                tabulator.errors.Error) as e:
             six.raise_from(RegistryError(e), e)
 
     @property
@@ -88,16 +86,13 @@ class Registry(object):
 
     def _get_registry(self, registry_path_or_url):
         '''Return a dict with objects mapped by their id from a CSV endpoint'''
-        if os.path.isfile(registry_path_or_url):
-            with open(registry_path_or_url, 'r') as f:
-                reader = compat.csv_dict_reader(f.readlines())
-        else:
-            res = requests.get(registry_path_or_url)
-            res.raise_for_status()
+        table = tabulator.topen(registry_path_or_url, with_headers=True)
+        # FIXME: Remove this when
+        # https://github.com/datapackages/tabulator-py/issues/39 is done.
+        rows_as_dict = [dict(zip(row.headers, row.values))
+                        for row in table]
 
-            reader = compat.csv_dict_reader(StringIO(res.text))
-
-        return dict([(o['id'], o) for o in reader])
+        return dict([(o['id'], o) for o in rows_as_dict])
 
     def _get_absolute_path(self, relative_path):
         '''Return the received relative_path joined with the base path
