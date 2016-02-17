@@ -8,8 +8,6 @@ import io
 import six
 import requests
 
-import datapackage.exceptions
-
 urlparse = six.moves.urllib.parse.urlparse
 
 
