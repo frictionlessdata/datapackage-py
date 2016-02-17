@@ -57,6 +57,18 @@ class Schema(object):
         except jsonschema.ValidationError as e:
             six.raise_from(ValidationError.create_from(e), e)
 
+    def iter_errors(self, data):
+        '''Lazily yields each ValidationError for the received data dict.
+
+        Args:
+            data (dict): The data to be validated.
+
+        Returns:
+            iter: ValidationError for each error in the data.
+        '''
+        for error in self._validator.iter_errors(data):
+            yield ValidationError.create_from(error)
+
     def _load_registry(self):
         try:
             return datapackage_registry.Registry()

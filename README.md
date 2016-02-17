@@ -51,6 +51,26 @@ except datapackage.exceptions.ValidationError as e:
     pass
 ```
 
+### Retrieving all validation errors from a Data Package
+
+```python
+import datapackage
+
+# This metadata has two errors:
+#   * It has no "name", which is required;
+#   * Its resource has no "data", "path" or "url".
+metadata = {
+    'resources': [
+        {},
+    ]
+}
+
+dp = datapackage.DataPackage(metadata)
+
+for error in dp.iter_errors():
+    # Handle error
+```
+
 ### Creating a Data Package
 
 ```python

@@ -12,7 +12,7 @@ import shutil
 import zipfile
 import six
 import requests
-from .schema import Schema
+import datapackage.schema
 from .resource import Resource
 from .exceptions import (
     DataPackageException,
@@ -191,7 +191,7 @@ class DataPackage(object):
                 be saved into.
 
         Raises:
-            DataPackageValidateException: If the Data Package is invalid.
+            ValidationError: If the Data Package is invalid.
             DataPackageException: If there were some error writing the package.
         '''
         self.validate()
@@ -225,9 +225,17 @@ class DataPackage(object):
         '''Validate this Data Package.
 
         Raises:
-            DataPackageValidateException: If the Data Package is invalid.
+            ValidationError: If the Data Package is invalid.
         '''
         self.schema.validate(self.to_dict())
+
+    def iter_errors(self):
+        '''Lazily yields each ValidationError for the received data dict.
+
+        Returns:
+            iter: ValidationError for each error in the data.
+        '''
+        return self.schema.iter_errors(self.to_dict())
 
     def _extract_zip_if_possible(self, metadata):
         '''str: Path to the extracted datapackage.json if metadata points to
@@ -316,7 +324,7 @@ class DataPackage(object):
         return the_metadata
 
     def _load_schema(self, schema):
-        return Schema(schema)
+        return datapackage.schema.Schema(schema)
 
     def _get_base_path(self, metadata, default_base_path):
         base_path = default_base_path

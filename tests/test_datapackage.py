@@ -207,6 +207,20 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.ValidationError):
             dp.validate()
 
+    @mock.patch('datapackage.schema.Schema')
+    def test_iter_errors_returns_schemas_iter_errors(self, schema_mock):
+        iter_errors_mock = mock.Mock()
+        iter_errors_mock.return_value = 'the iter errors'
+        schema_mock.return_value.iter_errors = iter_errors_mock
+
+        metadata = {
+            'name': 'foo',
+        }
+        dp = datapackage.DataPackage({})
+
+        assert dp.iter_errors() == 'the iter errors'
+        iter_errors_mock.assert_called_with(dp.to_dict())
+
     def test_required_attributes(self):
         schema = {
             'required': ['name', 'title'],

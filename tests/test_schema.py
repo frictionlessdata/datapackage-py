@@ -183,3 +183,29 @@ class TestSchema(object):
 
         assert 'bar' not in dir(foo_schema)
         assert 'foo' not in dir(bar_schema)
+
+    def test_iter_validation_returns_iter_with_each_validationerror(self):
+        schema_dict = {
+            'type': 'array',
+            'items': {'enum': [1, 2, 3]},
+            'maxItems': 2,
+        }
+        data_dict = [2, 3, 4]
+        expected_errors_validators = ('maxItems', 'enum')
+
+        schema = Schema(schema_dict)
+        errors = [error for error in schema.iter_errors(data_dict)]
+
+        assert len(errors) == 2
+        for error in errors:
+            assert error.validator in expected_errors_validators
+            assert isinstance(error, datapackage.exceptions.ValidationError)
+
+    def test_iter_validation_returns_no_errors_if_data_is_valid(self):
+        schema_dict = {}
+        data_dict = ''
+
+        schema = Schema(schema_dict)
+        errors = [error for error in schema.iter_errors(data_dict)]
+
+        assert len(errors) == 0
