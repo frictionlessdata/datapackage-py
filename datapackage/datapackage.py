@@ -12,11 +12,10 @@ import shutil
 import zipfile
 import six
 import requests
-import datapackage_validate as dpkg_validate
+from .schema import Schema
 from .resource import Resource
 from .exceptions import (
     DataPackageException,
-    SchemaError,
 )
 
 
@@ -47,6 +46,8 @@ class DataPackage(object):
         DataPackageException: If the :data:`metadata` couldn't be loaded or was
             invalid.
         SchemaError: If the :data:`schema` couldn't be loaded or was invalid.
+        RegistryError: If there was some problem loading the :data:`schema`
+            from the registry.
     '''
 
     def __init__(self, metadata=None, schema='base', default_base_path=None):
@@ -315,10 +316,7 @@ class DataPackage(object):
         return the_metadata
 
     def _load_schema(self, schema):
-        try:
-            return dpkg_validate.Schema(schema)
-        except dpkg_validate.exceptions.DataPackageValidateException as e:
-            six.raise_from(SchemaError(e), e)
+        return Schema(schema)
 
     def _get_base_path(self, metadata, default_base_path):
         base_path = default_base_path

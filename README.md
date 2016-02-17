@@ -38,6 +38,19 @@ print(msg)
 # The highest Brazilian GDP occured in 2011, when it peaked at US$ 2,615,189,973,181. This was 172.44% more than its minimum GDP in 1960.
 ```
 
+### Validating a Data Package
+
+```python
+import datapackage
+
+dp = datapackage.DataPackage('http://data.okfn.org/data/core/gdp/datapackage.json')
+try:
+    dp.validate()
+except datapackage.exceptions.ValidationError as e:
+    # Handle the ValidationError
+    pass
+```
+
 ### Creating a Data Package
 
 ```python

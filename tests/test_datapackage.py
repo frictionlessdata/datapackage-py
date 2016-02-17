@@ -128,13 +128,13 @@ class TestDataPackage(object):
         assert datapackage.DataPackage().schema.to_dict() == schema
 
     @mock.patch('datapackage_registry.Registry')
-    def test_schema_raises_schemaerror_if_registry_raised(self,
+    def test_schema_raises_registryerror_if_registry_raised(self,
                                                           registry_class_mock):
         registry_ex = datapackage_registry.exceptions
         DataPackageRegistryException = registry_ex.DataPackageRegistryException
         registry_class_mock.side_effect = DataPackageRegistryException
 
-        with pytest.raises(datapackage.exceptions.SchemaError):
+        with pytest.raises(datapackage.exceptions.RegistryError):
             datapackage.DataPackage()
 
     def test_attributes(self):

@@ -27,6 +27,7 @@ class Schema(object):
 
     Raises:
         SchemaError: If unable to load schema or it was invalid.
+        RegistryError: If there was some error loading the schema registry.
 
     Warning:
         The schema objects created with this class are read-only. You should
