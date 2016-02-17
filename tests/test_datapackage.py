@@ -213,10 +213,8 @@ class TestDataPackage(object):
         iter_errors_mock.return_value = 'the iter errors'
         schema_mock.return_value.iter_errors = iter_errors_mock
 
-        metadata = {
-            'name': 'foo',
-        }
-        dp = datapackage.DataPackage({})
+        metadata = {}
+        dp = datapackage.DataPackage(metadata)
 
         assert dp.iter_errors() == 'the iter errors'
         iter_errors_mock.assert_called_with(dp.to_dict())
