@@ -70,7 +70,7 @@ class DataPackage(object):
 
     @property
     def schema(self):
-        ''':class:`datapackage_validate.Schema`: This data package's schema.
+        ''':class:`.Schema`: This data package's schema.
 
         Check https://github.com/okfn/datapackage-validate-py for documentation
         on its attributes.
