@@ -11,7 +11,7 @@ import six
 import requests
 
 from . import compat
-from .exceptions import DataPackageRegistryException
+from .exceptions import RegistryError
 
 
 class Registry(object):
@@ -24,7 +24,7 @@ class Registry(object):
     def __init__(self, registry_path_or_url=DEFAULT_REGISTRY_PATH):
         '''Allows interfacing with a dataprotocols schema registry
 
-        This method raises DataPackageRegistryException if there were any
+        This method raises RegistryError if there were any
         errors.
         '''
         if os.path.isfile(registry_path_or_url):
@@ -38,7 +38,7 @@ class Registry(object):
                 ValueError,
                 KeyError,
                 requests.exceptions.RequestException) as e:
-            six.raise_from(DataPackageRegistryException(e), e)
+            six.raise_from(RegistryError(e), e)
 
     @property
     def available_profiles(self):
@@ -60,7 +60,7 @@ class Registry(object):
         be downloaded from the web. The results are cached, so any subsequent
         calls won't hit the filesystem or the web.
 
-        This method raises DataPackageRegistryException if there were any
+        This method raises RegistryError if there were any
         errors.
         '''
         if profile_id not in self._profiles:
@@ -69,7 +69,7 @@ class Registry(object):
             except (IOError,
                     ValueError,
                     requests.exceptions.RequestException) as e:
-                six.raise_from(DataPackageRegistryException(e), e)
+                six.raise_from(RegistryError(e), e)
         return self._profiles[profile_id]
 
     def _get_profile(self, profile_id):
@@ -112,7 +112,7 @@ class Registry(object):
     def _load_json_file_or_url(self, json_path_or_url):
         '''Return the JSON at the local path or URL as a dict
 
-        This method raises DataPackageRegistryException if there were any
+        This method raises RegistryError if there were any
         errors.
         '''
         try:
@@ -128,4 +128,4 @@ class Registry(object):
 
         except (ValueError,
                 requests.exceptions.RequestException) as e:
-            six.raise_from(DataPackageRegistryException(e), e)
+            six.raise_from(RegistryError(e), e)

@@ -13,8 +13,8 @@ import os
 import pytest
 import httpretty
 import tests.test_helpers as test_helpers
-import datapackage_registry
-from datapackage_registry.exceptions import DataPackageRegistryException
+import datapackage.registry
+from datapackage.exceptions import RegistryError
 
 
 class TestRegistry(object):
@@ -26,14 +26,14 @@ class TestRegistry(object):
     def test_return_empty_dict_when_registry_is_empty(self):
         '''Return an empty dict when registry csv is empty'''
         registry_path = self.EMPTY_REGISTRY_PATH
-        registry = datapackage_registry.Registry(registry_path)
+        registry = datapackage.registry.Registry(registry_path)
 
         assert registry.available_profiles == {}
 
     def test_return_non_empty_dict_when_registry_is_not_empty(self):
         '''Return an dict of dicts when registry csv is not empty'''
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
-        registry = datapackage_registry.Registry(registry_path)
+        registry = datapackage.registry.Registry(registry_path)
 
         assert len(registry.available_profiles) == 2
         # each member in dict is a dict
@@ -43,7 +43,7 @@ class TestRegistry(object):
     def test_dicts_have_expected_keys(self):
         '''The returned dicts have the expected keys'''
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
-        registry = datapackage_registry.Registry(registry_path)
+        registry = datapackage.registry.Registry(registry_path)
 
         # each dict in profiles has the expected keys
         for profile in registry.available_profiles.values():
@@ -52,7 +52,7 @@ class TestRegistry(object):
 
     def test_dicts_have_expected_values(self):
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
-        registry = datapackage_registry.Registry(registry_path)
+        registry = datapackage.registry.Registry(registry_path)
 
         assert len(registry.available_profiles) == 2
 
@@ -68,7 +68,7 @@ class TestRegistry(object):
     def test_unicode_in_registry(self):
         '''A utf-8 encoded string in the registry csv won't break the code.'''
         registry_path = self.UNICODE_REGISTRY_PATH
-        registry = datapackage_registry.Registry(registry_path)
+        registry = datapackage.registry.Registry(registry_path)
 
         assert len(registry.available_profiles) == 2
         base_profile_metadata = registry.available_profiles.get('base')
@@ -85,7 +85,7 @@ class TestRegistry(object):
         )
         httpretty.register_uri(httpretty.GET, url, body=body)
 
-        registry = datapackage_registry.Registry(url)
+        registry = datapackage.registry.Registry(url)
 
         assert len(registry.available_profiles) == 1
         assert registry.available_profiles.get('base') == {
@@ -102,8 +102,8 @@ class TestRegistry(object):
         httpretty.register_uri(httpretty.GET, url,
                                body="foo\nbar")
 
-        with pytest.raises(DataPackageRegistryException):
-            datapackage_registry.Registry(url)
+        with pytest.raises(RegistryError):
+            datapackage.registry.Registry(url)
 
     @httpretty.activate
     def test_404_raises_error(self):
@@ -112,8 +112,8 @@ class TestRegistry(object):
         httpretty.register_uri(httpretty.GET, url,
                                body="404", status=404)
 
-        with pytest.raises(DataPackageRegistryException):
-            datapackage_registry.Registry(url)
+        with pytest.raises(RegistryError):
+            datapackage.registry.Registry(url)
 
     @httpretty.activate
     def test_500_raises_error(self):
@@ -122,8 +122,8 @@ class TestRegistry(object):
         httpretty.register_uri(httpretty.GET, url,
                                body="500", status=500)
 
-        with pytest.raises(DataPackageRegistryException):
-            datapackage_registry.Registry(url)
+        with pytest.raises(RegistryError):
+            datapackage.registry.Registry(url)
 
     @httpretty.activate
     def test_raises_if_profile_in_remote_file_isnt_a_json(self):
@@ -136,20 +136,20 @@ class TestRegistry(object):
         httpretty.register_uri(httpretty.GET, 'http://example.com/one.json',
                                body='I\'m not a JSON')
 
-        registry = datapackage_registry.Registry(url)
+        registry = datapackage.registry.Registry(url)
 
-        with pytest.raises(DataPackageRegistryException):
+        with pytest.raises(RegistryError):
             registry.get('notajson')
 
     def test_raises_if_profile_in_local_file_isnt_a_json(self):
         registry_path = test_helpers.fixture_path('registry_with_notajson_profile.csv')
-        registry = datapackage_registry.Registry(registry_path)
+        registry = datapackage.registry.Registry(registry_path)
 
-        with pytest.raises(DataPackageRegistryException):
+        with pytest.raises(RegistryError):
             registry.get('notajson')
 
     def test_available_profiles_arent_writable(self):
-        registry = datapackage_registry.Registry()
+        registry = datapackage.registry.Registry()
         with pytest.raises(AttributeError):
             registry.available_profiles = {}
 
@@ -158,7 +158,7 @@ class TestRegistry(object):
         httpretty.HTTPretty.allow_net_connect = False
 
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
-        registry = datapackage_registry.Registry(registry_path)
+        registry = datapackage.registry.Registry(registry_path)
 
         base_profile = registry.get('base')
         assert base_profile is not None
@@ -177,7 +177,7 @@ class TestRegistry(object):
         profile_body = '{ "title": "base_profile" }'
         httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
 
-        registry = datapackage_registry.Registry(registry_url)
+        registry = datapackage.registry.Registry(registry_url)
 
         base_profile = registry.get('base')
         assert base_profile is not None
@@ -196,36 +196,36 @@ class TestRegistry(object):
         profile_body = '{ "title": "base_profile" }'
         httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
 
-        registry = datapackage_registry.Registry(registry_url)
+        registry = datapackage.registry.Registry(registry_url)
 
         base_profile = registry.get('base')
         assert base_profile is not None
         assert base_profile == {'title': 'base_profile'}
 
     def test_get_returns_none_if_profile_doesnt_exist(self):
-        registry = datapackage_registry.Registry()
+        registry = datapackage.registry.Registry()
         assert registry.get('non-existent-profile') is None
 
     def test_get_memoize_the_profiles(self):
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
-        registry = datapackage_registry.Registry(registry_path)
+        registry = datapackage.registry.Registry(registry_path)
 
         registry.get('base')
 
         m = mock.mock_open(read_data='{}')
-        with mock.patch('datapackage_registry.registry.open', m):
+        with mock.patch('datapackage.registry.open', m):
             registry.get('base')
 
         assert not m.called, '.get() should memoize the profiles'
 
     def test_base_path_default(self):
-        registry = datapackage_registry.Registry()
+        registry = datapackage.registry.Registry()
         base_path = os.path.dirname(registry.DEFAULT_REGISTRY_PATH)
 
         assert registry.base_path == base_path
 
     def test_base_path_uses_received_registry_base_path(self):
-        registry = datapackage_registry.Registry(self.EMPTY_REGISTRY_PATH)
+        registry = datapackage.registry.Registry(self.EMPTY_REGISTRY_PATH)
         base_path = os.path.dirname(self.EMPTY_REGISTRY_PATH)
 
         assert registry.base_path == base_path
@@ -234,13 +234,13 @@ class TestRegistry(object):
     def test_base_path_is_none_if_registry_is_remote(self):
         url = 'http://some-place.com/registry.csv'
         httpretty.register_uri(httpretty.GET, url, body='')
-        registry = datapackage_registry.Registry(url)
+        registry = datapackage.registry.Registry(url)
 
         assert registry.base_path is None
 
     @httpretty.activate
     def test_base_path_cant_be_set(self):
-        registry = datapackage_registry.Registry()
+        registry = datapackage.registry.Registry()
 
         with pytest.raises(AttributeError):
             registry.base_path = '/another/path'

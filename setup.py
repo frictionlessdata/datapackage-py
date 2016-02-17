@@ -10,9 +10,9 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 
 def schema_files():
-    '''Return all CSV and JSON files paths in datapackage_registry/schemas
+    '''Return all CSV and JSON files paths in datapackage/schemas
 
-    The paths are relative to ./datapackage_registry
+    The paths are relative to ./datapackage
     '''
     def recursive_glob(path, patterns):
         results = []
@@ -23,7 +23,7 @@ def schema_files():
             results.extend(os.path.join(base, f) for f in matching_files)
         return results
 
-    base_folder = 'datapackage_registry'
+    base_folder = 'datapackage'
     remove_base_folder = lambda path: path[len(base_folder) + 1:]
 
     path = os.path.join(base_folder, 'schemas')
@@ -70,7 +70,6 @@ setup(
         'six >= 1.10.0',
         'requests >= 2.8.0',
         'jsonschema >= 2.5.1',
-        'datapackage_registry >= 0.3.0',
         'tabulator',
     ],
 

@@ -1,2 +1,0 @@
-class DataPackageRegistryException(Exception):
-    pass

@@ -18,7 +18,6 @@ import six
 import pytest
 import httpretty
 import tests.test_helpers as test_helpers
-import datapackage_registry
 import datapackage
 
 
@@ -118,7 +117,7 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(metadata, schema=schema)
         assert dp.schema.to_dict() == schema
 
-    @mock.patch('datapackage_registry.Registry')
+    @mock.patch('datapackage.registry.Registry')
     def test_schema_gets_from_registry_if_available(self, registry_class_mock):
         schema = {'foo': 'bar'}
         registry_mock = mock.MagicMock()
@@ -127,12 +126,10 @@ class TestDataPackage(object):
 
         assert datapackage.DataPackage().schema.to_dict() == schema
 
-    @mock.patch('datapackage_registry.Registry')
+    @mock.patch('datapackage.registry.Registry')
     def test_schema_raises_registryerror_if_registry_raised(self,
-                                                          registry_class_mock):
-        registry_ex = datapackage_registry.exceptions
-        DataPackageRegistryException = registry_ex.DataPackageRegistryException
-        registry_class_mock.side_effect = DataPackageRegistryException
+                                                            registry_mock):
+        registry_mock.side_effect = datapackage.exceptions.RegistryError
 
         with pytest.raises(datapackage.exceptions.RegistryError):
             datapackage.DataPackage()
