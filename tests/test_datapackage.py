@@ -252,15 +252,6 @@ class TestDataPackageResources(object):
         with pytest.raises(AttributeError):
             dp.base_path = 'foo'
 
-    def test_base_path_ignores_base_in_metadata(self):
-        # The "base" attribute was dropped in DataPackage 1.0.0-beta.15
-
-        metadata = {
-            'base': '/the/base/path',
-        }
-        dp = datapackage.DataPackage(metadata)
-        assert dp.base_path != metadata['base']
-
     def test_base_path_is_datapackages_base_path_when_it_is_a_file(self):
         path = test_helpers.fixture_path('empty_datapackage.json')
         base_path = os.path.dirname(path)

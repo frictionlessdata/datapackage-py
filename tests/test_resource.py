@@ -515,36 +515,3 @@ class TestTabularResource(object):
         resource = TabularResource({'url': url})
         with pytest.raises(IOError):
             [row for row in resource.iter()]
-
-
-class TestResourceBasePath(object):
-    # The "base" attribute was dropped in DataPackage 1.0.0-beta.15
-
-    def test_remote_data_path_ignores_the_base(self):
-        resource_dict = {
-            'path': 'data.txt',
-            'base': 'http://somewhere.com/',
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.remote_data_path is None
-
-    def test_local_data_path_ignores_the_base(self):
-        resource_dict = {
-            'path': 'unicode.txt',
-            'base': '/foo/bar',
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert not resource.local_data_path.startswith(resource_dict['base'])
-
-    def test_load_ignores_the_base(self):
-        filename = 'foo.txt'
-        base_path = os.path.dirname(
-            test_helpers.fixture_path(filename)
-        )
-        resource_dict = {
-            'path': filename,
-            'base': '/foo/bar',
-        }
-        resource = datapackage.Resource.load(resource_dict,
-                                             base_path)
-        assert resource.data == b'foo\n'
