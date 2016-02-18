@@ -71,5 +71,11 @@ setup(
         'requests >= 2.8.0',
         'jsonschema >= 2.5.1',
         'tabulator >= 0.3.3',
+        'click',
     ],
+    entry_points={
+        "console_scripts": [
+           "datapackage=datapackage.cli_datapackage_validate:main",
+        ],
+    }
 )
