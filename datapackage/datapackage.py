@@ -12,11 +12,10 @@ import shutil
 import zipfile
 import six
 import requests
-import datapackage_validate as dpkg_validate
+import datapackage.schema
 from .resource import Resource
 from .exceptions import (
     DataPackageException,
-    SchemaError,
 )
 
 
@@ -47,6 +46,8 @@ class DataPackage(object):
         DataPackageException: If the :data:`metadata` couldn't be loaded or was
             invalid.
         SchemaError: If the :data:`schema` couldn't be loaded or was invalid.
+        RegistryError: If there was some problem loading the :data:`schema`
+            from the registry.
     '''
 
     def __init__(self, metadata=None, schema='base', default_base_path=None):
@@ -69,7 +70,7 @@ class DataPackage(object):
 
     @property
     def schema(self):
-        ''':class:`datapackage_validate.Schema`: This data package's schema.
+        ''':class:`.Schema`: This data package's schema.
 
         Check https://github.com/okfn/datapackage-validate-py for documentation
         on its attributes.
@@ -190,7 +191,7 @@ class DataPackage(object):
                 be saved into.
 
         Raises:
-            DataPackageValidateException: If the Data Package is invalid.
+            ValidationError: If the Data Package is invalid.
             DataPackageException: If there were some error writing the package.
         '''
         self.validate()
@@ -224,9 +225,17 @@ class DataPackage(object):
         '''Validate this Data Package.
 
         Raises:
-            DataPackageValidateException: If the Data Package is invalid.
+            ValidationError: If the Data Package is invalid.
         '''
         self.schema.validate(self.to_dict())
+
+    def iter_errors(self):
+        '''Lazily yields each ValidationError for the received data dict.
+
+        Returns:
+            iter: ValidationError for each error in the data.
+        '''
+        return self.schema.iter_errors(self.to_dict())
 
     def _extract_zip_if_possible(self, metadata):
         '''str: Path to the extracted datapackage.json if metadata points to
@@ -315,10 +324,7 @@ class DataPackage(object):
         return the_metadata
 
     def _load_schema(self, schema):
-        try:
-            return dpkg_validate.Schema(schema)
-        except dpkg_validate.exceptions.DataPackageValidateException as e:
-            six.raise_from(SchemaError(e), e)
+        return datapackage.schema.Schema(schema)
 
     def _get_base_path(self, metadata, default_base_path):
         base_path = default_base_path

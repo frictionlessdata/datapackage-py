@@ -128,13 +128,13 @@ class TestDataPackage(object):
         assert datapackage.DataPackage().schema.to_dict() == schema
 
     @mock.patch('datapackage_registry.Registry')
-    def test_schema_raises_schemaerror_if_registry_raised(self,
+    def test_schema_raises_registryerror_if_registry_raised(self,
                                                           registry_class_mock):
         registry_ex = datapackage_registry.exceptions
         DataPackageRegistryException = registry_ex.DataPackageRegistryException
         registry_class_mock.side_effect = DataPackageRegistryException
 
-        with pytest.raises(datapackage.exceptions.SchemaError):
+        with pytest.raises(datapackage.exceptions.RegistryError):
             datapackage.DataPackage()
 
     def test_attributes(self):
@@ -206,6 +206,18 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(schema=schema)
         with pytest.raises(datapackage.exceptions.ValidationError):
             dp.validate()
+
+    @mock.patch('datapackage.schema.Schema')
+    def test_iter_errors_returns_schemas_iter_errors(self, schema_mock):
+        iter_errors_mock = mock.Mock()
+        iter_errors_mock.return_value = 'the iter errors'
+        schema_mock.return_value.iter_errors = iter_errors_mock
+
+        metadata = {}
+        dp = datapackage.DataPackage(metadata)
+
+        assert dp.iter_errors() == 'the iter errors'
+        iter_errors_mock.assert_called_with(dp.to_dict())
 
     def test_required_attributes(self):
         schema = {
