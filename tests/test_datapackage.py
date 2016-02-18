@@ -692,21 +692,14 @@ class TestSafeDataPackage(object):
         assert not dp.safe()
 
 
-@pytest.yield_fixture
-def tmpfile():
-    with tempfile.NamedTemporaryFile() as f:
-        yield f
-
-
-@pytest.yield_fixture
-def datapackage_zip():
-    with tempfile.NamedTemporaryFile() as f:
-        metadata = {
-            'name': 'proverbs',
-            'resources': [
-                {'path': test_helpers.fixture_path('foo.txt')},
-            ]
-        }
-        dp = datapackage.DataPackage(metadata)
-        dp.save(f)
-        yield f
+@pytest.fixture
+def datapackage_zip(tmpfile):
+    metadata = {
+        'name': 'proverbs',
+        'resources': [
+            {'path': test_helpers.fixture_path('foo.txt')},
+        ]
+    }
+    dp = datapackage.DataPackage(metadata)
+    dp.save(tmpfile)
+    return tmpfile
