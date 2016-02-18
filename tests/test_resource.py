@@ -5,7 +5,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
-import tempfile
 import pytest
 import httpretty
 import tests.test_helpers as test_helpers
@@ -303,17 +302,16 @@ class TestResource(object):
 
         assert [row for row in resource.iter()] == [51]
 
-    def test_iterator_with_local_data(self):
+    def test_iterator_with_local_data(self, txt_tmpfile):
         contents = (
             'first line\n'
             'second line\n'
         )
 
-        with tempfile.NamedTemporaryFile(suffix='.txt') as tmpfile:
-            tmpfile.write(contents.encode('utf-8'))
-            tmpfile.flush()
-            resource = datapackage.Resource.load({'path': tmpfile.name})
-            data = [row for row in resource.iter()]
+        txt_tmpfile.write(contents.encode('utf-8'))
+        txt_tmpfile.flush()
+        resource = datapackage.Resource.load({'path': txt_tmpfile.name})
+        data = [row for row in resource.iter()]
 
         assert data == [b'first line\n', b'second line\n']
 
@@ -432,18 +430,17 @@ class TestTabularResource(object):
 
         assert [row for row in resource.iter()] == data
 
-    def test_iterator_with_local_data(self):
+    def test_iterator_with_local_data(self, csv_tmpfile):
         csv_contents = (
             'country,value\n'
             'China,中国\n'
             'Brazil,Brasil\n'
         ).encode('utf-8')
+        csv_tmpfile.write(csv_contents)
+        csv_tmpfile.flush()
 
-        with tempfile.NamedTemporaryFile(suffix='.csv') as tmpfile:
-            tmpfile.write(csv_contents)
-            tmpfile.flush()
-            resource = TabularResource({'path': tmpfile.name})
-            data = [row for row in resource.iter()]
+        resource = TabularResource({'path': csv_tmpfile.name})
+        data = [row for row in resource.iter()]
 
         assert data == [
             {'country': 'China', 'value': '中国'},
@@ -476,13 +473,12 @@ class TestTabularResource(object):
         with pytest.raises(ValueError):
             [row for row in resource.iter()]
 
-    def test_iterator_with_local_non_tabular_data(self):
-        with tempfile.NamedTemporaryFile(suffix='.txt') as tmpfile:
-            tmpfile.write('foo'.encode('utf-8'))
-            tmpfile.flush()
-            resource = TabularResource({'path': tmpfile.name})
-            with pytest.raises(ValueError):
-                [row for row in resource.iter()]
+    def test_iterator_with_local_non_tabular_data(self, txt_tmpfile):
+        txt_tmpfile.write('foo'.encode('utf-8'))
+        txt_tmpfile.flush()
+        resource = TabularResource({'path': txt_tmpfile.name})
+        with pytest.raises(ValueError):
+            [row for row in resource.iter()]
 
     @httpretty.activate
     def test_iterator_with_remote_non_tabular_data(self):
