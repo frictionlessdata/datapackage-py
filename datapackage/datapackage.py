@@ -192,7 +192,7 @@ class DataPackage(object):
 
         Raises:
             ValidationError: If the Data Package is invalid.
-            DataPackageException: If there were some error writing the package.
+            DataPackageException: If there was some error writing the package.
         '''
         self.validate()
 

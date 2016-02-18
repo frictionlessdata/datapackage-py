@@ -20,7 +20,8 @@ class Registry(object):
             defaults to the local registry cache path.
 
     Raises:
-        RegistryError: If there was some error loading the registry.
+        RegistryError: If there was some problem opening the registry file or
+            its format was incorrect.
     '''
     DEFAULT_REGISTRY_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
@@ -38,7 +39,6 @@ class Registry(object):
             self._registry = self._get_registry(registry_path_or_url)
         except (IOError,
                 ValueError,
-                KeyError,
                 tabulator.errors.Error) as e:
             six.raise_from(RegistryError(e), e)
 
@@ -66,30 +66,43 @@ class Registry(object):
             profile_id (str): The ID of the profile you want.
 
         Raises:
-            RegistryError: If there were any errors loading the profile.
+            RegistryError: If there was some problem opening the profile file
+                or its format was incorrect.
         '''
         if profile_id not in self._profiles:
             try:
                 self._profiles[profile_id] = self._get_profile(profile_id)
-            except (IOError,
-                    ValueError,
-                    requests.exceptions.RequestException) as e:
+            except (ValueError,
+                    IOError) as e:
                 six.raise_from(RegistryError(e), e)
         return self._profiles[profile_id]
 
     def _get_profile(self, profile_id):
-        '''Return the profile with the received ID as a dict'''
+        '''dict: Return the profile with the received ID as a dict (None if it
+        doesn't exist).'''
         profile_metadata = self._registry.get(profile_id)
         if not profile_metadata:
             return
 
         path = self._get_absolute_path(profile_metadata.get('schema_path'))
-        if path and os.path.isfile(path):
-            return self._load_json_file_or_url(path)
-
         url = profile_metadata.get('schema')
-        if url:
-            return self._load_json_file_or_url(url)
+        if path:
+            try:
+                return self._load_json_file(path)
+            except IOError as local_exc:
+                if not url:
+                    raise local_exc
+
+                try:
+                    return self._load_json_url(url)
+                except IOError:
+                    msg = (
+                        'Error loading profile locally at "{path}" '
+                        'and remotely at "{url}".'
+                    ).format(path=path, url=url)
+                    six.raise_from(IOError(msg), local_exc)
+        elif url:
+            return self._load_json_url(url)
 
     def _get_registry(self, registry_path_or_url):
         '''dict: Return the registry as dict with profiles keyed by id.'''
@@ -99,7 +112,14 @@ class Registry(object):
         rows_as_dict = [dict(zip(row.headers, row.values))
                         for row in table]
 
-        return dict([(o['id'], o) for o in rows_as_dict])
+        try:
+            registry = dict([(o['id'], o) for o in rows_as_dict])
+            return registry
+        except KeyError as e:
+            msg = (
+                'Registry at "{path}" has no "id" column.'
+            ).format(path=registry_path_or_url)
+            six.raise_from(ValueError(msg), e)
 
     def _get_absolute_path(self, relative_path):
         '''str: Return the received relative_path joined with the base path
@@ -109,14 +129,13 @@ class Registry(object):
         except (AttributeError, TypeError):
             pass
 
-    def _load_json_file_or_url(self, json_path_or_url):
-        '''dict: Return the JSON at the local path or URL as a dict.'''
-        if os.path.isfile(json_path_or_url):
-            with open(json_path_or_url, 'r') as f:
-                result = json.load(f)
-        else:
-            res = requests.get(json_path_or_url)
-            res.raise_for_status()
-            result = res.json()
+    def _load_json_file(self, path):
+        with open(path, 'r') as f:
+            return json.load(f)
 
-        return result
+    def _load_json_url(self, url):
+        '''dict: Return the JSON at the local path or URL as a dict.'''
+        res = requests.get(url)
+        res.raise_for_status()
+
+        return res.json()

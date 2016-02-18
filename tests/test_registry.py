@@ -12,6 +12,7 @@ except ImportError:
 import os
 import pytest
 import httpretty
+import tempfile
 import tests.test_helpers as test_helpers
 import datapackage.registry
 from datapackage.exceptions import RegistryError
@@ -43,6 +44,15 @@ class TestRegistry(object):
         }
 
     @httpretty.activate
+    def test_init_raises_if_registry_isnt_a_csv(self):
+        url = 'http://some-place.com/registry.txt'
+        httpretty.register_uri(httpretty.GET, url,
+                               body="foo")
+
+        with pytest.raises(RegistryError):
+            datapackage.registry.Registry(url)
+
+    @httpretty.activate
     def test_init_raises_if_registry_has_no_id_field(self):
         url = 'http://some-place.com/registry.csv'
         httpretty.register_uri(httpretty.GET, url,
@@ -66,6 +76,12 @@ class TestRegistry(object):
 
         with pytest.raises(RegistryError):
             datapackage.registry.Registry(url)
+
+    def test_init_raises_if_registry_path_doesnt_exist(self):
+        registry_path = 'inexistent-registry-path.csv'
+
+        with pytest.raises(RegistryError):
+            datapackage.registry.Registry(registry_path)
 
     def test_available_profiles_returns_empty_dict_when_registry_is_empty(self):
         registry_path = self.EMPTY_REGISTRY_PATH
@@ -106,13 +122,6 @@ class TestRegistry(object):
         base_profile_metadata = registry.available_profiles.get('base')
         assert base_profile_metadata['title'] == 'Iñtërnâtiônàlizætiøn'
 
-    def test_get_raises_if_profile_isnt_a_json(self):
-        registry_path = test_helpers.fixture_path('registry_with_notajson_profile.csv')
-        registry = datapackage.registry.Registry(registry_path)
-
-        with pytest.raises(RegistryError):
-            registry.get('notajson')
-
     @httpretty.activate
     def test_get_loads_profile_from_disk(self):
         httpretty.HTTPretty.allow_net_connect = False
@@ -126,22 +135,64 @@ class TestRegistry(object):
 
     @httpretty.activate
     def test_get_loads_remote_file_if_local_copy_doesnt_exist(self):
-        registry_url = 'http://some-place.com/registry.csv'
         registry_body = (
             'id,title,schema,specification,schema_path\r\n'
             'base,Data Package,http://example.com/one.json,http://example.com,inexistent.json'
         )
-        httpretty.register_uri(httpretty.GET, registry_url, body=registry_body)
-
         profile_url = 'http://example.com/one.json'
         profile_body = '{ "title": "base_profile" }'
         httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
 
-        registry = datapackage.registry.Registry(registry_url)
+        with tempfile.NamedTemporaryFile(suffix='.csv') as tmpfile:
+            tmpfile.write(registry_body.encode('utf-8'))
+            tmpfile.flush()
+
+            registry = datapackage.registry.Registry(tmpfile.name)
 
         base_profile = registry.get('base')
         assert base_profile is not None
         assert base_profile == {'title': 'base_profile'}
+
+    def test_get_raises_if_profile_isnt_a_json(self):
+        registry_path = test_helpers.fixture_path('registry_with_notajson_profile.csv')
+        registry = datapackage.registry.Registry(registry_path)
+
+        with pytest.raises(RegistryError):
+            registry.get('notajson')
+
+    @httpretty.activate
+    def test_get_raises_if_remote_profile_file_doesnt_exist(self):
+        registry_url = 'http://example.com/registry.csv'
+        registry_body = (
+            'id,title,schema,specification,schema_path\r\n'
+            'base,Data Package,http://example.com/one.json,http://example.com,base.json'
+        )
+        httpretty.register_uri(httpretty.GET, registry_url, body=registry_body)
+        profile_url = 'http://example.com/one.json'
+        httpretty.register_uri(httpretty.GET, profile_url, status=404)
+
+        registry = datapackage.registry.Registry(registry_url)
+
+        with pytest.raises(RegistryError):
+            registry.get('base')
+
+    @httpretty.activate
+    def test_get_raises_if_local_profile_file_doesnt_exist(self):
+        registry_body = (
+            'id,title,schema,specification,schema_path\r\n'
+            'base,Data Package,http://example.com/one.json,http://example.com,inexistent.json'
+        )
+        with tempfile.NamedTemporaryFile(suffix='.csv') as tmpfile:
+            tmpfile.write(registry_body.encode('utf-8'))
+            tmpfile.flush()
+
+            registry = datapackage.registry.Registry(tmpfile.name)
+
+        profile_url = 'http://example.com/one.json'
+        httpretty.register_uri(httpretty.GET, profile_url, status=404)
+
+        with pytest.raises(RegistryError):
+            registry.get('base')
 
     def test_get_returns_none_if_profile_doesnt_exist(self):
         registry = datapackage.registry.Registry()
