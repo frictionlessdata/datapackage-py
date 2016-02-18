@@ -1,7 +1,7 @@
 # DataPackage.py
 
-[![Build Status](https://travis-ci.org/okfn/datapackage-py.svg)](https://travis-ci.org/okfn/datapackage-py)
-[![Test Coverage](https://coveralls.io/repos/okfn/datapackage-py/badge.svg?branch=master&service=github)](https://coveralls.io/github/okfn/datapackage-py)
+[![Build Status](https://travis-ci.org/datapackages/datapackage-py.svg)](https://travis-ci.org/datapackages/datapackage-py)
+[![Test Coverage](https://coveralls.io/repos/datapackages/datapackage-py/badge.svg?branch=master&service=github)](https://coveralls.io/github/datapackages/datapackage-py)
 [![Documentation](https://readthedocs.org/projects/datapackagepy/badge/?version=latest)](https://datapackagepy.readthedocs.org/en/latest/)
 ![Support Python versions 2.7, 3.3, 3.4 and 3.5](https://img.shields.io/badge/python-2.7%2C%203.3%2C%203.4%2C%203.5-blue.svg)
 
