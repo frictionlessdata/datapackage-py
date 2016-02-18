@@ -160,31 +160,6 @@ class TestResource(object):
         resource = datapackage.Resource.load(resource_dict, base_path)
         assert resource.data == b'foo\n'
 
-    def test_load_accepts_relative_paths_with_base_defined_in_metadata(self):
-        filename = 'foo.txt'
-        base_path = os.path.dirname(
-            test_helpers.fixture_path(filename)
-        )
-        resource_dict = {
-            'path': filename,
-            'base': base_path,
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == b'foo\n'
-
-    def test_load_base_path_in_metadata_overloads_base_passed_in_args(self):
-        filename = 'foo.txt'
-        base_path = os.path.dirname(
-            test_helpers.fixture_path(filename)
-        )
-        resource_dict = {
-            'path': filename,
-            'base': base_path,
-        }
-        resource = datapackage.Resource.load(resource_dict,
-                                             'invalid_base_path')
-        assert resource.data == b'foo\n'
-
     def test_load_binary_data(self):
         resource_dict = {
             'path': test_helpers.fixture_path('image.gif'),
@@ -280,16 +255,6 @@ class TestResource(object):
         abs_path = os.path.join(base_path, 'unicode.txt')
         assert resource.local_data_path == abs_path
 
-    def test_local_data_path_returns_the_absolute_path_relative_to_base(self):
-        base_path = test_helpers.fixture_path('')
-        resource_dict = {
-            'path': 'unicode.txt',
-            'base': base_path,
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        abs_path = os.path.join(base_path, resource_dict['path'])
-        assert resource.local_data_path == abs_path
-
     def test_local_data_path_returns_none_if_theres_no_file(self):
         resource_dict = {
             'data': 'foo',
@@ -313,14 +278,6 @@ class TestResource(object):
         }
         resource = datapackage.Resource.load(resource_dict)
         assert resource.remote_data_path == resource_dict['url']
-
-    def test_remote_data_path_returns_the_base(self):
-        resource_dict = {
-            'path': 'data.txt',
-            'base': 'http://somewhere.com/',
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.remote_data_path == 'http://somewhere.com/data.txt'
 
     def test_remote_data_path_returns_none_if_theres_no_remote_data(self):
         resource_dict = {

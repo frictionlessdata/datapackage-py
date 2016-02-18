@@ -252,25 +252,6 @@ class TestDataPackageResources(object):
         with pytest.raises(AttributeError):
             dp.base_path = 'foo'
 
-    def test_base_path_can_be_set_by_changing_the_metadata(self):
-        metadata = {}
-        dp = datapackage.DataPackage(metadata, default_base_path='foo')
-        assert dp.base_path == 'foo'
-        dp.metadata['base'] = 'metadata/base/path'
-        assert dp.base_path == 'metadata/base/path'
-
-    def test_base_path_passed_through_data_is_prefered_over_the_default(self):
-        metadata = {
-            'base': 'metadata/base/path'
-        }
-        dp = datapackage.DataPackage(metadata, default_base_path='foo')
-        assert dp.base_path == 'metadata/base/path'
-
-    def test_base_path_is_default_when_metadata_is_a_dict(self):
-        metadata = {}
-        dp = datapackage.DataPackage(metadata, default_base_path='foo')
-        assert dp.base_path == 'foo'
-
     def test_base_path_is_datapackages_base_path_when_it_is_a_file(self):
         path = test_helpers.fixture_path('empty_datapackage.json')
         base_path = os.path.dirname(path)
@@ -494,17 +475,13 @@ class TestSavingDataPackages(object):
         assert generated_dp_dict['resources'][0]['path'] == 'data/unicode.txt'
 
     def test_works_with_resources_with_relative_paths(self, tmpfile):
-        base_path = test_helpers.fixture_path('')
-        metadata = {
-            'name': 'proverbs',
-            'base': base_path,
-            'resources': [
-                {'path': 'unicode.txt'}
-            ]
-        }
-        schema = {}
-        dp = datapackage.DataPackage(metadata, schema)
+        path = test_helpers.fixture_path(
+            'datapackage_with_foo.txt_resource.json'
+        )
+        dp = datapackage.DataPackage(path)
         dp.save(tmpfile)
+        with zipfile.ZipFile(tmpfile, 'r') as z:
+            assert len(z.filelist) == 2
 
     def test_should_raise_validation_error_if_datapackage_is_invalid(self,
                                                                      tmpfile):
@@ -662,11 +639,9 @@ class TestSafeDataPackage(object):
         assert dp.safe()
 
     def test_local_with_resources_outside_base_path_isnt_safe(self, tmpfile):
-        base_path = os.path.dirname(__file__)
         metadata = {
-            'base': base_path,
             'resources': [
-                {'path': '../setup.py'},
+                {'path': __file__},
             ]
         }
         tmpfile.write(json.dumps(metadata).encode('utf-8'))
@@ -679,11 +654,9 @@ class TestSafeDataPackage(object):
         assert dp.safe()
 
     def test_zip_with_resources_outside_base_path_isnt_safe(self, tmpfile):
-        base_path = os.path.dirname(__file__)
         metadata = {
-            'base': base_path,
             'resources': [
-                {'path': '../setup.py'},
+                {'path': __file__},
             ]
         }
         with zipfile.ZipFile(tmpfile.name, 'w') as z:
