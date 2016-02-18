@@ -9,12 +9,10 @@ import six
 import requests
 import json
 import jsonschema
-import datapackage_registry
-from datapackage_registry.exceptions import DataPackageRegistryException
+import datapackage.registry
 from .exceptions import (
     SchemaError,
     ValidationError,
-    RegistryError,
 )
 
 
@@ -70,10 +68,7 @@ class Schema(object):
             yield ValidationError.create_from(error)
 
     def _load_registry(self):
-        try:
-            return datapackage_registry.Registry()
-        except DataPackageRegistryException as e:
-            six.raise_from(RegistryError(str(e)), e)
+        return datapackage.registry.Registry()
 
     def _load_schema(self, schema, registry):
         the_schema = schema
@@ -91,7 +86,6 @@ class Schema(object):
                         the_schema = req.json()
             except (IOError,
                     ValueError,
-                    DataPackageRegistryException,
                     requests.exceptions.RequestException) as e:
                 msg = 'Unable to load schema at "{0}"'
                 six.raise_from(SchemaError(msg.format(schema)), e)

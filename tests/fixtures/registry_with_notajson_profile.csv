@@ -1,0 +1,2 @@
+id,title,schema,specification,schema_path
+notajson,Not a JSON,http://example.com/one.json,http://example.com,not_a_json
