@@ -1,4 +1,5 @@
 {
+  "name": "datapackage",
   "resources": [
     { "path": "foo.txt" }
   ]

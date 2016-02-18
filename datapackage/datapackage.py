@@ -80,7 +80,7 @@ class DataPackage(object):
     @property
     def base_path(self):
         '''str: The base path of this Data Package (can be None).'''
-        return self.metadata.get('base', self._base_path)
+        return self._base_path
 
     @property
     def resources(self):
@@ -329,9 +329,7 @@ class DataPackage(object):
     def _get_base_path(self, metadata, default_base_path):
         base_path = default_base_path
 
-        if isinstance(metadata, dict) and 'base' in metadata:
-            base_path = metadata['base']
-        elif isinstance(metadata, six.string_types):
+        if isinstance(metadata, six.string_types):
             if os.path.exists(metadata):
                 base_path = os.path.dirname(os.path.abspath(metadata))
             else:

@@ -55,7 +55,7 @@ class Resource(object):
 
     def __init__(self, metadata, default_base_path=None):
         self._metadata = metadata
-        self._base_path = self.metadata.get('base', default_base_path)
+        self._base_path = default_base_path
 
     @property
     def metadata(self):
