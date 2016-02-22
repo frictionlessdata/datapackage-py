@@ -23,6 +23,7 @@ class Registry(object):
         RegistryError: If there was some problem opening the registry file or
             its format was incorrect.
     '''
+    DEFAULT_REGISTRY_URL = 'http://schemas.datapackages.org/registry.csv'
     DEFAULT_REGISTRY_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         'schemas',

@@ -91,6 +91,23 @@ with open('datapackage.json', 'w') as f:
 # {"name": "my_sleep_duration", "resources": [{"data": [7, 8, 5, 6, 9, 7, 8], "name": "data"}]}
 ```
 
+### Using a schema that's not in the local cache
+
+```python
+import datapackage
+import datapackage.registry
+
+# This constant points to the official registry URL
+# You can use any URL or path that points to a registry CSV
+registry_url = datapackage.registry.Registry.DEFAULT_REGISTRY_URL
+registry = datapackage.registry.Registry(registry_url)
+
+metadata = {}  # The datapackage.json file
+schema = registry.get('tabular')  # Change to your schema ID
+
+dp = datapackage.DataPackage(metadata, schema)
+```
+
 ## Developer notes
 
 These notes are intended to help people that want to contribute to this
