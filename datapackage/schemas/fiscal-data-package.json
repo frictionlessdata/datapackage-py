@@ -3,7 +3,7 @@
   "title": "Fiscal Data Package",
   "description": "Fiscal Data Package is a simple specification for data access and delivery of fiscal data.",
   "type": "object",
-  "required": [ "name", "title", "resources", "mapping" ],
+  "required": [ "name", "title", "resources", "model" ],
   "properties": {
     "name": {
       "$ref": "definitions.json#/define/name",
@@ -170,9 +170,9 @@
       },
       "required": ["start"]
     },
-    "mapping": {
-      "title": "Mapping",
-      "description": "The mapping hash provides a way to link the 'physical' model - the data in CSV files - to a more general, conceptual, 'logical' model for fiscal information.",
+    "model": {
+      "title": "Model",
+      "description": "The 'logical model' for the data",
       "type": "object",
       "properties": {
         "measures": {
