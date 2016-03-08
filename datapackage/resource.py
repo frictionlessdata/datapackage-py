@@ -268,8 +268,16 @@ class TabularResource(Resource):
             inline_data = self._parse_inline_data()
             result = iter(inline_data)
         elif data_path_or_url:
+            dialect = self.metadata.get('dialect', {})
+            parser_options = {}
+            if 'delimiter' in dialect:
+                parser_options['delimiter'] = dialect['delimiter']
+            if 'lineTerminator' in dialect:
+                parser_options['lineterminator'] = dialect['lineTerminator']
             try:
-                table = tabulator.topen(data_path_or_url, with_headers=True)
+                table = tabulator.topen(data_path_or_url, with_headers=True,
+                                        parser_class=tabulator.parsers.CSV,
+                                        parser_options=parser_options)
                 result = TabulatorIterator(table)
             except tabulator.errors.Error as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
