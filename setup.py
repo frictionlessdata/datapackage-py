@@ -70,6 +70,6 @@ setup(
         'six >= 1.10.0',
         'requests >= 2.8.0',
         'jsonschema >= 2.5.1',
-        'tabulator >= 0.3.3',
+        'tabulator >= 0.3.6',
     ],
 )
