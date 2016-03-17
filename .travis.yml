@@ -3,15 +3,13 @@ os:
   - linux
   - osx
 python:
+  - 2.7
+  - 3.3
+  - 3.4
   - 3.5
 sudo: false
 env:
-  fast_finish: true
-  matrix:
-    - TOXENV=py27
-    - TOXENV=py33
-    - TOXENV=py34
-    - TOXENV=py35
+  - TOXENV="py${PYTHON_VERSION//./}"
 install:
   - pip install tox coveralls
 script: tox
