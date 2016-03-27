@@ -96,14 +96,3 @@ def restore_resources(mapping, resources):
                 del fk['reference']['table']
                 fk['reference']['resource'] = name
     return resources
-
-
-def ensure_dir(path):
-    """Ensure directory exists.
-    Parameters
-    ----------
-    path: str
-    """
-    dirpath = os.path.dirname(path)
-    if dirpath and not os.path.exists(dirpath):
-        os.makedirs(dirpath)
