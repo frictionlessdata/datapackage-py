@@ -110,6 +110,41 @@ schema = registry.get('tabular')  # Change to your schema ID
 dp = datapackage.DataPackage(metadata, schema)
 ```
 
+### Push/pull Data Package to storage
+
+Package provides `push_datapackage` and `pull_datapackage` utilities to
+push and pull to/from storage.
+
+This functionality requires `jsontableschema` storage plugin installed. See
+[plugins](#https://github.com/frictionlessdata/jsontableschema-py#plugins)
+section of `jsontableschema` docs for more information. Let's imagine
+we have installed `jsontableschema-mystorage` (not a real name) plugin.
+
+Then we could push and pull datapackage to/from the storage:
+
+> All parameters should be used as keyword arguments.
+
+```python
+from datapackage import push_datapackage, pull_datapackage
+
+# Push
+push_datapackage(
+    descriptor='descriptor_path',
+    backend='mystorage, '**<mystorage_options>)
+
+# Import
+pull_datapackage(
+    descriptor='descriptor_path', name='datapackage_name',
+    backend='mystorage', **<mystorage_options>)
+```
+
+Options could be a SQLAlchemy engine or a BigQuery project and dataset name etc.
+Detailed desctiption you could find in a concrete plugin documentation.
+
+See concrete exmples in
+[plugins](#https://github.com/frictionlessdata/jsontableschema-py#plugins)
+section of `jsontableschema` docs.
+
 ## Developer notes
 
 These notes are intended to help people that want to contribute to this

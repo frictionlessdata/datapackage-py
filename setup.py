@@ -72,5 +72,7 @@ setup(
         'requests >= 2.8.0',
         'jsonschema >= 2.5.1',
         'tabulator >= 0.3.6',
+        'jsontableschema >= 0.5.1',
+        'unicodecsv>=0.14',
     ],
 )
