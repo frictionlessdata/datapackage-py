@@ -10,6 +10,7 @@ import six
 import json
 import unicodecsv as csv
 from copy import deepcopy
+from importlib import import_module
 from jsontableschema.model import SchemaModel
 
 from . import helpers
@@ -90,6 +91,9 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
         Backend options mentioned in backend docs.
 
     """
+
+    # Save datapackage name
+    datapackage_name = name
 
     # Get storage
     plugin = import_module('jsontableschema.plugins.%s' % backend)
