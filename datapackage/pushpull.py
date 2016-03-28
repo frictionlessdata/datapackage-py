@@ -60,7 +60,7 @@ def push_datapackage(descriptor, backend, **backend_options):
             for item in data:
                 row = []
                 for field in schema['fields']:
-                    row.append(item[field['name']])
+                    row.append(item.get(field['name'], None))
                 yield row
         tables.append(table)
         schemas.append(schema)
