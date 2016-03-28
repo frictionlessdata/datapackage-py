@@ -56,12 +56,15 @@ def push_datapackage(descriptor, backend, **backend_options):
         schema = resource.metadata['schema']
         data = resource.iter()
         # TODO: review
-        def values(iterable):
-            for value in iterable.values():
-                yield value
+        def values(schema, data):
+            for item in data:
+                row = []
+                for field in schema['fields']:
+                    row.append(item[field['name']])
+                yield row
         tables.append(table)
         schemas.append(schema)
-        datamap[table] = values(data)
+        datamap[table] = values(schema, data)
         if name is not None:
             mapping[name] = table
     schemas = mappers.convert_schemas(mapping, schemas)
