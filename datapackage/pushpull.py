@@ -57,7 +57,7 @@ def push_datapackage(descriptor, backend, **backend_options):
                 row = []
                 for field in schema['fields']:
                     row.append(item.get(field['name'], None))
-                yield row
+                yield tuple(row)
         tables.append(table)
         schemas.append(schema)
         datamap[table] = values(schema, data)

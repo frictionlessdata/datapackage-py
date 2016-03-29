@@ -33,6 +33,13 @@ def test_push_datapackage(storage):
             {'name': 'city', 'type': 'string'}]}])
     storage.write.assert_called_with('data___data', ANY)
 
+    # Assert writen data
+    data = storage.write.call_args[0][1]
+    assert list(data) == [
+        ('1', 'London'),
+        ('2', 'Paris'),
+    ]
+
 
 def test_pull_datapackage(storage, descriptor):
 
