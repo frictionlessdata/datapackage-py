@@ -99,7 +99,6 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
 
     # Iterate over tables
     resources = []
-    mapping = {}
     for table in storage.tables:
 
         # Prepare
@@ -107,8 +106,6 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
         base = os.path.dirname(descriptor)
         path, name = mappers.restore_path(table)
         fullpath = os.path.join(base, path)
-        if name is not None:
-            mapping[table] = name
 
         # Write data
         helpers.ensure_dir(fullpath)
@@ -132,7 +129,7 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
     if six.PY2:
         mode = 'wb'
         encoding = None
-    resources = mappers.restore_resources(mapping, resources)
+    resources = mappers.restore_resources(resources)
     helpers.ensure_dir(descriptor)
     with io.open(descriptor,
                  mode=mode,

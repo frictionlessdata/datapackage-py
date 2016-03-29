@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import os
 import re
+from copy import deepcopy
 
 
 # Module API
@@ -63,33 +64,33 @@ def convert_schemas(mapping, schemas):
         list: converted schemas
 
     """
+    schemas = deepcopy(schemas)
     for schema in schemas:
         for fk in schema.get('foreignKeys', []):
             resource = fk['reference']['resource']
             if resource != 'self':
                 if resource not in mapping:
-                    message = (
-                        'Resource "%s" for foreign key "%s" '
-                        'doesn\'t exist.' % (resource, fk))
+                    message = 'Not resource "%s" for foreign key "%s"'
+                    message = message % (resource, fk)
                     raise ValueError(message)
                 fk['reference']['resource'] = '<table>'
                 fk['reference']['table'] = mapping[resource]
     return schemas
 
 
-def restore_resources(mapping, resources):
+def restore_resources(resources):
     """Restore schemas from being compatible with storage schemas.
 
     Foreign keys related operations.
 
     Args:
-        mapping (dict): mapping between table and resource name
-        list: resources
+        list: resources from storage
 
     Returns:
         list: restored resources
 
     """
+    resources = deepcopy(resources)
     for resource in resources:
         schema = resource['schema']
         for fk in schema.get('foreignKeys', []):

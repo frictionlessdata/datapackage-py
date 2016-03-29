@@ -13,7 +13,7 @@ def ensure_dir(path):
     """Ensure directory exists.
 
     Args:
-        path (str): directory path
+        path (str): file path inside the directory to ensure
 
     """
     dirpath = os.path.dirname(path)
