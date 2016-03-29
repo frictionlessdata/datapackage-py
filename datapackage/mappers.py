@@ -12,13 +12,14 @@ import re
 
 def convert_path(path, name):
     """Convert resource's path and name to storage's table name.
-    Parameters
-    ----------
-    path: str
-    name: str
-    Returns
-    -------
-    table: str
+
+    Args:
+        path (str): resource path
+        name (str): resource name
+
+    Returns:
+        str: table name
+
     """
     table = os.path.splitext(path)[0]
     table = table.replace(os.path.sep, '__')
@@ -31,12 +32,13 @@ def convert_path(path, name):
 
 def restore_path(table):
     """Restore resource's path and name from storage's table.
-    Parameters
-    ----------
-    table: str
-    Returns
-    -------
-    (path: str, name: str)
+
+    Args:
+        table (str): table name
+
+    Returns:
+        (str, str): resource path and name
+
     """
     name = None
     splited = table.split('___')
@@ -50,15 +52,16 @@ def restore_path(table):
 
 def convert_schemas(mapping, schemas):
     """Convert schemas to be compatible with storage schemas.
+
     Foreign keys related operations.
-    Parameters
-    ----------
-    mapping: dict
-        Mapping between resource name and table name.
-    schemas: list
-    Returns
-    -------
-    schemas: list
+
+    Args:
+        mapping (dict): mapping between resource name and table name
+        schemas (list): schemas
+
+    Returns:
+        list: converted schemas
+
     """
     for schema in schemas:
         for fk in schema.get('foreignKeys', []):
@@ -76,15 +79,16 @@ def convert_schemas(mapping, schemas):
 
 def restore_resources(mapping, resources):
     """Restore schemas from being compatible with storage schemas.
+
     Foreign keys related operations.
-    Parameters
-    ----------
-    mapping: dict
-        Mapping between table and resource name.
-    resources: list
-    Returns
-    -------
-    resources: list
+
+    Args:
+        mapping (dict): mapping between table and resource name
+        list: resources
+
+    Returns:
+        list: restored resources
+
     """
     for resource in resources:
         schema = resource['schema']

@@ -25,14 +25,10 @@ def push_datapackage(descriptor, backend, **backend_options):
 
     All parameters should be used as keyword arguments.
 
-    Parameters
-    ----------
-    descriptor: str
-        Path to descriptor.
-    backend: str
-        Backend name like `sql` or `bigquery`.
-    backend_options: dict
-        Backend options mentioned in backend docs.
+    Args:
+        descriptor (str): path to descriptor
+        backend (str): backend name like `sql` or `bigquery`
+        backend_options (dict): backend options mentioned in backend docs
 
     """
 
@@ -86,16 +82,11 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
 
     All parameters should be used as keyword arguments.
 
-    Parameters
-    ----------
-    descriptor: str
-        Path where to store descriptor.
-    name: str
-        Name of the pulled datapackage.
-    backend: str
-        Backend name like `sql` or `bigquery`.
-    backend_options: dict
-        Backend options mentioned in backend docs.
+    Args:
+        descriptor (str): path where to store descriptor
+        name (str): name of the pulled datapackage
+        backend (str): backend name like `sql` or `bigquery`
+        backend_options (dict): backend options mentioned in backend docs
 
     """
 

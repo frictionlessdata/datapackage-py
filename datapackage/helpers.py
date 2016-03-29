@@ -12,9 +12,8 @@ import os
 def ensure_dir(path):
     """Ensure directory exists.
 
-    Parameters
-    ----------
-    path: str
+    Args:
+        path (str): directory path
 
     """
     dirpath = os.path.dirname(path)
