@@ -10,8 +10,8 @@ __FIXTURES_PATH = os.path.join(
     'fixtures'
 )
 
-def fixture_path(fixture):
-    return os.path.join(__FIXTURES_PATH, fixture)
+def fixture_path(fixture, *paths):
+    return os.path.join(__FIXTURES_PATH, fixture, *paths)
 
 
 def test_ensure_dir():
