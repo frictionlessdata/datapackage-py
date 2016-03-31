@@ -139,9 +139,9 @@ pull_datapackage(
 ```
 
 Options could be a SQLAlchemy engine or a BigQuery project and dataset name etc.
-Detailed desctiption you could find in a concrete plugin documentation.
+Detailed description you could find in a concrete plugin documentation.
 
-See concrete exmples in
+See concrete examples in
 [plugins](#https://github.com/frictionlessdata/jsontableschema-py#plugins)
 section of `jsontableschema` docs.
 
