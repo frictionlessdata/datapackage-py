@@ -130,7 +130,7 @@ from datapackage import push_datapackage, pull_datapackage
 # Push
 push_datapackage(
     descriptor='descriptor_path',
-    backend='mystorage, '**<mystorage_options>)
+    backend='mystorage', **<mystorage_options>)
 
 # Import
 pull_datapackage(

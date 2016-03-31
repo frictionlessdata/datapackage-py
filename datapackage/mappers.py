@@ -60,6 +60,10 @@ def convert_schemas(mapping, schemas):
         mapping (dict): mapping between resource name and table name
         schemas (list): schemas
 
+    Raises:
+        ValueError: if there is no resource
+            for some foreign key in given mapping
+
     Returns:
         list: converted schemas
 

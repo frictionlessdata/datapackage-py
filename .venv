@@ -1,0 +1,5 @@
+# Activate: source .venv
+virtualenv .python
+source .python/bin/activate
+pip install --upgrade -e .
+pip install tox
