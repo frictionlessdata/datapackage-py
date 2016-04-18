@@ -75,9 +75,4 @@ setup(
         'jsontableschema >= 0.5.1',
         'unicodecsv>=0.14',
     ],
-
-    obsoletes=[
-        'datapackage-registry',
-        'datapackage-validate',
-    ],
 )
