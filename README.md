@@ -12,10 +12,8 @@ A model for working with [Data Packages].
   
 ## Install
 
-*The current code is not yet on PyPI so you need to do a source install as follows:*
-
 ```
-pip install git+git://github.com/frictionlessdata/datapackage-py.git
+pip install datapackage
 ```
 
 ## Examples
