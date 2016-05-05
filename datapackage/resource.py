@@ -194,7 +194,7 @@ class Resource(object):
 class TabularResource(Resource):
     '''Subclass of :class:`Resource` that deals with tabular data.
 
-    It currently supports CSV, XLS, XLSX and JSON.
+    It currently supports CSV, TSV, XLS, XLSX and JSON.
     '''
 
     @classmethod
@@ -205,7 +205,7 @@ class TabularResource(Resource):
             path = urllib.parse.urlparse(path_or_url).path
             return path.split('.')[-1].lower()
 
-        TABULAR_RESOURCE_FORMATS = ('csv', 'xls', 'xlsx', 'json')
+        TABULAR_RESOURCE_FORMATS = ('csv', 'tsv', 'xls', 'xlsx', 'json')
         metadata_data = metadata.get('data')
         if metadata_data:
             try:
