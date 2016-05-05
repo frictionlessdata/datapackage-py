@@ -34,7 +34,7 @@ def schema_files():
 
 setup(
     name='datapackage',
-    version='0.0.1',
+    version='0.6.0',
     description=(
         'Utilities to work with Data Packages as defined on dataprotocols.org'
     ),
@@ -48,7 +48,7 @@ setup(
     license='MIT',
 
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
 
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
@@ -59,9 +59,10 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
     ],
 
-    keywords='data dataprotocols jsontableschema openrefine datascience',
+    keywords='data dataprotocols jsontableschema frictionlessdata datascience',
 
     packages=find_packages(exclude=['tests']),
     package_data={'datapackage': schema_files()},
@@ -70,7 +71,9 @@ setup(
         'six >= 1.10.0',
         'requests >= 2.8.0',
         'jsonschema >= 2.5.1',
-        'tabulator >= 0.3.3',
+        'tabulator >= 0.3.6',
+        'jsontableschema >= 0.5.1',
+        'unicodecsv>=0.14',
         'click',
     ],
     entry_points={
