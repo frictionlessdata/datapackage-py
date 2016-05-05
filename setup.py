@@ -74,11 +74,10 @@ setup(
         'tabulator >= 0.3.6',
         'jsontableschema >= 0.5.1',
         'unicodecsv>=0.14',
-        'click',
     ],
     entry_points={
         "console_scripts": [
-           "datapackage=datapackage.cli_datapackage_validate:main",
+            "datapackage=datapackage.cli:main",
         ],
     }
 )

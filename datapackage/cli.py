@@ -1,45 +1,82 @@
+# coding: utf-8
 from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-import click
+import argparse
 import os
 import sys
-import codecs
-import datapackage_validate
+import six
+
+import datapackage
+import datapackage.exceptions
 
 
-@click.command()
-@click.argument('action')
-@click.argument('datapackage')
-def main(action, datapackage):
-    if action=='validate':
-        # is it a dir or the json file?
-        if os.path.isdir(datapackage):
-            json_path = os.path.join(datapackage, "datapackage.json")
-        elif os.path.exists(datapackage):
-            json_path = datapackage
+class Command(object):
+
+    def __init__(self, subparsers, command, stdout, stderr):
+        self.stdout = stdout
+        self.stderr = stderr
+        parser = subparsers.add_parser(command)
+        self.add_arguments(parser)
+        parser.set_defaults(func=self.run)
+
+    def add_arguments(self, parser):
+        pass  # pragma: no cover
+
+    def info(self, message):
+        self.stdout.write(message.encode('utf-8') + b'\n')
+
+    def error(self, message):
+        self.stderr.write(message.encode('utf-8') + b'\n')
+
+    def run(self):
+        raise NotImplementedError
+
+
+class Validate(Command):
+
+    def add_arguments(self, parser):
+        parser.add_argument('datapackage')
+
+    def run(self, args):
+        if os.path.isdir(args.datapackage):
+            json_path = os.path.join(args.datapackage, "datapackage.json")
+        elif os.path.exists(args.datapackage):
+            json_path = args.datapackage
         else:
-            msg = "'%s' is neither an existing directory \
-neither an existing file" % datapackage
-            raise NotImplementedError(msg)
-        json_contents = codecs.open(json_path, 'r', 'utf-8').read()
+            self.error((
+                "Error: '%s' is neither an existing directory neither an "
+                "existing file."
+            ) % args.datapackage)
+            return 1
 
         try:
-            datapackage_validate.validate(json_contents)
-            # datapackage_validate.validate(json_contents, schema)
-        except datapackage_validate.exceptions.DataPackageValidateException as e:
-            n_errors = len(e.errors)
-            if n_errors == 1:
-                s = "%d error" % n_errors
-            else:
-                s = "%d error" % n_errors
-            s += " found in datapackage.json:"
-            for err in e.errors:
-                s += " \n **ERROR** %s" % err
-            print(s, file=sys.stderr)
-    else:
-        lst_actions_allowed = ['validate']
-        msg = "action '%s' not in %s" % (action, lst_actions_allowed)
-        raise NotImplementedError(msg)
+            datapackage.DataPackage(json_path).validate()
+        except datapackage.exceptions.ValidationError as e:
+            self.error('Error: %s' % e.message)
+            return 1
+        else:
+            self.info('valid')
+
+
+def main(argv=None, stdout=None, stderr=None):
+    if six.PY3:
+        stdout = stdout or sys.stdout.buffer
+        stderr = stderr or sys.stderr.buffer
+    else:  # pragma: no cover
+        stdout = stdout or sys.stdout
+        stderr = stderr or sys.stderr
+
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    Validate(subparsers, 'validate', stdout, stderr)
+
+    args = parser.parse_args(argv)
+    exit_code = args.func(args) or 0
+    sys.exit(exit_code)
+
 
 if __name__ == '__main__':
     main()
