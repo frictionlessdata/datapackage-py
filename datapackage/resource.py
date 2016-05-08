@@ -279,6 +279,7 @@ class TabularResource(Resource):
                 parser_class = tabulator.parsers.CSV
             try:
                 table = tabulator.topen(data_path_or_url, with_headers=True,
+                                        encoding=self.metadata.get('encoding'),
                                         parser_class=parser_class,
                                         parser_options=parser_options)
                 result = TabulatorIterator(table)
