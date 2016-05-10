@@ -447,6 +447,19 @@ class TestTabularResource(object):
             {'country': 'Brazil', 'value': 'Brasil'},
         ]
 
+    def test_raises_with_wrong_encoding(self, csv_tmpfile):
+        csv_contents = (
+            'country,value\n'
+            'China,中国\n'
+            'Brazil,Brasil\n'
+        ).encode('utf-8')
+        csv_tmpfile.write(csv_contents)
+        csv_tmpfile.flush()
+
+        resource = TabularResource({'path': csv_tmpfile.name, 'encoding': 'utf-16'})
+        with pytest.raises(ValueError):
+            data = [row for row in resource.iter()]
+
     @httpretty.activate
     def test_iterator_with_remote_data(self):
         httpretty.HTTPretty.allow_net_connect = False
