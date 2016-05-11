@@ -252,8 +252,8 @@ class TabularResource(Resource):
             iter: An iterator that yields each row in this resource.
 
         Raises:
-            ValueError: If the data isn't tabular or if the resource has
-                no data.
+            ValueError: If the data isn't tabular, if the resource has
+                no data, or if its specified encoding is incorrect
             IOError: If there was some problem opening the data file (e.g. it
                 doesn't exist or we don't have permissions to read it).
         '''
@@ -277,8 +277,10 @@ class TabularResource(Resource):
                 parser_options['lineterminator'] = dialect['lineTerminator']
             if len(dialect) > 0:
                 parser_class = tabulator.parsers.CSV
+            print('EEEE',self.metadata.get('encoding'))
             try:
                 table = tabulator.topen(data_path_or_url, with_headers=True,
+                                        encoding=self.metadata.get('encoding'),
                                         parser_class=parser_class,
                                         parser_options=parser_options)
                 result = TabulatorIterator(table)
