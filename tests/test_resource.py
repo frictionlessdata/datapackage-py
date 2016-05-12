@@ -384,6 +384,25 @@ class TestTabularResource(object):
         assert resource.data[0] == {'country': 'China', 'value': '中国'}
         assert resource.data[1] == {'country': 'Brazil', 'value': 'Brasil'}
 
+    def test_load_tsv(self):
+        resource_dict = {
+            'path': test_helpers.fixture_path('cities.tsv')
+        }
+
+        resource = TabularResource(resource_dict)
+        assert resource.data == [
+            {'Area': '1807.92', 'Name': 'Acrelândia', 'Population': '12538', 'State': 'AC'},
+            {'Area': '186.53', 'Name': 'Boca da Mata', 'Population': '25776', 'State': 'AL'},
+            {'Area': '242.62', 'Name': 'Capela', 'Population': '17077', 'State': 'AL'},
+            {'Area': '6709.66', 'Name': 'Tartarugalzinho', 'Population': '12563', 'State': 'AP'},
+            {'Area': '837.72', 'Name': 'América Dourada', 'Population': None, 'State': 'BA'},
+            {'Area': '204.79', 'Name': 'Jijoca de Jericoacoara', 'Population': '17002', 'State': 'CE'},
+            {'Area': '6953.67', 'Name': 'Cavalcante', 'Population': '9392', 'State': 'GO'},
+            {'Area': '8258.42', 'Name': 'Centro Novo do Maranhão', 'Population': '17622', 'State': 'MA'},
+            {'Area': '3651.18', 'Name': 'Ped\\ro G\\omes', 'Population': '7967', 'State': 'MS'},
+            {'Area': '881.06', 'Name': 'Abadia dos Dourados', 'Population': '6704', 'State': 'MG'},
+        ]
+
     def test_accepts_urls_with_query_components_and_fragments(self):
         url = 'http://someplace.com/resource.csv?foo=bar#foobar'
         resource_dict = {
