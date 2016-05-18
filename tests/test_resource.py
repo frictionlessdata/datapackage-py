@@ -479,6 +479,41 @@ class TestTabularResource(object):
         with pytest.raises(ValueError):
             data = [row for row in resource.iter()]
 
+    def test_iterator_with_schema(self, csv_tmpfile):
+        csv_contents = (
+            'superhero,awesomeness\n'
+            'Captain America,8\n'
+            'Iron Man,10\n'
+            'Ant Man,5\n'
+            'SuperMan,7\n'
+        ).encode('utf-8')
+        csv_tmpfile.write(csv_contents)
+        csv_tmpfile.flush()
+
+        resource = TabularResource(
+            {'path': csv_tmpfile.name,
+             'schema': {
+                 'fields':[
+                     {
+                         'name': 'superhero',
+                         'type': 'string'
+                     },
+                     {
+                         'name': 'awesomeness',
+                         'type': 'integer'
+                     }
+                 ]
+             }
+            })
+        data = [row for row in resource.iter()]
+
+        assert data == [
+            {'superhero': 'Captain America',  'awesomeness': 8},
+            {'superhero': 'Iron Man',         'awesomeness': 10},
+            {'superhero': 'Ant Man',          'awesomeness': 5},
+            {'superhero': 'SuperMan',         'awesomeness': 7},
+        ]
+
     @httpretty.activate
     def test_iterator_with_remote_data(self):
         httpretty.HTTPretty.allow_net_connect = False

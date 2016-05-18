@@ -5,9 +5,11 @@ from __future__ import unicode_literals
 
 
 import os
+import json
 import six
 import six.moves.urllib as urllib
 import tabulator
+import jsontableschema
 
 from .resource_file import (
     InlineResourceFile,
@@ -283,7 +285,7 @@ class TabularResource(Resource):
                                         encoding=self.descriptor.get('encoding'),
                                         parser_class=parser_class,
                                         parser_options=parser_options)
-                result = TabulatorIterator(table)
+                result = TabulatorIterator(table, self.descriptor.get('schema'))
             except tabulator.errors.Error as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
                 six.raise_from(ValueError(msg.format(data_path_or_url)), e)
@@ -319,15 +321,28 @@ def _is_url(path):
 class TabulatorIterator(object):
     # FIXME: This is a workaround because Tabulator doesn't support returning a
     # list of keyed dicts yet. When it does, we can remove this.
-    def __init__(self, tabulator_iter):
+    def __init__(self, tabulator_iter, schema):
         self._tabulator_iter = tabulator_iter
+        self._schema = None
+        if schema is not None:
+            self._schema = jsontableschema.model.SchemaModel(schema)
 
     def __iter__(self):
         return self
 
     def __next__(self):
         row = next(self._tabulator_iter)
-        return dict(zip(row.headers, row.values))
+        row = dict(zip(row.headers, row.values))
+        if self._schema is not None:
+            for field in self._schema.fields:
+                field_name = field['name']
+                value = row[field_name]
+                try:
+                    value = self._schema.cast(field_name, value)
+                except Exception as e:
+                    six.raise_from(ValueError('Cannot cast %r for <%s>' % (value, field_name)), e)
+                row[field_name] = value
+        return row
 
     def next(self):
         # For Py27 compatibility
