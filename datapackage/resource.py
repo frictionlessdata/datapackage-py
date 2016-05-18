@@ -277,7 +277,7 @@ class TabularResource(Resource):
                 parser_options['lineterminator'] = dialect['lineTerminator']
             if len(dialect) > 0:
                 parser_class = tabulator.parsers.CSV
-            print('EEEE',self.metadata.get('encoding'))
+
             try:
                 table = tabulator.topen(data_path_or_url, with_headers=True,
                                         encoding=self.metadata.get('encoding'),
