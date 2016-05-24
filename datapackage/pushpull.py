@@ -75,6 +75,7 @@ def push_datapackage(descriptor, backend, **backend_options):
     for table in storage.tables:
         if table in datamap:
             storage.write(table, datamap[table])
+    return storage
 
 
 def pull_datapackage(descriptor, name, backend, **backend_options):
@@ -139,3 +140,4 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
             'resources': resources,
         }
         json.dump(descriptor, file, indent=4)
+    return storage
