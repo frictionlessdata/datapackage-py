@@ -57,7 +57,7 @@ def test_pull_datapackage(storage, descriptor):
 
     # Assert pulled datapackage
     dp = DataPackage(descriptor)
-    assert dp.metadata == {'name': 'name', 'resources': [
+    assert dp.descriptor == {'name': 'name', 'resources': [
         {'path': 'data.csv', 'name': 'data', 'schema':
             {'fields': [
                 {'name': 'id', 'type': 'integer'},

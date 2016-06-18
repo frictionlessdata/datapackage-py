@@ -27,24 +27,24 @@ class TestDataPackage(object):
         assert dp.schema.title == 'Data Package'
 
     def test_init_accepts_dicts(self):
-        metadata = {
+        descriptor = {
             'foo': 'bar',
         }
-        dp = datapackage.DataPackage(metadata)
-        assert dp.metadata == metadata
+        dp = datapackage.DataPackage(descriptor)
+        assert dp.descriptor == descriptor
 
     def test_init_accepts_filelike_object(self):
-        metadata = {
+        descriptor = {
             'foo': 'bar',
         }
-        filelike_metadata = six.StringIO(json.dumps(metadata))
-        dp = datapackage.DataPackage(filelike_metadata)
-        assert dp.metadata == metadata
+        filelike_descriptor = six.StringIO(json.dumps(descriptor))
+        dp = datapackage.DataPackage(filelike_descriptor)
+        assert dp.descriptor == descriptor
 
     def test_init_accepts_file_paths(self):
         path = test_helpers.fixture_path('empty_datapackage.json')
         dp = datapackage.DataPackage(path)
-        assert dp.metadata == {}
+        assert dp.descriptor == {}
 
     def test_init_raises_if_file_path_doesnt_exist(self):
         path = 'this-file-doesnt-exist.json'
@@ -76,7 +76,7 @@ class TestDataPackage(object):
                                content_type='application/json')
 
         dp = datapackage.DataPackage(url)
-        assert dp.metadata == {'foo': 'bar'}
+        assert dp.descriptor == {'foo': 'bar'}
 
     @httpretty.activate
     def test_init_raises_if_url_doesnt_exist(self):
@@ -106,15 +106,15 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.DataPackageException):
             datapackage.DataPackage(url)
 
-    def test_init_raises_if_metadata_isnt_dict_or_string(self):
-        metadata = 51
+    def test_init_raises_if_descriptor_isnt_dict_or_string(self):
+        descriptor = 51
         with pytest.raises(datapackage.exceptions.DataPackageException):
-            datapackage.DataPackage(metadata)
+            datapackage.DataPackage(descriptor)
 
     def test_schema(self):
-        metadata = {}
+        descriptor = {}
         schema = {'foo': 'bar'}
-        dp = datapackage.DataPackage(metadata, schema=schema)
+        dp = datapackage.DataPackage(descriptor, schema=schema)
         assert dp.schema.to_dict() == schema
 
     @mock.patch('datapackage.registry.Registry')
@@ -135,7 +135,7 @@ class TestDataPackage(object):
             datapackage.DataPackage()
 
     def test_attributes(self):
-        metadata = {
+        descriptor = {
             'name': 'test',
             'title': 'a test',
         }
@@ -144,33 +144,33 @@ class TestDataPackage(object):
                 'name': {}
             }
         }
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         assert sorted(dp.attributes) == sorted(['name', 'title'])
 
     def test_attributes_can_be_set(self):
-        metadata = {
+        descriptor = {
             'name': 'foo',
         }
-        dp = datapackage.DataPackage(metadata)
-        dp.metadata['title'] = 'bar'
+        dp = datapackage.DataPackage(descriptor)
+        dp.descriptor['title'] = 'bar'
         assert dp.to_dict() == {'name': 'foo', 'title': 'bar'}
 
     def test_attributes_arent_immutable(self):
-        metadata = {
+        descriptor = {
             'keywords': [],
         }
-        dp = datapackage.DataPackage(metadata)
-        dp.metadata['keywords'].append('foo')
+        dp = datapackage.DataPackage(descriptor)
+        dp.descriptor['keywords'].append('foo')
         assert dp.to_dict() == {'keywords': ['foo']}
 
     def test_attributes_return_an_empty_tuple_if_there_are_none(self):
-        metadata = {}
+        descriptor = {}
         schema = {}
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         assert dp.attributes == ()
 
     def test_validate(self):
-        metadata = {
+        descriptor = {
             'name': 'foo',
         }
         schema = {
@@ -179,7 +179,7 @@ class TestDataPackage(object):
             },
             'required': ['name'],
         }
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         dp.validate()
 
     def test_validate_works_when_setting_attributes_after_creation(self):
@@ -190,7 +190,7 @@ class TestDataPackage(object):
             'required': ['name'],
         }
         dp = datapackage.DataPackage(schema=schema)
-        dp.metadata['name'] = 'foo'
+        dp.descriptor['name'] = 'foo'
         dp.validate()
 
     def test_validate_raises_validation_error_if_invalid(self):
@@ -210,8 +210,8 @@ class TestDataPackage(object):
         iter_errors_mock.return_value = 'the iter errors'
         schema_mock.return_value.iter_errors = iter_errors_mock
 
-        metadata = {}
-        dp = datapackage.DataPackage(metadata)
+        descriptor = {}
+        dp = datapackage.DataPackage(descriptor)
 
         assert dp.iter_errors() == 'the iter errors'
         iter_errors_mock.assert_called_with(dp.to_dict())
@@ -229,18 +229,18 @@ class TestDataPackage(object):
         assert dp.required_attributes == ()
 
     def test_to_dict_value_can_be_altered_without_changing_the_dp(self):
-        metadata = {}
-        dp = datapackage.DataPackage(metadata)
+        descriptor = {}
+        dp = datapackage.DataPackage(descriptor)
         dp_dict = dp.to_dict()
         dp_dict['foo'] = 'bar'
-        assert dp.metadata == {}
+        assert dp.descriptor == {}
 
     def test_to_json(self):
-        metadata = {
+        descriptor = {
             'foo': 'bar',
         }
-        dp = datapackage.DataPackage(metadata)
-        assert json.loads(dp.to_json()) == metadata
+        dp = datapackage.DataPackage(descriptor)
+        assert json.loads(dp.to_json()) == descriptor
 
 
 class TestDataPackageResources(object):
@@ -268,36 +268,36 @@ class TestDataPackageResources(object):
         assert dp.base_path == base_url
 
     def test_resources_are_empty_tuple_by_default(self):
-        metadata = {}
-        dp = datapackage.DataPackage(metadata)
+        descriptor = {}
+        dp = datapackage.DataPackage(descriptor)
         assert dp.resources == ()
 
     def test_cant_assign_to_resources(self):
-        metadata = {}
-        dp = datapackage.DataPackage(metadata)
+        descriptor = {}
+        dp = datapackage.DataPackage(descriptor)
         with pytest.raises(AttributeError):
             dp.resources = ()
 
     def test_inline_resources_are_loaded(self):
-        metadata = {
+        descriptor = {
             'resources': [
                 {'data': 'foo'},
                 {'data': 'bar'},
             ],
         }
-        dp = datapackage.DataPackage(metadata)
+        dp = datapackage.DataPackage(descriptor)
         assert len(dp.resources) == 2
         assert dp.resources[0].data == 'foo'
         assert dp.resources[1].data == 'bar'
 
     def test_local_resource_with_absolute_path_is_loaded(self):
         path = test_helpers.fixture_path('foo.txt')
-        metadata = {
+        descriptor = {
             'resources': [
                 {'path': path},
             ],
         }
-        dp = datapackage.DataPackage(metadata)
+        dp = datapackage.DataPackage(descriptor)
         assert len(dp.resources) == 1
         assert dp.resources[0].data == b'foo\n'
 
@@ -309,26 +309,26 @@ class TestDataPackageResources(object):
         assert dp.resources[0].data == b'foo\n'
 
     def test_raises_if_local_resource_path_doesnt_exist(self):
-        metadata = {
+        descriptor = {
             'resources': [
                 {'path': 'inexistent-file.json'},
             ],
         }
 
         with pytest.raises(IOError):
-            datapackage.DataPackage(metadata).resources[0].data
+            datapackage.DataPackage(descriptor).resources[0].data
 
     @httpretty.activate
     def test_remote_resource_is_loaded(self):
         url = 'http://someplace.com/resource.txt'
         httpretty.register_uri(httpretty.GET, url, body='foo')
-        metadata = {
+        descriptor = {
             'resources': [
                 {'url': url},
             ],
         }
 
-        dp = datapackage.DataPackage(metadata)
+        dp = datapackage.DataPackage(descriptor)
         assert len(dp.resources) == 1
         assert dp.resources[0].data == b'foo'
 
@@ -336,17 +336,17 @@ class TestDataPackageResources(object):
     def test_raises_if_remote_resource_url_doesnt_exist(self):
         url = 'http://someplace.com/inexistent-file.json'
         httpretty.register_uri(httpretty.GET, url, status=404)
-        metadata = {
+        descriptor = {
             'resources': [
                 {'url': url},
             ],
         }
 
         with pytest.raises(IOError):
-            datapackage.DataPackage(metadata).resources[0].data
+            datapackage.DataPackage(descriptor).resources[0].data
 
-    def test_changing_resource_metadata_changes_it_in_the_datapackage(self):
-        metadata = {
+    def test_changing_resource_descriptor_changes_it_in_the_datapackage(self):
+        descriptor = {
             'resources': [
                 {
                     'data': '万事开头难',
@@ -354,8 +354,8 @@ class TestDataPackageResources(object):
             ]
         }
 
-        dp = datapackage.DataPackage(metadata)
-        dp.resources[0].metadata['name'] = 'saying'
+        dp = datapackage.DataPackage(descriptor)
+        dp.resources[0].descriptor['name'] = 'saying'
         assert dp.to_dict()['resources'][0]['name'] == 'saying'
 
     def test_can_add_resource(self):
@@ -363,22 +363,22 @@ class TestDataPackageResources(object):
             'data': '万事开头难',
         }
         dp = datapackage.DataPackage()
-        resources = dp.metadata.get('resources', [])
+        resources = dp.descriptor.get('resources', [])
         resources.append(resource)
-        dp.metadata['resources'] = resources
+        dp.descriptor['resources'] = resources
 
         assert len(dp.resources) == 1
         assert dp.resources[0].data == '万事开头难'
 
     def test_can_remove_resource(self):
-        metadata = {
+        descriptor = {
             'resources': [
                 {'data': '万事开头难'},
                 {'data': 'All beginnings are hard'}
             ]
         }
-        dp = datapackage.DataPackage(metadata)
-        del dp.metadata['resources'][1]
+        dp = datapackage.DataPackage(descriptor)
+        del dp.descriptor['resources'][1]
 
         assert len(dp.resources) == 1
         assert dp.resources[0].data == '万事开头难'
@@ -396,14 +396,14 @@ class TestSavingDataPackages(object):
         assert zipfile.is_zipfile(tmpfile.name)
 
     def test_adds_datapackage_descriptor_at_zipfile_root(self, tmpfile):
-        metadata = {
+        descriptor = {
             'name': 'proverbs',
             'resources': [
                 {'data': '万事开头难'}
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             dp_json = z.read('datapackage.json').decode('utf-8')
@@ -411,7 +411,7 @@ class TestSavingDataPackages(object):
 
     def test_generates_filenames_for_named_resources(self, tmpfile):
         resource_path = test_helpers.fixture_path('unicode.txt')
-        metadata = {
+        descriptor = {
             'name': 'proverbs',
             'resources': [
                 {'name': 'proverbs', 'format': 'TXT', 'path': resource_path},
@@ -419,14 +419,14 @@ class TestSavingDataPackages(object):
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             assert 'data/proverbs.txt' in z.namelist()
             assert 'data/proverbs_without_format' in z.namelist()
 
     def test_generates_unique_filenames_for_unnamed_resources(self, tmpfile):
-        metadata = {
+        descriptor = {
             'name': 'proverbs',
             'resources': [
                 {'path': test_helpers.fixture_path('unicode.txt')},
@@ -434,7 +434,7 @@ class TestSavingDataPackages(object):
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             files = z.namelist()
@@ -442,14 +442,14 @@ class TestSavingDataPackages(object):
 
     def test_adds_resources_inside_data_subfolder(self, tmpfile):
         resource_path = test_helpers.fixture_path('unicode.txt')
-        metadata = {
+        descriptor = {
             'name': 'proverbs',
             'resources': [
                 {'path': resource_path}
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             filename = [name for name in z.namelist()
@@ -460,14 +460,14 @@ class TestSavingDataPackages(object):
 
     def test_fixes_resources_paths_to_be_relative_to_package(self, tmpfile):
         resource_path = test_helpers.fixture_path('unicode.txt')
-        metadata = {
+        descriptor = {
             'name': 'proverbs',
             'resources': [
                 {'name': 'unicode', 'format': 'txt', 'path': resource_path}
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             json_string = z.read('datapackage.json').decode('utf-8')
@@ -485,14 +485,14 @@ class TestSavingDataPackages(object):
 
     def test_should_raise_validation_error_if_datapackage_is_invalid(self,
                                                                      tmpfile):
-        metadata = {}
+        descriptor = {}
         schema = {
             'properties': {
                 'name': {},
             },
             'required': ['name'],
         }
-        dp = datapackage.DataPackage(metadata, schema)
+        dp = datapackage.DataPackage(descriptor, schema)
         with pytest.raises(datapackage.exceptions.ValidationError):
             dp.save(tmpfile)
 
@@ -526,13 +526,13 @@ class TestSavingDataPackages(object):
 class TestImportingDataPackageFromZip(object):
     def test_it_works_with_local_paths(self, datapackage_zip):
         dp = datapackage.DataPackage(datapackage_zip.name)
-        assert dp.metadata['name'] == 'proverbs'
+        assert dp.descriptor['name'] == 'proverbs'
         assert len(dp.resources) == 1
         assert dp.resources[0].data == b'foo\n'
 
     def test_it_works_with_file_objects(self, datapackage_zip):
         dp = datapackage.DataPackage(datapackage_zip)
-        assert dp.metadata['name'] == 'proverbs'
+        assert dp.descriptor['name'] == 'proverbs'
         assert len(dp.resources) == 1
         assert dp.resources[0].data == b'foo\n'
 
@@ -545,7 +545,7 @@ class TestImportingDataPackageFromZip(object):
                                content_type='application/zip')
 
         dp = datapackage.DataPackage(url)
-        assert dp.metadata['name'] == 'proverbs'
+        assert dp.descriptor['name'] == 'proverbs'
         assert len(dp.resources) == 1
         assert dp.resources[0].data == b'foo\n'
 
@@ -570,13 +570,13 @@ class TestImportingDataPackageFromZip(object):
                 assert local_data_file.read() == data_file.read()
 
     def test_it_can_load_from_zip_files_inner_folders(self, tmpfile):
-        metadata = {
+        descriptor = {
             'name': 'foo',
         }
         with zipfile.ZipFile(tmpfile.name, 'w') as z:
-            z.writestr('foo/datapackage.json', json.dumps(metadata))
+            z.writestr('foo/datapackage.json', json.dumps(descriptor))
         dp = datapackage.DataPackage(tmpfile.name, {})
-        assert dp.metadata == metadata
+        assert dp.descriptor == descriptor
 
     def test_it_breaks_if_theres_no_datapackage_json(self, tmpfile):
         with zipfile.ZipFile(tmpfile.name, 'w') as z:
@@ -585,51 +585,51 @@ class TestImportingDataPackageFromZip(object):
             datapackage.DataPackage(tmpfile.name, {})
 
     def test_it_breaks_if_theres_more_than_one_datapackage_json(self, tmpfile):
-        metadata_foo = {
+        descriptor_foo = {
             'name': 'foo',
         }
-        metadata_bar = {
+        descriptor_bar = {
             'name': 'bar',
         }
         with zipfile.ZipFile(tmpfile.name, 'w') as z:
-            z.writestr('foo/datapackage.json', json.dumps(metadata_foo))
-            z.writestr('bar/datapackage.json', json.dumps(metadata_bar))
+            z.writestr('foo/datapackage.json', json.dumps(descriptor_foo))
+            z.writestr('bar/datapackage.json', json.dumps(descriptor_bar))
         with pytest.raises(datapackage.exceptions.DataPackageException):
             datapackage.DataPackage(tmpfile.name, {})
 
 
 class TestSafeDataPackage(object):
     def test_without_resources_is_safe(self):
-        metadata = {}
-        dp = datapackage.DataPackage(metadata, {})
+        descriptor = {}
+        dp = datapackage.DataPackage(descriptor, {})
         assert dp.safe()
 
     def test_with_local_resources_with_inexistent_path_isnt_safe(self):
-        metadata = {
+        descriptor = {
             'resources': [
                 {'path': '/foo/bar'},
             ]
         }
-        dp = datapackage.DataPackage(metadata, {})
+        dp = datapackage.DataPackage(descriptor, {})
         assert not dp.safe()
 
     def test_with_local_resources_with_existent_path_isnt_safe(self):
-        metadata = {
+        descriptor = {
             'resources': [
                 {'path': test_helpers.fixture_path('foo.txt')},
             ]
         }
-        dp = datapackage.DataPackage(metadata, {})
+        dp = datapackage.DataPackage(descriptor, {})
         assert not dp.safe()
 
-    def test_metadata_dict_without_local_resources_is_safe(self):
-        metadata = {
+    def test_descriptor_dict_without_local_resources_is_safe(self):
+        descriptor = {
             'resources': [
                 {'data': 42},
                 {'url': 'http://someplace.com/data.csv'},
             ]
         }
-        dp = datapackage.DataPackage(metadata, {})
+        dp = datapackage.DataPackage(descriptor, {})
         assert dp.safe()
 
     def test_local_with_relative_resources_paths_is_safe(self):
@@ -639,12 +639,12 @@ class TestSafeDataPackage(object):
         assert dp.safe()
 
     def test_local_with_resources_outside_base_path_isnt_safe(self, tmpfile):
-        metadata = {
+        descriptor = {
             'resources': [
                 {'path': __file__},
             ]
         }
-        tmpfile.write(json.dumps(metadata).encode('utf-8'))
+        tmpfile.write(json.dumps(descriptor).encode('utf-8'))
         tmpfile.flush()
         dp = datapackage.DataPackage(tmpfile.name, {})
         assert not dp.safe()
@@ -654,25 +654,25 @@ class TestSafeDataPackage(object):
         assert dp.safe()
 
     def test_zip_with_resources_outside_base_path_isnt_safe(self, tmpfile):
-        metadata = {
+        descriptor = {
             'resources': [
                 {'path': __file__},
             ]
         }
         with zipfile.ZipFile(tmpfile.name, 'w') as z:
-            z.writestr('datapackage.json', json.dumps(metadata))
+            z.writestr('datapackage.json', json.dumps(descriptor))
         dp = datapackage.DataPackage(tmpfile.name, {})
         assert not dp.safe()
 
 
 @pytest.fixture
 def datapackage_zip(tmpfile):
-    metadata = {
+    descriptor = {
         'name': 'proverbs',
         'resources': [
             {'path': test_helpers.fixture_path('foo.txt')},
         ]
     }
-    dp = datapackage.DataPackage(metadata)
+    dp = datapackage.DataPackage(descriptor)
     dp.save(tmpfile)
     return tmpfile

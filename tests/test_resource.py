@@ -16,7 +16,7 @@ TabularResource = datapackage.resource.TabularResource
 
 
 class TestResource(object):
-    def test_metadata_are_available(self):
+    def test_descriptor_are_available(self):
         resource_dict = {
             'name': 'foo',
             'url': 'http://someplace.com/foo.json',
@@ -24,13 +24,13 @@ class TestResource(object):
             'data': {'foo': 'bar'},
         }
         resource = datapackage.Resource(resource_dict)
-        assert resource.metadata == resource_dict
+        assert resource.descriptor == resource_dict
 
-    def test_metadata_cant_be_assigned(self):
+    def test_descriptor_cant_be_assigned(self):
         resource_dict = {}
         resource = datapackage.Resource(resource_dict)
         with pytest.raises(AttributeError):
-            resource.metadata = {}
+            resource.descriptor = {}
 
     def test_data_is_none_by_default(self):
         resource_dict = {}
@@ -210,7 +210,7 @@ class TestResource(object):
             'path': original_path
         }
         resource = datapackage.Resource.load(resource_dict)
-        resource.metadata['path'] = new_path
+        resource.descriptor['path'] = new_path
         assert resource.data == b'foo\n'
 
     @httpretty.activate
@@ -226,7 +226,7 @@ class TestResource(object):
             'url': original_url
         }
         resource = datapackage.Resource.load(resource_dict)
-        resource.metadata['url'] = new_url
+        resource.descriptor['url'] = new_url
         assert resource.data == b'bar'
 
     def test_can_change_the_data_after_creation(self):
@@ -234,7 +234,7 @@ class TestResource(object):
             'data': ['foo']
         }
         resource = datapackage.Resource.load(resource_dict)
-        resource.metadata['data'] = ['bar']
+        resource.descriptor['data'] = ['bar']
         assert resource.data == ['bar']
 
     def test_local_data_path_returns_the_unmodified_path(self):
