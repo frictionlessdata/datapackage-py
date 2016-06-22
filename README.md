@@ -9,7 +9,7 @@
 A model for working with [Data Packages].
 
   [Data Packages]: http://dataprotocols.org/data-packages/
-  
+
 ## Install
 
 ```
@@ -63,16 +63,16 @@ except datapackage.exceptions.ValidationError as e:
 ```python
 import datapackage
 
-# This metadata has two errors:
+# This descriptor has two errors:
 #   * It has no "name", which is required;
 #   * Its resource has no "data", "path" or "url".
-metadata = {
+descriptor = {
     'resources': [
         {},
     ]
 }
 
-dp = datapackage.DataPackage(metadata)
+dp = datapackage.DataPackage(descriptor)
 
 for error in dp.iter_errors():
     # Handle error
@@ -84,13 +84,13 @@ for error in dp.iter_errors():
 import datapackage
 
 dp = datapackage.DataPackage()
-dp.metadata['name'] = 'my_sleep_duration'
-dp.metadata['resources'] = [
+dp.descriptor['name'] = 'my_sleep_duration'
+dp.descriptor['resources'] = [
     {'name': 'data'}
 ]
 
 resource = dp.resources[0]
-resource.metadata['data'] = [
+resource.descriptor['data'] = [
     7, 8, 5, 6, 9, 7, 8
 ]
 
@@ -110,10 +110,10 @@ import datapackage.registry
 registry_url = datapackage.registry.Registry.DEFAULT_REGISTRY_URL
 registry = datapackage.registry.Registry(registry_url)
 
-metadata = {}  # The datapackage.json file
+descriptor = {}  # The datapackage.json file
 schema = registry.get('tabular')  # Change to your schema ID
 
-dp = datapackage.DataPackage(metadata, schema)
+dp = datapackage.DataPackage(descriptor, schema)
 ```
 
 ### Push/pull Data Package to storage

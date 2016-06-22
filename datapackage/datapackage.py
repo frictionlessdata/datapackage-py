@@ -23,7 +23,7 @@ class DataPackage(object):
     '''Class for loading, validating and working with a Data Package.
 
     Args:
-        metadata (dict, str or file-like object, optional): The contents of the
+        descriptor (dict, str or file-like object, optional): The contents of the
             `datapackage.json` file. It can be a ``dict`` with its contents,
             a ``string`` with the local path for the file or its URL, or a
             file-like object. It also can point to a `ZIP` file with one and
@@ -38,35 +38,35 @@ class DataPackage(object):
         default_base_path (str, optional): The default path to be used to load
             resources located on the local disk that don't define a base path
             themselves. This will usually be the path for the
-            `datapackage.json` file. If the :data:`metadata` parameter was the
+            `datapackage.json` file. If the :data:`descriptor` parameter was the
             path to the `datapackage.json`, this will automatically be set to
             its base path.
 
     Raises:
-        DataPackageException: If the :data:`metadata` couldn't be loaded or was
+        DataPackageException: If the :data:`descriptor` couldn't be loaded or was
             invalid.
         SchemaError: If the :data:`schema` couldn't be loaded or was invalid.
         RegistryError: If there was some problem loading the :data:`schema`
             from the registry.
     '''
 
-    def __init__(self, metadata=None, schema='base', default_base_path=None):
-        metadata = self._extract_zip_if_possible(metadata)
+    def __init__(self, descriptor=None, schema='base', default_base_path=None):
+        descriptor = self._extract_zip_if_possible(descriptor)
 
-        self._metadata = self._load_metadata(metadata)
+        self._descriptor = self._load_descriptor(descriptor)
         self._schema = self._load_schema(schema)
-        self._base_path = self._get_base_path(metadata, default_base_path)
-        self._resources = self._load_resources(self.metadata,
+        self._base_path = self._get_base_path(descriptor, default_base_path)
+        self._resources = self._load_resources(self.descriptor,
                                                self.base_path)
 
     def __del__(self):
         self._remove_tempdir_if_exists()
 
     @property
-    def metadata(self):
-        '''dict: The metadata of this data package. Its attributes can be
+    def descriptor(self):
+        '''dict: The descriptor of this data package. Its attributes can be
         changed.'''
-        return self._metadata
+        return self._descriptor
 
     @property
     def schema(self):
@@ -87,13 +87,13 @@ class DataPackage(object):
         '''The resources defined in this data package (can be empty).
 
         To add or remove resources, alter the `resources` attribute of the
-        :data:`metadata`.
+        :data:`descriptor`.
 
         :returns: The resources.
         :rtype: tuple of :class:`.Resource`
         '''
         self._resources = self._update_resources(self._resources,
-                                                 self.metadata,
+                                                 self.descriptor,
                                                  self.base_path)
         return self._resources
 
@@ -121,11 +121,11 @@ class DataPackage(object):
 
     def to_dict(self):
         '''dict: Convert this Data Package to dict.'''
-        return copy.deepcopy(self.metadata)
+        return copy.deepcopy(self.descriptor)
 
     def to_json(self):
         '''str: Convert this Data Package to a JSON string.'''
-        return json.dumps(self.metadata)
+        return json.dumps(self.descriptor)
 
     def safe(self):
         '''bool: Return if it's safe to load this datapackage's resources.
@@ -197,8 +197,8 @@ class DataPackage(object):
         self.validate()
 
         def arcname(resource):
-            basename = resource.metadata.get('name')
-            resource_format = resource.metadata.get('format')
+            basename = resource.descriptor.get('name')
+            resource_format = resource.descriptor.get('format')
             if not basename:
                 index = self.resources.index(resource)
                 basename = 'resource-{index}'.format(index=index)
@@ -208,14 +208,14 @@ class DataPackage(object):
 
         try:
             with zipfile.ZipFile(file_or_path, 'w') as z:
-                metadata = json.loads(self.to_json())
+                descriptor = json.loads(self.to_json())
                 for i, resource in enumerate(self.resources):
                     path = resource.local_data_path
                     if path:
                         path_inside_dp = arcname(resource)
                         z.write(path, path_inside_dp)
-                        metadata['resources'][i]['path'] = path_inside_dp
-                z.writestr('datapackage.json', json.dumps(metadata))
+                        descriptor['resources'][i]['path'] = path_inside_dp
+                z.writestr('datapackage.json', json.dumps(descriptor))
         except (IOError,
                 zipfile.BadZipfile,
                 zipfile.LargeZipFile) as e:
@@ -237,13 +237,13 @@ class DataPackage(object):
         '''
         return self.schema.iter_errors(self.to_dict())
 
-    def _extract_zip_if_possible(self, metadata):
-        '''str: Path to the extracted datapackage.json if metadata points to
-        ZIP, or the unaltered metadata otherwise.'''
-        result = metadata
+    def _extract_zip_if_possible(self, descriptor):
+        '''str: Path to the extracted datapackage.json if descriptor points to
+        ZIP, or the unaltered descriptor otherwise.'''
+        result = descriptor
         try:
-            if isinstance(metadata, six.string_types):
-                res = requests.get(metadata)
+            if isinstance(descriptor, six.string_types):
+                res = requests.get(descriptor)
                 res.raise_for_status()
                 result = res.content
         except (IOError,
@@ -271,15 +271,15 @@ class DataPackage(object):
                     z.extractall(self._tempdir)
                     result = os.path.join(self._tempdir, descriptor_path)
             else:
-                result = metadata
+                result = descriptor
         except (TypeError,
                 zipfile.BadZipfile):
             pass
 
-        if hasattr(metadata, 'seek'):
-            # Rewind metadata if it's a file, as we read it for testing if it's
+        if hasattr(descriptor, 'seek'):
+            # Rewind descriptor if it's a file, as we read it for testing if it's
             # a zip file
-            metadata.seek(0)
+            descriptor.seek(0)
 
         return result
 
@@ -290,65 +290,65 @@ class DataPackage(object):
             msg = 'DataPackage must have only one "datapackage.json" (had {n})'
             raise DataPackageException(msg.format(n=len(datapackage_jsons)))
 
-    def _load_metadata(self, metadata):
-        the_metadata = metadata
+    def _load_descriptor(self, descriptor):
+        the_descriptor = descriptor
 
-        if the_metadata is None:
-            the_metadata = {}
+        if the_descriptor is None:
+            the_descriptor = {}
 
-        if isinstance(the_metadata, six.string_types):
+        if isinstance(the_descriptor, six.string_types):
             try:
-                if os.path.isfile(the_metadata):
-                    with open(the_metadata, 'r') as f:
-                        the_metadata = json.load(f)
+                if os.path.isfile(the_descriptor):
+                    with open(the_descriptor, 'r') as f:
+                        the_descriptor = json.load(f)
                 else:
-                    req = requests.get(the_metadata)
+                    req = requests.get(the_descriptor)
                     req.raise_for_status()
-                    the_metadata = req.json()
+                    the_descriptor = req.json()
             except (IOError,
                     ValueError,
                     requests.exceptions.RequestException) as e:
-                msg = 'Unable to load JSON at \'{0}\''.format(metadata)
+                msg = 'Unable to load JSON at \'{0}\''.format(descriptor)
                 six.raise_from(DataPackageException(msg), e)
 
-        if hasattr(the_metadata, 'read'):
+        if hasattr(the_descriptor, 'read'):
             try:
-                the_metadata = json.load(the_metadata)
+                the_descriptor = json.load(the_descriptor)
             except ValueError as e:
                 six.raise_from(DataPackageException(str(e)), e)
 
-        if not isinstance(the_metadata, dict):
+        if not isinstance(the_descriptor, dict):
             msg = 'Data must be a \'dict\', but was a \'{0}\''
-            raise DataPackageException(msg.format(type(the_metadata).__name__))
+            raise DataPackageException(msg.format(type(the_descriptor).__name__))
 
-        return the_metadata
+        return the_descriptor
 
     def _load_schema(self, schema):
         return datapackage.schema.Schema(schema)
 
-    def _get_base_path(self, metadata, default_base_path):
+    def _get_base_path(self, descriptor, default_base_path):
         base_path = default_base_path
 
-        if isinstance(metadata, six.string_types):
-            if os.path.exists(metadata):
-                base_path = os.path.dirname(os.path.abspath(metadata))
+        if isinstance(descriptor, six.string_types):
+            if os.path.exists(descriptor):
+                base_path = os.path.dirname(os.path.abspath(descriptor))
             else:
-                # suppose metadata is a URL
-                base_path = os.path.dirname(metadata)
+                # suppose descriptor is a URL
+                base_path = os.path.dirname(descriptor)
 
         return base_path
 
-    def _load_resources(self, metadata, base_path):
-        return self._update_resources((), metadata, base_path)
+    def _load_resources(self, descriptor, base_path):
+        return self._update_resources((), descriptor, base_path)
 
-    def _update_resources(self, current_resources, metadata, base_path):
-        resources_dicts = metadata.get('resources')
+    def _update_resources(self, current_resources, descriptor, base_path):
+        resources_dicts = descriptor.get('resources')
         new_resources = []
 
         if resources_dicts is not None:
             for resource_dict in resources_dicts:
                 resource = [res for res in current_resources
-                            if res.metadata == resource_dict]
+                            if res.descriptor == resource_dict]
                 if not resource:
                     resource = [Resource.load(resource_dict, base_path)]
                 new_resources.append(resource[0])

@@ -24,19 +24,19 @@ class Resource(object):
     method.
 
     The resources' attributes should only be altered through the
-    :data:`metadata` dict.
+    :data:`descriptor` dict.
     '''
 
     @classmethod
-    def load(cls, metadata, default_base_path=None):
-        '''Factory method that loads the resource described in ``metadata``.
+    def load(cls, descriptor, default_base_path=None):
+        '''Factory method that loads the resource described in ``descriptor``.
 
-        It'll first try to load the resource defined in ``metadata`` as a
+        It'll first try to load the resource defined in ``descriptor`` as a
         :class:`TabularResource`. If that fails, it'll fall back to loading it
         as a :class:`Resource`.
 
         Args:
-            metadata (dict): The dict with the resource's metadata
+            descriptor (dict): The dict with the resource's descriptor
             default_base_path (str, optional): The base path to be used in case
                 the resource's data is in the local disk. Usually this would be
                 the base path of the `datapackage.json` this resource is in.
@@ -46,21 +46,21 @@ class Resource(object):
                 resource. If it was tabular, a :class:`TabularResource` will be
                 returned, otherwise, it'll be a :class:`Resource`.
         '''
-        if TabularResource.can_handle(metadata):
+        if TabularResource.can_handle(descriptor):
             resource_class = TabularResource
         else:
             resource_class = Resource
 
-        return resource_class(metadata, default_base_path)
+        return resource_class(descriptor, default_base_path)
 
-    def __init__(self, metadata, default_base_path=None):
-        self._metadata = metadata
+    def __init__(self, descriptor, default_base_path=None):
+        self._descriptor = descriptor
         self._base_path = default_base_path
 
     @property
-    def metadata(self):
-        '''dict: The metadata this resource was created with.'''
-        return self._metadata
+    def descriptor(self):
+        '''dict: The descriptor this resource was created with.'''
+        return self._descriptor
 
     @property
     def data(self):
@@ -78,14 +78,14 @@ class Resource(object):
                 doesn't exist or we don't have permissions to read it).
         '''
         if not hasattr(self, '_data') or \
-           self._metadata_data_has_changed(self.metadata):
-            self._data = self._parse_data(self.metadata)
+           self._descriptor_data_has_changed(self.descriptor):
+            self._data = self._parse_data(self.descriptor)
         return self._data
 
     @property
     def local_data_path(self):
         '''str: The absolute local path for the data.'''
-        path = self._absolute_path(self.metadata.get('path'))
+        path = self._absolute_path(self.descriptor.get('path'))
         if path:
             return os.path.abspath(path)
 
@@ -97,17 +97,17 @@ class Resource(object):
         etc.) by itself or when considering the datapackage's or resource's
         base path.
         '''
-        url = self.metadata.get('url')
+        url = self.descriptor.get('url')
         if url:
             return url
         else:
-            path = self._absolute_path(self.metadata.get('path'))
+            path = self._absolute_path(self.descriptor.get('path'))
             if path and _is_url(path):
                 return path
 
     @property
     def _resource_file(self):
-        if self._metadata_data_has_changed(self.metadata):
+        if self._descriptor_data_has_changed(self.descriptor):
             resource_file = self._load_resource_file()
         else:
             try:
@@ -140,26 +140,26 @@ class Resource(object):
         else:
             raise ValueError('Resource has no data')
 
-    def _metadata_data_has_changed(self, metadata):
+    def _descriptor_data_has_changed(self, descriptor):
         changed = False
-        metadata_data_ids = self._metadata_data_ids(metadata)
+        descriptor_data_ids = self._descriptor_data_ids(descriptor)
         try:
-            changed = metadata_data_ids != self._original_metadata_data_ids
+            changed = descriptor_data_ids != self._original_descriptor_data_ids
         except AttributeError:
-            self._original_metadata_data_ids = metadata_data_ids
+            self._original_descriptor_data_ids = descriptor_data_ids
         return changed
 
-    def _metadata_data_ids(self, metadata):
+    def _descriptor_data_ids(self, descriptor):
         return {
-            'data_id': id(metadata.get('data')),
-            'data_path_id': id(metadata.get('path')),
-            'data_url_id': id(metadata.get('url'))
+            'data_id': id(descriptor.get('data')),
+            'data_path_id': id(descriptor.get('path')),
+            'data_url_id': id(descriptor.get('url'))
         }
 
     def _load_resource_file(self):
-        inline_data = self.metadata.get('data')
-        data_path = self.metadata.get('path')
-        data_url = self.metadata.get('url')
+        inline_data = self.descriptor.get('data')
+        data_path = self.descriptor.get('path')
+        data_url = self.descriptor.get('url')
 
         if inline_data:
             return InlineResourceFile(inline_data)
@@ -178,7 +178,7 @@ class Resource(object):
         if inline_data or data_path or data_url:
             raise IOError('Couldn\'t load resource.')
 
-    def _parse_data(self, metadata):
+    def _parse_data(self, descriptor):
         return self._load_data()
 
     def _load_data(self):
@@ -198,28 +198,28 @@ class TabularResource(Resource):
     '''
 
     @classmethod
-    def can_handle(cls, metadata):
+    def can_handle(cls, descriptor):
         '''bool: Returns True if this class can handle the resource in
-        metadata.'''
+        descriptor.'''
         def get_extension(path_or_url):
             path = urllib.parse.urlparse(path_or_url).path
             return path.split('.')[-1].lower()
 
         TABULAR_RESOURCE_FORMATS = ('csv', 'tsv', 'xls', 'xlsx', 'json')
-        metadata_data = metadata.get('data')
-        if metadata_data:
+        descriptor_data = descriptor.get('data')
+        if descriptor_data:
             try:
-                cls._raise_if_isnt_tabular_data(metadata_data)
+                cls._raise_if_isnt_tabular_data(descriptor_data)
                 return True
             except ValueError:
                 pass
 
-        metadata_format = metadata.get('format', '').lower()
-        metadata_path = metadata.get('path', '')
-        metadata_url = metadata.get('url', '')
-        if metadata_format in TABULAR_RESOURCE_FORMATS or \
-           get_extension(metadata_path) in TABULAR_RESOURCE_FORMATS or \
-           get_extension(metadata_url) in TABULAR_RESOURCE_FORMATS:
+        descriptor_format = descriptor.get('format', '').lower()
+        descriptor_path = descriptor.get('path', '')
+        descriptor_url = descriptor.get('url', '')
+        if descriptor_format in TABULAR_RESOURCE_FORMATS or \
+           get_extension(descriptor_path) in TABULAR_RESOURCE_FORMATS or \
+           get_extension(descriptor_url) in TABULAR_RESOURCE_FORMATS:
             return True
 
         return False
@@ -258,7 +258,7 @@ class TabularResource(Resource):
                 doesn't exist or we don't have permissions to read it).
         '''
         result = None
-        inline_data = self.metadata.get('data')
+        inline_data = self.descriptor.get('data')
         if self.local_data_path and os.path.isfile(self.local_data_path):
             data_path_or_url = self.local_data_path
         else:
@@ -268,7 +268,7 @@ class TabularResource(Resource):
             inline_data = self._parse_inline_data()
             result = iter(inline_data)
         elif data_path_or_url:
-            dialect = self.metadata.get('dialect', {})
+            dialect = self.descriptor.get('dialect', {})
             parser_options = {}
             parser_class = None
             if 'delimiter' in dialect:
@@ -280,7 +280,7 @@ class TabularResource(Resource):
 
             try:
                 table = tabulator.topen(data_path_or_url, with_headers=True,
-                                        encoding=self.metadata.get('encoding'),
+                                        encoding=self.descriptor.get('encoding'),
                                         parser_class=parser_class,
                                         parser_options=parser_options)
                 result = TabulatorIterator(table)
@@ -289,7 +289,7 @@ class TabularResource(Resource):
                 six.raise_from(ValueError(msg.format(data_path_or_url)), e)
 
         if result is None:
-            if self.metadata.get('path'):
+            if self.descriptor.get('path'):
                 # FIXME: This is a hack to throw an IOError when local data
                 # exists but couldn't be loaded for some reason. If "path"
                 # existed and there were no issues opening it, "result" would
@@ -304,7 +304,7 @@ class TabularResource(Resource):
         return [row for row in self.iter()]
 
     def _parse_inline_data(self):
-        data = self.metadata.get('data')
+        data = self.descriptor.get('data')
 
         self._raise_if_isnt_tabular_data(data)
 
