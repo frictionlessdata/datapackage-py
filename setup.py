@@ -40,7 +40,7 @@ setup(
     ),
     long_description=long_description,
 
-    url='https://github.com/okfn/datapackage-py',
+    url='https://github.com/frictionlessdata/datapackage-py',
 
     author='Open Knowledge Foundation',
     author_email='info@okfn.org',
