@@ -36,8 +36,8 @@ def test_push_datapackage(storage):
     # Assert writen data
     data = storage.write.call_args[0][1]
     assert list(data) == [
-        ('1', 'London'),
-        ('2', 'Paris'),
+        (1, 'London'),
+        (2, 'Paris'),
     ]
 
 
