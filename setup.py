@@ -34,7 +34,7 @@ def schema_files():
 
 setup(
     name='datapackage',
-    version='0.6.1',
+    version='0.7.0',
     description=(
         'Utilities to work with Data Packages as defined on dataprotocols.org'
     ),
