@@ -285,7 +285,7 @@ class TabularResource(Resource):
                                         encoding=self.descriptor.get('encoding'),
                                         parser_class=parser_class,
                                         parser_options=parser_options)
-                result = TabulatorIterator(table, self.descriptor.get('schema'))
+                result = TabulatorIterator(table.iter(keyed=True), self.descriptor.get('schema'))
             except tabulator.errors.Error as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
                 six.raise_from(ValueError(msg.format(data_path_or_url)), e)
@@ -319,8 +319,6 @@ def _is_url(path):
 
 
 class TabulatorIterator(object):
-    # FIXME: This is a workaround because Tabulator doesn't support returning a
-    # list of keyed dicts yet. When it does, we can remove this.
     def __init__(self, tabulator_iter, schema):
         self._tabulator_iter = tabulator_iter
         self._schema = None
@@ -332,7 +330,6 @@ class TabulatorIterator(object):
 
     def __next__(self):
         row = next(self._tabulator_iter)
-        row = dict(zip(row.headers, row.values))
         if self._schema is not None:
             for field in self._schema.fields:
                 field_name = field['name']
