@@ -34,7 +34,7 @@ def schema_files():
 
 setup(
     name='datapackage',
-    version='0.8.0',
+    version='0.8.1',
     description=(
         'Utilities to work with Data Packages as defined on dataprotocols.org'
     ),
@@ -71,7 +71,7 @@ setup(
         'six >= 1.10.0',
         'requests >= 2.8.0',
         'jsonschema >= 2.5.1',
-        'tabulator >= 0.4.0',
+        'tabulator >= 0.5.0',
         'jsontableschema >= 0.5.1',
         'unicodecsv>=0.14',
     ],

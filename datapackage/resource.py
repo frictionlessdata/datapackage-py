@@ -10,6 +10,7 @@ import six
 import six.moves.urllib as urllib
 import tabulator
 import jsontableschema
+from jsontableschema.exceptions import JsonTableSchemaException
 
 from .resource_file import (
     InlineResourceFile,
@@ -272,21 +273,19 @@ class TabularResource(Resource):
         elif data_path_or_url:
             dialect = self.descriptor.get('dialect', {})
             parser_options = {}
-            parser_class = None
             if 'delimiter' in dialect:
                 parser_options['delimiter'] = dialect['delimiter']
             if 'lineTerminator' in dialect:
                 parser_options['lineterminator'] = dialect['lineTerminator']
             if len(dialect) > 0:
-                parser_class = tabulator.parsers.CSV
+                parser_options['constructor'] = tabulator.parsers.CSV
 
             try:
-                table = tabulator.topen(data_path_or_url, with_headers=True,
+                table = tabulator.topen(data_path_or_url, headers='row1',
                                         encoding=self.descriptor.get('encoding'),
-                                        parser_class=parser_class,
                                         parser_options=parser_options)
-                result = TabulatorIterator(table, self.descriptor.get('schema'))
-            except tabulator.errors.Error as e:
+                result = self._iter_from_tabulator(table, self.descriptor.get('schema'))
+            except tabulator.exceptions.TabulatorException as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
                 six.raise_from(ValueError(msg.format(data_path_or_url)), e)
 
@@ -312,38 +311,22 @@ class TabularResource(Resource):
 
         return data
 
+    def _iter_from_tabulator(self, table, schema):
+        model = None
+        if schema is not None:
+            model = jsontableschema.model.SchemaModel(schema)
+        for keyed_row in table.iter(keyed=True):
+            if model is not None:
+                for field in model.fields:
+                    fname = field['name']
+                    try:
+                        keyed_row[fname] = model.cast(fname, keyed_row[fname])
+                    except JsonTableSchemaException as exception:
+                        msg = 'Cannot cast %r for <%s>' % (value, field['name'])
+                        six.raise_from(ValueError(msg), exception)
+            yield keyed_row
+
 
 def _is_url(path):
     parts = six.moves.urllib.parse.urlsplit(path)
     return bool(parts.scheme and parts.netloc)
-
-
-class TabulatorIterator(object):
-    # FIXME: This is a workaround because Tabulator doesn't support returning a
-    # list of keyed dicts yet. When it does, we can remove this.
-    def __init__(self, tabulator_iter, schema):
-        self._tabulator_iter = tabulator_iter
-        self._schema = None
-        if schema is not None:
-            self._schema = jsontableschema.model.SchemaModel(schema)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        row = next(self._tabulator_iter)
-        row = dict(zip(row.headers, row.values))
-        if self._schema is not None:
-            for field in self._schema.fields:
-                field_name = field['name']
-                value = row[field_name]
-                try:
-                    value = self._schema.cast(field_name, value)
-                except Exception as e:
-                    six.raise_from(ValueError('Cannot cast %r for <%s>' % (value, field_name)), e)
-                row[field_name] = value
-        return row
-
-    def next(self):
-        # For Py27 compatibility
-        return self.__next__()

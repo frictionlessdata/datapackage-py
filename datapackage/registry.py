@@ -40,7 +40,7 @@ class Registry(object):
             self._registry = self._get_registry(registry_path_or_url)
         except (IOError,
                 ValueError,
-                tabulator.errors.Error) as e:
+                tabulator.exceptions.TabulatorException) as e:
             six.raise_from(RegistryError(e), e)
 
     @property
@@ -107,14 +107,9 @@ class Registry(object):
 
     def _get_registry(self, registry_path_or_url):
         '''dict: Return the registry as dict with profiles keyed by id.'''
-        table = tabulator.topen(registry_path_or_url, with_headers=True)
-        # FIXME: Remove this when
-        # https://github.com/datapackages/tabulator-py/issues/39 is done.
-        rows_as_dict = [dict(zip(row.headers, row.values))
-                        for row in table]
-
+        table = tabulator.topen(registry_path_or_url, headers='row1')
         try:
-            registry = dict([(o['id'], o) for o in rows_as_dict])
+            registry = dict([(o['id'], o) for o in table.read(keyed=True)])
             return registry
         except KeyError as e:
             msg = (
