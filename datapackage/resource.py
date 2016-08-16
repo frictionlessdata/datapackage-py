@@ -10,6 +10,7 @@ import six
 import six.moves.urllib as urllib
 import tabulator
 import jsontableschema
+from jsontableschema.exceptions import JsonTableSchemaException
 
 from .resource_file import (
     InlineResourceFile,
@@ -311,15 +312,16 @@ class TabularResource(Resource):
         return data
 
     def _iter_from_tabulator(self, table, schema):
+        model = None
         if schema is not None:
-            schema = jsontableschema.model.SchemaModel(schema)
+            model = jsontableschema.model.SchemaModel(schema)
         for keyed_row in table.iter(keyed=True):
-            if schema is not None:
-                for field in schema.fields:
+            if model is not None:
+                for field in model.fields:
+                    fname = field['name']
                     try:
-                        keyed_row[field['name']] = schema.cast(
-                            field['name'], keyed_row[field['name']])
-                    except Exception as exception:
+                        keyed_row[fname] = model.cast(fname, keyed_row[fname])
+                    except JsonTableSchemaException as exception:
                         msg = 'Cannot cast %r for <%s>' % (value, field['name'])
                         six.raise_from(ValueError(msg), exception)
             yield keyed_row
