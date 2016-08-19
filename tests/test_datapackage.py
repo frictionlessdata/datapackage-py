@@ -381,7 +381,7 @@ class TestDataPackageResources(object):
 
         dp = datapackage.DataPackage(url)
 
-        assert dp.resources[0].local_data_path == None
+        assert dp.resources[0].local_data_path is None
 
     def test_changing_resource_descriptor_changes_it_in_the_datapackage(self):
         descriptor = {
