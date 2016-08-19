@@ -322,7 +322,7 @@ class TabularResource(Resource):
                     try:
                         keyed_row[fname] = model.cast(fname, keyed_row[fname])
                     except JsonTableSchemaException as exception:
-                        msg = 'Cannot cast %r for <%s>' % (value, field['name'])
+                        msg = 'Cannot cast %r for <%s>' % (keyed_row[fname], fname)
                         six.raise_from(ValueError(msg), exception)
             yield keyed_row
 
