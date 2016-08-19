@@ -349,11 +349,11 @@ class TestDataPackageResources(object):
     def test_if_relative_resource_of_remote_package_has_absolute_path(self):
         url = 'http://someplace.com/datapackage.json'
 
-        package = """{
+        package = '''{
             "resources": [
                 {"path": "data.csv"}
             ]
-        }"""
+        }'''
 
         httpretty.register_uri(httpretty.GET, url,
             body=package,
@@ -369,11 +369,11 @@ class TestDataPackageResources(object):
     def test_if_resource_of_remote_package_has_local_data_path(self):
         url = 'http://someplace.com/datapackage.json'
 
-        package = """{
+        package = '''{
                     "resources": [
                         {"path": "data.csv"}
                     ]
-                }"""
+                }'''
 
         httpretty.register_uri(httpretty.GET, url,
                                body=package,
