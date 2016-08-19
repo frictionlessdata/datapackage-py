@@ -366,7 +366,7 @@ class TestDataPackageResources(object):
             assert not local_data_path.startswith('/')
 
     @httpretty.activate
-    def test_if_resource_of_remote_package_has_local_data_path(self):
+    def test_remote_resource_has_no_local_data_path(self):
         url = 'http://someplace.com/datapackage.json'
 
         package = '''{
