@@ -87,9 +87,9 @@ class Resource(object):
 
     @property
     def local_data_path(self):
-        '''str: The absolute local path for the data.'''
+        '''str: The absolute local path for the data if it exists.'''
         path = self._absolute_path(self.descriptor.get('path'))
-        if path:
+        if path and not _is_url(path):
             return os.path.abspath(path)
 
     @property

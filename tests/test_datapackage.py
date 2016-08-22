@@ -345,6 +345,24 @@ class TestDataPackageResources(object):
         with pytest.raises(IOError):
             datapackage.DataPackage(descriptor).resources[0].data
 
+    @httpretty.activate
+    def test_remote_resource_has_no_local_data_path(self):
+        url = 'http://someplace.com/datapackage.json'
+
+        package = '''{
+                    "resources": [
+                        {"path": "data.csv"}
+                    ]
+                }'''
+
+        httpretty.register_uri(httpretty.GET, url,
+                               body=package,
+                               content_type='application/json')
+
+        dp = datapackage.DataPackage(url)
+
+        assert dp.resources[0].local_data_path is None
+
     def test_changing_resource_descriptor_changes_it_in_the_datapackage(self):
         descriptor = {
             'resources': [
