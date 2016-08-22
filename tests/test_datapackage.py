@@ -346,26 +346,6 @@ class TestDataPackageResources(object):
             datapackage.DataPackage(descriptor).resources[0].data
 
     @httpretty.activate
-    def test_if_relative_resource_of_remote_package_has_absolute_path(self):
-        url = 'http://someplace.com/datapackage.json'
-
-        package = '''{
-            "resources": [
-                {"path": "data.csv"}
-            ]
-        }'''
-
-        httpretty.register_uri(httpretty.GET, url,
-            body=package,
-            content_type='application/json')
-
-        dp = datapackage.DataPackage(url)
-
-        local_data_path = dp.resources[0].local_data_path
-        if local_data_path:
-            assert not local_data_path.startswith('/')
-
-    @httpretty.activate
     def test_remote_resource_has_no_local_data_path(self):
         url = 'http://someplace.com/datapackage.json'
 
