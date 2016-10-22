@@ -281,9 +281,9 @@ class TabularResource(Resource):
                 parser_options['constructor'] = tabulator.parsers.CSV
 
             try:
-                table = tabulator.topen(data_path_or_url, headers='row1',
+                table = tabulator.Stream(data_path_or_url, headers=1,
                                         encoding=self.descriptor.get('encoding'),
-                                        parser_options=parser_options)
+                                        parser_options=parser_options).open()
                 result = self._iter_from_tabulator(table, self.descriptor.get('schema'))
             except tabulator.exceptions.TabulatorException as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'

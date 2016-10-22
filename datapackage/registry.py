@@ -107,7 +107,7 @@ class Registry(object):
 
     def _get_registry(self, registry_path_or_url):
         '''dict: Return the registry as dict with profiles keyed by id.'''
-        table = tabulator.topen(registry_path_or_url, headers='row1')
+        table = tabulator.Stream(registry_path_or_url, headers=1).open()
         try:
             registry = dict([(o['id'], o) for o in table.read(keyed=True)])
             return registry
