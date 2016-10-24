@@ -314,16 +314,16 @@ class TabularResource(Resource):
     def _iter_from_tabulator(self, table, schema):
         model = None
         if schema is not None:
-            model = jsontableschema.model.SchemaModel(schema)
+            model = jsontableschema.Schema(schema)
         for keyed_row in table.iter(keyed=True):
             if model is not None:
                 for field in model.fields:
-                    fname = field['name']
+                    value = keyed_row[field.name]
                     try:
-                        keyed_row[fname] = model.cast(fname, keyed_row[fname])
+                        keyed_row[field.name] = field.cast_value(value)
                     except JsonTableSchemaException as exception:
-                        msg = 'Cannot cast %r for <%s>' % (keyed_row[fname], fname)
-                        six.raise_from(ValueError(msg), exception)
+                        message = 'Cannot cast %r for <%s>' % (value, field.name)
+                        six.raise_from(ValueError(message), exception)
             yield keyed_row
 
 
