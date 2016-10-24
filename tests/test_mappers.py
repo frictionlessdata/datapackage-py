@@ -34,8 +34,7 @@ def test_convert_schemas_resource_reference():
     mapping = {'resource_name': 'table_name'}
     schema = {'foreignKeys': [{'reference': {'resource': 'resource_name'}}]}
     result = module.convert_schemas(mapping, [schema])
-    assert result[0] == {'foreignKeys':
-        [{'reference': {'resource': '<table>', 'table': 'table_name'}}]}
+    assert result[0] == {'foreignKeys': [{'reference': {'resource': 'table_name'}}]}
 
 
 def test_convert_schemas_resource_missing():
@@ -46,8 +45,6 @@ def test_convert_schemas_resource_missing():
 
 
 def test_restore_resources():
-    resource = {'schema': {'foreignKeys':
-        [{'reference': {'resource': '<table>', 'table': 'path___name'}}]}}
+    resource = {'schema': {'foreignKeys': [{'reference': {'resource':  'path___name'}}]}}
     result = module.restore_resources([resource])
-    assert result[0] == {'schema': {'foreignKeys':
-        [{'reference': {'resource': 'name'}}]}}
+    assert result[0] == {'schema': {'foreignKeys': [{'reference': {'resource': 'name'}}]}}

@@ -22,7 +22,7 @@ def test_push_datapackage(storage):
 
     # Prepare and call
     descriptor = helpers.fixture_path('datapackage', 'datapackage.json')
-    storage.tables = ['data___data']  # Without patch it's a reflection
+    storage.buckets = ['data___data']  # Without patch it's a reflection
     module.push_datapackage(descriptor=descriptor, backend='backend')
 
     # Assert mocked calls
@@ -44,7 +44,7 @@ def test_push_datapackage(storage):
 def test_pull_datapackage(storage, descriptor):
 
     # Prepare and call
-    storage.tables = ['data___data']
+    storage.buckets = ['data___data']
     storage.describe.return_value = (
         {'fields': [
             {'name': 'id', 'type': 'integer'},
