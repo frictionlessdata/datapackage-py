@@ -71,8 +71,8 @@ setup(
         'six>=1.10,<2.0a',
         'requests>=2.8,<3.0a',
         'jsonschema>=2.5,<3.0a',
-        'tabulator>=0.7,<0.8a',
-        'jsontableschema>=0.7,<0.8a',
-        'unicodecsv>=0.14,<0.15a',
+        'unicodecsv>=0.14,<1.0a',
+        'jsontableschema>=0.7,<1.0a',
+        'tabulator>=0.7,<1.0a',
     ],
 )
