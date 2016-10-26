@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import os
 import json
 import six
+import warnings
 import six.moves.urllib as urllib
 import tabulator
 import jsontableschema
@@ -271,19 +272,24 @@ class TabularResource(Resource):
             inline_data = self._parse_inline_data()
             result = iter(inline_data)
         elif data_path_or_url:
+            encoding=self.descriptor.get('encoding')
             dialect = self.descriptor.get('dialect', {})
-            parser_options = {}
+            options = {}
+            if dialect:
+                options['format'] = 'csv'
             if 'delimiter' in dialect:
-                parser_options['delimiter'] = dialect['delimiter']
+                options['delimiter'] = dialect['delimiter']
             if 'lineTerminator' in dialect:
-                parser_options['lineterminator'] = dialect['lineTerminator']
-            if len(dialect) > 0:
-                parser_options['constructor'] = tabulator.parsers.CSV
-
+                # https://github.com/frictionlessdata/datapackage-py/issues/58
+                # tabulator doesn't support lineTerminator because
+                # it's not supported by Python builtin csv parser
+                lineterm = dialect['lineTerminator']
+                if lineterm not in ['\r\n', '\r', '\n']:
+                    message = 'Line terminator "%s" is not supported' % lineterm
+                    warnings.warn(message, UserWarning)
             try:
-                table = tabulator.topen(data_path_or_url, headers='row1',
-                                        encoding=self.descriptor.get('encoding'),
-                                        parser_options=parser_options)
+                table = tabulator.Stream(data_path_or_url,
+                    headers=1, encoding=encoding, **options).open()
                 result = self._iter_from_tabulator(table, self.descriptor.get('schema'))
             except tabulator.exceptions.TabulatorException as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
@@ -314,16 +320,16 @@ class TabularResource(Resource):
     def _iter_from_tabulator(self, table, schema):
         model = None
         if schema is not None:
-            model = jsontableschema.model.SchemaModel(schema)
+            model = jsontableschema.Schema(schema)
         for keyed_row in table.iter(keyed=True):
             if model is not None:
                 for field in model.fields:
-                    fname = field['name']
+                    value = keyed_row[field.name]
                     try:
-                        keyed_row[fname] = model.cast(fname, keyed_row[fname])
+                        keyed_row[field.name] = field.cast_value(value)
                     except JsonTableSchemaException as exception:
-                        msg = 'Cannot cast %r for <%s>' % (keyed_row[fname], fname)
-                        six.raise_from(ValueError(msg), exception)
+                        message = 'Cannot cast %r for <%s>' % (value, field.name)
+                        six.raise_from(ValueError(message), exception)
             yield keyed_row
 
 

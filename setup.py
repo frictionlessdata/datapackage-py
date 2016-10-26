@@ -68,11 +68,11 @@ setup(
     package_data={'datapackage': schema_files()},
 
     install_requires=[
-        'six >= 1.10.0',
-        'requests >= 2.8.0',
-        'jsonschema >= 2.5.1',
-        'tabulator >= 0.5.0',
-        'jsontableschema >= 0.5.1',
-        'unicodecsv>=0.14',
+        'six>=1.10,<2.0a',
+        'requests>=2.8,<3.0a',
+        'jsonschema>=2.5,<3.0a',
+        'unicodecsv>=0.14,<1.0a',
+        'jsontableschema>=0.7,<1.0a',
+        'tabulator>=0.8,<1.0a',
     ],
 )

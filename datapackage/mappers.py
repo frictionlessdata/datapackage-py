@@ -77,8 +77,7 @@ def convert_schemas(mapping, schemas):
                     message = 'Not resource "%s" for foreign key "%s"'
                     message = message % (resource, fk)
                     raise ValueError(message)
-                fk['reference']['resource'] = '<table>'
-                fk['reference']['table'] = mapping[resource]
+                fk['reference']['resource'] = mapping[resource]
     return schemas
 
 
@@ -98,10 +97,6 @@ def restore_resources(resources):
     for resource in resources:
         schema = resource['schema']
         for fk in schema.get('foreignKeys', []):
-            fkresource = fk['reference']['resource']
-            if fkresource == '<table>':
-                table = fk['reference']['table']
-                _, name = restore_path(table)
-                del fk['reference']['table']
-                fk['reference']['resource'] = name
+            _, name = restore_path(fk['reference']['resource'])
+            fk['reference']['resource'] = name
     return resources

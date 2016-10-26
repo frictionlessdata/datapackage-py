@@ -11,8 +11,7 @@ import json
 import unicodecsv as csv
 from copy import deepcopy
 from importlib import import_module
-from jsontableschema.model import SchemaModel
-
+from jsontableschema import Schema
 from . import helpers
 from . import mappers
 from .datapackage import DataPackage
@@ -67,12 +66,12 @@ def push_datapackage(descriptor, backend, **backend_options):
 
     # Create tables
     for table in tables:
-        if storage.check(table):
+        if table in storage.buckets:
             storage.delete(table)
     storage.create(tables, schemas)
 
     # Write data to tables
-    for table in storage.tables:
+    for table in storage.buckets:
         if table in datamap:
             storage.write(table, datamap[table])
     return storage
@@ -100,7 +99,7 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
 
     # Iterate over tables
     resources = []
-    for table in storage.tables:
+    for table in storage.buckets:
 
         # Prepare
         schema = storage.describe(table)
@@ -111,8 +110,8 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
         # Write data
         helpers.ensure_dir(fullpath)
         with io.open(fullpath, 'wb') as file:
-            model = SchemaModel(deepcopy(schema))
-            data = storage.read(table)
+            model = Schema(deepcopy(schema))
+            data = storage.iter(table)
             writer = csv.writer(file, encoding='utf-8')
             writer.writerow(model.headers)
             for row in data:
