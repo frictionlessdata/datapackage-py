@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import os
 import json
 import six
+import warnings
 import six.moves.urllib as urllib
 import tabulator
 import jsontableschema
@@ -271,19 +272,24 @@ class TabularResource(Resource):
             inline_data = self._parse_inline_data()
             result = iter(inline_data)
         elif data_path_or_url:
+            encoding=self.descriptor.get('encoding')
             dialect = self.descriptor.get('dialect', {})
-            parser_options = {}
+            options = {}
+            if dialect:
+                options['format'] = 'csv'
             if 'delimiter' in dialect:
-                parser_options['delimiter'] = dialect['delimiter']
+                options['delimiter'] = dialect['delimiter']
             if 'lineTerminator' in dialect:
-                parser_options['lineterminator'] = dialect['lineTerminator']
-            if len(dialect) > 0:
-                parser_options['constructor'] = tabulator.parsers.CSV
-
+                # https://github.com/frictionlessdata/datapackage-py/issues/58
+                # tabulator doesn't support lineTerminator because
+                # it's not supported by Python builtin csv parser
+                lineterm = dialect['lineTerminator']
+                if lineterm not in ['\r\n', '\r', '\n']:
+                    message = 'Line terminator "%s" is not supported' % lineterm
+                    warnings.warn(message, UserWarning)
             try:
-                table = tabulator.Stream(data_path_or_url, headers=1,
-                                        encoding=self.descriptor.get('encoding'),
-                                        parser_options=parser_options).open()
+                table = tabulator.Stream(data_path_or_url,
+                    headers=1, encoding=encoding, **options).open()
                 result = self._iter_from_tabulator(table, self.descriptor.get('schema'))
             except tabulator.exceptions.TabulatorException as e:
                 msg = 'Data at \'{0}\' isn\'t in a known tabular data format'
