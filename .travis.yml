@@ -12,3 +12,11 @@ env:
 install:
   - pip install tox coveralls
 script: tox
+deploy:
+  provider: pypi
+  user: roll
+  distributions: sdist bdist_wheel
+  on:
+    tags: true
+  password:
+    secure: kff/0n5V0XPHxMpJHbyiPDO9ROaimvGWu7Yo+SaYxVOcXBPDZIavb37Jvj7oUu1UcuH2xX0bUpkKjlEFA5k8a3J7W5RvGL5VezmPZzWAC87sdoUJ7BId8fV/R311n+8Q5eP5ncADGiu6nFhFtgozBLhZxd2L1X9n/A4wydes0Ms=
