@@ -72,7 +72,7 @@ setup(
         'requests>=2.8,<3.0a',
         'jsonschema>=2.5,<3.0a',
         'unicodecsv>=0.14,<1.0a',
-        'jsontableschema>=0.7,<1.0a',
-        'tabulator>=0.8,<1.0a',
+        'jsontableschema>=0.8,<1.0a',
+        'tabulator>=0.10,<1.0a',
     ],
 )

@@ -342,7 +342,7 @@ class TestDataPackageResources(object):
             ],
         }
 
-        with pytest.raises(IOError):
+        with pytest.raises(ValueError):
             datapackage.DataPackage(descriptor).resources[0].data
 
     @httpretty.activate

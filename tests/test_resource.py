@@ -576,5 +576,5 @@ class TestTabularResource(object):
         url = 'http://someplace.com/inexistent-file.csv'
         httpretty.register_uri(httpretty.GET, url, status=404)
         resource = TabularResource({'url': url})
-        with pytest.raises(IOError):
+        with pytest.raises(ValueError):
             [row for row in resource.iter()]
