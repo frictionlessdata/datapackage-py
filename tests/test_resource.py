@@ -377,6 +377,7 @@ class TestTabularResource(object):
 
         resource_dict = {
             'url': url,
+            'encoding': 'utf-8',
         }
 
         resource = TabularResource(resource_dict)
@@ -458,7 +459,7 @@ class TestTabularResource(object):
         csv_tmpfile.write(csv_contents)
         csv_tmpfile.flush()
 
-        resource = TabularResource({'path': csv_tmpfile.name})
+        resource = TabularResource({'path': csv_tmpfile.name, 'encoding': 'utf-8'})
         data = [row for row in resource.iter()]
 
         assert data == [

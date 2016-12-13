@@ -305,11 +305,13 @@ class DataPackage(object):
                     req = requests.get(the_descriptor)
                     req.raise_for_status()
                     the_descriptor = req.json()
-            except (IOError,
-                    ValueError,
-                    requests.exceptions.RequestException) as e:
-                msg = 'Unable to load JSON at \'{0}\''.format(descriptor)
-                six.raise_from(DataPackageException(msg), e)
+            except (IOError, requests.exceptions.RequestException) as error:
+                message = 'Unable to load JSON at "%s"' % descriptor
+                six.raise_from(DataPackageException(message), error)
+            except ValueError as error:
+                # Python2 doesn't have json.JSONDecodeError (use ValueErorr)
+                message = 'Unable to parse JSON at "%s". %s' % (descriptor, error)
+                six.raise_from(DataPackageException(message), error)
 
         if hasattr(the_descriptor, 'read'):
             try:
