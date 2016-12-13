@@ -53,7 +53,7 @@ class TestDataPackage(object):
 
     def test_init_raises_if_path_isnt_a_json(self):
         not_a_json_path = test_helpers.fixture_path('not_a_json')
-        with pytest.raises(datapackage.exceptions.DataPackageException) as excinfo:
+        with pytest.raises(datapackage.exceptions.DataPackageException):
             datapackage.DataPackage(not_a_json_path)
 
     def test_init_raises_if_path_is_a_bad_json(self):
