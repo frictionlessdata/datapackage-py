@@ -53,8 +53,16 @@ class TestDataPackage(object):
 
     def test_init_raises_if_path_isnt_a_json(self):
         not_a_json_path = test_helpers.fixture_path('not_a_json')
-        with pytest.raises(datapackage.exceptions.DataPackageException):
+        with pytest.raises(datapackage.exceptions.DataPackageException) as excinfo:
             datapackage.DataPackage(not_a_json_path)
+
+    def test_init_raises_if_path_is_a_bad_json(self):
+        bad_json = test_helpers.fixture_path('bad_json.json')
+        with pytest.raises(datapackage.exceptions.DataPackageException) as excinfo:
+            datapackage.DataPackage(bad_json)
+        message = str(excinfo.value)
+        assert 'Unable to parse JSON' in message
+        assert 'line 2 column 5 (char 6)' in message
 
     def test_init_raises_if_path_json_isnt_a_dict(self):
         empty_array_path = test_helpers.fixture_path('empty_array.json')
