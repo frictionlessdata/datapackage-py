@@ -26,6 +26,8 @@
               "object",
               "geopoint",
               "geojson",
+              "gyear",
+              "gyearmonth",
               "array",
               "any"
             ]
