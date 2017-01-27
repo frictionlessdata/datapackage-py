@@ -45,6 +45,8 @@
                         "duration",
                         "geopoint",
                         "geojson",
+                        "gyear",
+                        "gyearmonth",
                         "any"
                       ],
                       "propertyOrder": 40
