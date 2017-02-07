@@ -277,16 +277,24 @@ class TabularResource(Resource):
             options = {}
             if dialect:
                 options['format'] = 'csv'
-            if 'delimiter' in dialect:
-                options['delimiter'] = dialect['delimiter']
-            if 'lineTerminator' in dialect:
-                # https://github.com/frictionlessdata/datapackage-py/issues/58
-                # tabulator doesn't support lineTerminator because
-                # it's not supported by Python builtin csv parser
-                lineterm = dialect['lineTerminator']
-                if lineterm not in ['\r\n', '\r', '\n']:
-                    message = 'Line terminator "%s" is not supported' % lineterm
-                    warnings.warn(message, UserWarning)
+                for tabulator_opt,      csv_dialect_opt in [
+                    ('delimiter',        'delimiter'),
+                    ('doublequote',      'doubleQuote'),
+                    ('escapechar',       'escapeChar'),
+                    ('lineterminator',   'lineTerminator'),
+                    ('quotechar',        'quoteChar'),
+                    ('skipinitialspace', 'skipInitialSpace'),
+                ]:
+                    if csv_dialect_opt in dialect:
+                        options[tabulator_opt] = dialect[csv_dialect_opt]
+                if 'lineTerminator' in dialect:
+                    # https://github.com/frictionlessdata/datapackage-py/issues/58
+                    # tabulator doesn't support lineTerminator because
+                    # it's not supported by Python builtin csv parser
+                    lineterm = dialect['lineTerminator']
+                    if lineterm not in ['\r\n', '\r', '\n']:
+                        message = 'Line terminator "%s" is not supported' % lineterm
+                        warnings.warn(message, UserWarning)
             try:
                 table = tabulator.Stream(data_path_or_url,
                     headers=1, encoding=encoding, **options).open()
