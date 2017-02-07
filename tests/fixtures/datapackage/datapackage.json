@@ -4,6 +4,9 @@
         {
             "name": "data",
             "path": "data.csv",
+            "dialect": {
+                "quoteChar": "|"
+            },
             "schema": {
                 "fields": [
                     {
