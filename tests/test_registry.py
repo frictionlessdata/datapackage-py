@@ -43,6 +43,29 @@ class TestRegistry(object):
             'specification': 'http://example.com',
         }
 
+    def test_init_raises_if_specified_registry_path_with_cache(self):
+        with pytest.raises(RegistryError):
+            datapackage.registry.Registry(self.BASE_AND_TABULAR_REGISTRY_PATH,
+                                          use_cache=True)
+
+    def test_init_works_if_specified_registry_path_without_cache(self):
+        datapackage.registry.Registry(self.BASE_AND_TABULAR_REGISTRY_PATH,
+                                      use_cache=False)
+
+    @httpretty.activate
+    def test_init_uses_official_remote_registry_if_use_cache_is_false(self):
+        httpretty.HTTPretty.allow_net_connect = False
+        url = 'http://schemas.datapackages.org/registry.csv'
+        body = (
+            'id,title,schema,specification\r\n'
+            'foo,title,http://example.com/one.json,http://example.com'
+        )
+        httpretty.register_uri(httpretty.GET, url, body=body)
+
+        registry = datapackage.registry.Registry(use_cache=False)
+
+        assert 'foo' in registry.available_profiles
+
     @httpretty.activate
     def test_init_raises_if_registry_isnt_a_csv(self):
         url = 'http://some-place.com/registry.txt'

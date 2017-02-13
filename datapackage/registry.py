@@ -18,10 +18,16 @@ class Registry(object):
     Args:
         registry_path_or_url (str): Path or URL to the registry's CSV file. It
             defaults to the local registry cache path.
+        use_cache (bool): Flag that controls if we should use the local cache
+            when loading the default registry. It can only be ``True`` if the
+            :data:`registry_path_or_url` isn't set or is equal to
+            :data:`DEFAULT_REGISTRY_PATH`. Defaults to ``True``.
 
     Raises:
-        RegistryError: If there was some problem opening the registry file or
-            its format was incorrect.
+        RegistryError: If there was some problem opening the registry file, if
+            its format was incorrect, or if you :data:`use_cache` is ``True``
+            and :data:`registry_path_or_url` isn't the
+            :data:`DEFAULT_REGISTRY_PATH`.
     '''
     DEFAULT_REGISTRY_URL = 'http://schemas.datapackages.org/registry.csv'
     DEFAULT_REGISTRY_PATH = os.path.join(
@@ -30,7 +36,14 @@ class Registry(object):
         'registry.csv'
     )
 
-    def __init__(self, registry_path_or_url=DEFAULT_REGISTRY_PATH):
+    def __init__(self,
+                 registry_path_or_url=DEFAULT_REGISTRY_PATH,
+                 use_cache=None):
+        registry_path_or_url = self._get_registry_path_or_url(
+            registry_path_or_url,
+            use_cache,
+        )
+
         if os.path.isfile(registry_path_or_url):
             self._BASE_PATH = os.path.dirname(
                 os.path.abspath(registry_path_or_url)
@@ -77,6 +90,23 @@ class Registry(object):
                     IOError) as e:
                 six.raise_from(RegistryError(e), e)
         return self._profiles[profile_id]
+
+    def _get_registry_path_or_url(self, registry_path_or_url, use_cache):
+        '''str: Returns registry path or url. Raises if trying to use cache
+        with a registry other than the default.'''
+        if registry_path_or_url != self.DEFAULT_REGISTRY_PATH:
+            if use_cache:
+                msg = (
+                    'You can only use cache with the default repository.'
+                )
+                raise RegistryError(msg)
+            result = registry_path_or_url
+        elif use_cache or use_cache is None:
+            result = self.DEFAULT_REGISTRY_PATH
+        else:
+            result = self.DEFAULT_REGISTRY_URL
+
+        return result
 
     def _get_profile(self, profile_id):
         '''dict: Return the profile with the received ID as a dict (None if it
