@@ -105,7 +105,7 @@ class Resource(object):
         if url:
             return url
         else:
-            path = self._absolute_path(self.descriptor.get('path'))
+            path = self._absolute_path(self.descriptor.get('path'), '/')
             if path and _is_url(path):
                 return path
 
@@ -189,10 +189,14 @@ class Resource(object):
         if self._resource_file:
             return self._resource_file.read()
 
-    def _absolute_path(self, path):
+    def _absolute_path(self, path, sep=None):
         if path is None or self._base_path is None:
             return path
-        return os.path.join(self._base_path, path)
+        if sep is None:
+            return os.path.join(self._base_path, path)
+        else:
+            return sep.join([self._base_path.rstrip(sep),
+                             path.lstrip(sep)])
 
 
 class TabularResource(Resource):
