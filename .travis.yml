@@ -4,7 +4,8 @@ os:
 python:
   - 2.7
   - 3.3
-  - 3.4
+  # TODO: activate (travis bug)
+  # - 3.4
   - 3.5
 sudo: false
 env:
