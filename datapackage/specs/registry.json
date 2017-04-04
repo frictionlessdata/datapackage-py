@@ -1,0 +1,23 @@
+[
+  {
+    "id": "data-package",
+    "title": "Data Package",
+    "schema": "https://specs.frictionlessdata.io/schemas/data-package.json",
+    "schema_path": "data-package.json",
+    "specification": "https://specs.frictionlessdata.io/data-package/"
+  },
+  {
+    "id": "tabular-data-package",
+    "title": "Tabular Data Package",
+    "schema": "https://specs.frictionlessdata.io/schemas/tabular-data-package.json",
+    "schema_path": "tabular-data-package.json",
+    "specification": "http://specs.frictionlessdata.io/tabular-data-package/"
+  },
+  {
+    "id": "fiscal-data-package",
+    "title": "Fiscal Data Package",
+    "schema": "https://specs.frictionlessdata.io/fiscal-data-package.json",
+    "schema_path": "fiscal-data-package.json",
+    "specification": "https://specs.frictionlessdata.io/fiscal-data-package/"
+  }
+]
