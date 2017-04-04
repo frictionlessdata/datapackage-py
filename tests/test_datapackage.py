@@ -696,7 +696,7 @@ def datapackage_zip(tmpfile):
     descriptor = {
         'name': 'proverbs',
         'resources': [
-            {'path': test_helpers.fixture_path('foo.txt')},
+            {'name': 'name', 'path': test_helpers.fixture_path('foo.txt')},
         ]
     }
     dp = datapackage.DataPackage(descriptor)

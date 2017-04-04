@@ -1,3 +1,0 @@
-id,title,schema,specification,schema_path
-base,Data Package,http://example.com/one.json,http://example.com,base_profile.json
-tabular,Tabular Data Package,http://example.com/two.json,http://example.com,tabular_profile.json

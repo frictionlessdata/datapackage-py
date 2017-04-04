@@ -1,0 +1,9 @@
+[
+  {
+    "id": "notajson-data-package",
+    "title": "Data Package",
+    "schema": "https://specs.frictionlessdata.io/schemas/data-package.json",
+    "schema_path": "not_a_json",
+    "specification": "https://specs.frictionlessdata.io/data-package/"
+  }
+]

@@ -19,28 +19,36 @@ from datapackage.exceptions import RegistryError
 
 
 class TestRegistry(object):
-    EMPTY_REGISTRY_PATH = test_helpers.fixture_path('empty_registry.csv')
-    BASE_AND_TABULAR_REGISTRY_PATH = test_helpers.fixture_path('base_and_tabular_registry.csv')
-    UNICODE_REGISTRY_PATH = test_helpers.fixture_path('unicode_registry.csv')
+    EMPTY_REGISTRY_PATH = test_helpers.fixture_path('empty_registry.json')
+    BASE_AND_TABULAR_REGISTRY_PATH = test_helpers.fixture_path('base_and_tabular_registry.json')
+    UNICODE_REGISTRY_PATH = test_helpers.fixture_path('unicode_registry.json')
     BASE_PROFILE_PATH = test_helpers.fixture_path('base_profile.json')
 
     @httpretty.activate
     def test_init_accepts_urls(self):
-        url = 'http://some-place.com/registry.csv'
-        body = (
-            'id,title,schema,specification\r\n'
-            'base,Data Package,http://example.com/one.json,http://example.com'
-        )
+        url = 'http://some-place.com/registry.json'
+        body = """
+        [
+          {
+            "id": "data-package",
+            "title": "Data Package",
+            "schema": "https://specs.frictionlessdata.io/schemas/data-package.json",
+            "schema_path": "data-package.json",
+            "specification": "https://specs.frictionlessdata.io/data-package/"
+          }
+        ]
+        """
         httpretty.register_uri(httpretty.GET, url, body=body)
 
         registry = datapackage.registry.Registry(url)
 
         assert len(registry.available_profiles) == 1
-        assert registry.available_profiles.get('base') == {
-            'id': 'base',
+        assert registry.available_profiles.get('default') == {
+            'id': 'data-package',
             'title': 'Data Package',
-            'schema': 'http://example.com/one.json',
-            'specification': 'http://example.com',
+            'schema': 'https://specs.frictionlessdata.io/schemas/data-package.json',
+            'schema_path': 'data-package.json',
+            'specification': 'https://specs.frictionlessdata.io/data-package/',
         }
 
     @httpretty.activate
@@ -84,7 +92,7 @@ class TestRegistry(object):
             datapackage.registry.Registry(registry_path)
 
     def test_it_has_default_registry_url_const(self):
-        url = 'http://schemas.datapackages.org/registry.csv'
+        url = 'https://specs.frictionlessdata.io/specs/registry.json'
         assert datapackage.registry.Registry.DEFAULT_REGISTRY_URL == url
 
     def test_available_profiles_returns_empty_dict_when_registry_is_empty(self):
@@ -98,19 +106,19 @@ class TestRegistry(object):
         registry = datapackage.registry.Registry(registry_path)
 
         assert len(registry.available_profiles) == 2
-        assert registry.available_profiles.get('base') == {
-            'id': 'base',
+        assert registry.available_profiles.get('default') == {
+            'id': 'data-package',
             'title': 'Data Package',
-            'schema': 'http://example.com/one.json',
-            'schema_path': 'base_profile.json',
-            'specification': 'http://example.com',
+            'schema': 'https://specs.frictionlessdata.io/schemas/data-package.json',
+            'schema_path': 'data-package.json',
+            'specification': 'https://specs.frictionlessdata.io/data-package/',
         }
         assert registry.available_profiles.get('tabular') == {
-            'id': 'tabular',
+            'id': 'tabular-data-package',
             'title': 'Tabular Data Package',
-            'schema': 'http://example.com/two.json',
-            'schema_path': 'tabular_profile.json',
-            'specification': 'http://example.com',
+            'schema': 'https://specs.frictionlessdata.io/schemas/tabular-data-package.json',
+            'schema_path': 'tabular-data-package.json',
+            'specification': 'http://specs.frictionlessdata.io/tabular-data-package/',
         }
 
     def test_available_profiles_cant_be_set(self):
@@ -123,7 +131,7 @@ class TestRegistry(object):
         registry = datapackage.registry.Registry(registry_path)
 
         assert len(registry.available_profiles) == 2
-        base_profile_metadata = registry.available_profiles.get('base')
+        base_profile_metadata = registry.available_profiles.get('unicode')
         assert base_profile_metadata['title'] == 'Iñtërnâtiônàlizætiøn'
 
     @httpretty.activate
@@ -133,18 +141,25 @@ class TestRegistry(object):
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
         registry = datapackage.registry.Registry(registry_path)
 
-        base_profile = registry.get('base')
+        base_profile = registry.get('default')
         assert base_profile is not None
-        assert base_profile['title'] == 'base_profile'
+        assert base_profile['profile'] == 'default'
 
     @httpretty.activate
     def test_get_loads_remote_file_if_local_copy_doesnt_exist(self):
-        registry_body = (
-            'id,title,schema,specification,schema_path\r\n'
-            'base,Data Package,http://example.com/one.json,http://example.com,inexistent.json'
-        )
+        registry_body = """
+        [
+          {
+            "id": "data-package",
+            "title": "Data Package",
+            "schema": "http://example.com/one.json",
+            "schema_path": "data-package.json",
+            "specification": "https://specs.frictionlessdata.io/data-package/"
+          }
+        ]
+        """
         profile_url = 'http://example.com/one.json'
-        profile_body = '{ "title": "base_profile" }'
+        profile_body = '{ "profile": "default" }'
         httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
 
         with tempfile.NamedTemporaryFile(suffix='.csv') as tmpfile:
@@ -153,12 +168,12 @@ class TestRegistry(object):
 
             registry = datapackage.registry.Registry(tmpfile.name)
 
-        base_profile = registry.get('base')
+        base_profile = registry.get('default')
         assert base_profile is not None
-        assert base_profile == {'title': 'base_profile'}
+        assert base_profile == {'profile': 'default'}
 
     def test_get_raises_if_profile_isnt_a_json(self):
-        registry_path = test_helpers.fixture_path('registry_with_notajson_profile.csv')
+        registry_path = test_helpers.fixture_path('registry_with_notajson_profile.json')
         registry = datapackage.registry.Registry(registry_path)
 
         with pytest.raises(RegistryError):
@@ -166,11 +181,18 @@ class TestRegistry(object):
 
     @httpretty.activate
     def test_get_raises_if_remote_profile_file_doesnt_exist(self):
-        registry_url = 'http://example.com/registry.csv'
-        registry_body = (
-            'id,title,schema,specification,schema_path\r\n'
-            'base,Data Package,http://example.com/one.json,http://example.com,base.json'
-        )
+        registry_url = 'http://example.com/registry.json'
+        registry_body = """
+        [
+          {
+            "id": "data-package",
+            "title": "Data Package",
+            "schema": "http://example.com/one.json",
+            "schema_path": "data-package.json",
+            "specification": "http://example.com"
+          }
+        ]
+        """
         httpretty.register_uri(httpretty.GET, registry_url, body=registry_body)
         profile_url = 'http://example.com/one.json'
         httpretty.register_uri(httpretty.GET, profile_url, status=404)
@@ -178,14 +200,21 @@ class TestRegistry(object):
         registry = datapackage.registry.Registry(registry_url)
 
         with pytest.raises(RegistryError):
-            registry.get('base')
+            registry.get('default')
 
     @httpretty.activate
     def test_get_raises_if_local_profile_file_doesnt_exist(self):
-        registry_body = (
-            'id,title,schema,specification,schema_path\r\n'
-            'base,Data Package,http://example.com/one.json,http://example.com,inexistent.json'
-        )
+        registry_body = """
+        [
+          {
+            "id": "data-package",
+            "title": "Data Package",
+            "schema": "http://example.com/one.json",
+            "schema_path": "inexistent.json",
+            "specification": "http://example.com"
+          }
+        ]
+        """
         with tempfile.NamedTemporaryFile(suffix='.csv') as tmpfile:
             tmpfile.write(registry_body.encode('utf-8'))
             tmpfile.flush()
@@ -196,7 +225,7 @@ class TestRegistry(object):
         httpretty.register_uri(httpretty.GET, profile_url, status=404)
 
         with pytest.raises(RegistryError):
-            registry.get('base')
+            registry.get('default')
 
     def test_get_returns_none_if_profile_doesnt_exist(self):
         registry = datapackage.registry.Registry()
@@ -228,8 +257,8 @@ class TestRegistry(object):
 
     @httpretty.activate
     def test_base_path_is_none_if_registry_is_remote(self):
-        url = 'http://some-place.com/registry.csv'
-        httpretty.register_uri(httpretty.GET, url, body='')
+        url = 'http://some-place.com/registry.json'
+        httpretty.register_uri(httpretty.GET, url, body='[]')
         registry = datapackage.registry.Registry(url)
 
         assert registry.base_path is None
