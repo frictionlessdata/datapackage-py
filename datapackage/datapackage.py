@@ -53,6 +53,7 @@ class DataPackage(object):
 
     def __init__(self, descriptor=None, schema='default', default_base_path=None):
         descriptor = self._extract_zip_if_possible(descriptor)
+
         self._descriptor = self._load_descriptor(descriptor)
         self._schema = self._load_schema(schema)
         self._base_path = self._get_base_path(descriptor, default_base_path)
