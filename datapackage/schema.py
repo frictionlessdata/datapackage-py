@@ -98,15 +98,8 @@ class Schema(object):
         return the_schema
 
     def _load_validator(self, schema, registry):
-        resolver = None
-
-        if registry.base_path:
-            path = 'file://{base_path}/'.format(base_path=registry.base_path)
-            resolver = jsonschema.RefResolver(path, schema)
-
         validator_class = jsonschema.validators.validator_for(schema)
-
-        return validator_class(schema, resolver=resolver)
+        return validator_class(schema)
 
     def _check_schema(self):
         try:
