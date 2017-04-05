@@ -4,6 +4,6 @@
         {"name": "name2", "dialect": "#/dialects/main"}
     ],
     "dialects": {
-        "main": {"dialect": "dialect"}
+        "main": {"delimiter": ","}
     }
 }

@@ -251,8 +251,8 @@ class TestDataPackage(object):
     def test_descriptor_dereferencing_uri(self):
         dp = datapackage.DataPackage('tests/fixtures/datapackage_with_dereferencing.json')
         assert dp.descriptor['resources'] == [
-            {'name': 'name1', 'schema': {'schema': 'schema'}},
-            {'name': 'name2', 'dialect': {'dialect': 'dialect'}},
+            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'dialect': {'delimiter': ','}},
         ]
 
     def test_descriptor_dereferencing_uri_pointer(self):
@@ -261,13 +261,13 @@ class TestDataPackage(object):
                 {'name': 'name1', 'schema': '#/schemas/main'},
                 {'name': 'name2', 'dialect': '#/dialects/0'},
              ],
-            'schemas': {'main': {'schema': 'schema'}},
-            'dialects': [{'dialect': 'dialect'}],
+            'schemas': {'main': {'fields': [{'name': 'name'}]}},
+            'dialects': [{'delimiter': ','}],
         }
         dp = datapackage.DataPackage(descriptor)
         assert dp.descriptor['resources'] == [
-            {'name': 'name1', 'schema': {'schema': 'schema'}},
-            {'name': 'name2', 'dialect': {'dialect': 'dialect'}},
+            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'dialect': {'delimiter': ','}},
         ]
 
     def test_descriptor_dereferencing_uri_pointer_bad(self):
@@ -282,10 +282,10 @@ class TestDataPackage(object):
     @httpretty.activate
     def test_descriptor_dereferencing_uri_remote(self):
         # Mocks
-        httpretty.register_uri(
-            httpretty.GET, 'http://example.com/schema', body='{"schema": "schema"}')
-        httpretty.register_uri(
-            httpretty.GET, 'https://example.com/dialect', body='{"dialect": "dialect"}')
+        httpretty.register_uri(httpretty.GET,
+            'http://example.com/schema', body='{"fields": [{"name": "name"}]}')
+        httpretty.register_uri(httpretty.GET,
+            'https://example.com/dialect', body='{"delimiter": ","}')
         # Tests
         descriptor = {
             'resources': [
@@ -295,8 +295,8 @@ class TestDataPackage(object):
         }
         dp = datapackage.DataPackage(descriptor)
         assert dp.descriptor['resources'] == [
-            {'name': 'name1', 'schema': {'schema': 'schema'}},
-            {'name': 'name2', 'dialect': {'dialect': 'dialect'}},
+            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'dialect': {'delimiter': ','}},
         ]
 
     def test_descriptor_dereferencing_uri_remote_bad(self):
@@ -320,8 +320,8 @@ class TestDataPackage(object):
         }
         dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
         assert dp.descriptor['resources'] == [
-            {'name': 'name1', 'schema': {'schema': 'schema'}},
-            {'name': 'name2', 'dialect': {'dialect': 'dialect'}},
+            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'dialect': {'delimiter': ','}},
         ]
 
     def test_descriptor_dereferencing_uri_local_bad(self):
