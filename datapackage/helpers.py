@@ -21,7 +21,7 @@ def is_safe_path(path):
     """Check if path is safe and allowed.
     """
     if os.path.isabs(path):
-        return Fale
+        return False
     if '..%s' % os.path.sep in path:
         return False
     return True
