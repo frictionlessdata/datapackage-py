@@ -12,6 +12,7 @@ import shutil
 import zipfile
 import six
 import requests
+import warnings
 import datapackage.schema
 from .resource import Resource
 from .exceptions import (
@@ -50,7 +51,7 @@ class DataPackage(object):
             from the registry.
     '''
 
-    def __init__(self, descriptor=None, schema='base', default_base_path=None):
+    def __init__(self, descriptor=None, schema='data-package', default_base_path=None):
         descriptor = self._extract_zip_if_possible(descriptor)
 
         self._descriptor = self._load_descriptor(descriptor)
@@ -227,7 +228,21 @@ class DataPackage(object):
         Raises:
             ValidationError: If the Data Package is invalid.
         '''
-        self.schema.validate(self.to_dict())
+        descriptor = self.to_dict()
+
+        # TODO: move to __init__ after Resource update
+        # Handle deprecated resource.path/url
+        for resource in descriptor.get('resources', []):
+            for key in ['path', 'url']:
+                value = resource.pop(key, None)
+                if value is not None:
+                    warnings.warn(
+                        'Resource property "{key}: <{key}>" is deprecated. '
+                        'Please use "data: [<{key}>]" instead.'.format(key=key),
+                        UserWarning)
+                    resource['data'] = [value]
+
+        self.schema.validate(descriptor)
 
     def iter_errors(self):
         '''Lazily yields each ValidationError for the received data dict.

@@ -7,8 +7,6 @@ import os
 import json
 import six
 import requests
-import tabulator
-
 from .exceptions import RegistryError
 
 
@@ -23,11 +21,14 @@ class Registry(object):
         RegistryError: If there was some problem opening the registry file or
             its format was incorrect.
     '''
-    DEFAULT_REGISTRY_URL = 'http://schemas.datapackages.org/registry.csv'
+
+    # Public
+
+    DEFAULT_REGISTRY_URL = 'https://specs.frictionlessdata.io/specs/registry.json'
     DEFAULT_REGISTRY_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        'schemas',
-        'registry.csv'
+        'specs',
+        'registry.json'
     )
 
     def __init__(self, registry_path_or_url=DEFAULT_REGISTRY_PATH):
@@ -38,9 +39,7 @@ class Registry(object):
         try:
             self._profiles = {}
             self._registry = self._get_registry(registry_path_or_url)
-        except (IOError,
-                ValueError,
-                tabulator.exceptions.TabulatorException) as e:
+        except (IOError, ValueError) as e:
             six.raise_from(RegistryError(e), e)
 
     @property
@@ -78,6 +77,8 @@ class Registry(object):
                 six.raise_from(RegistryError(e), e)
         return self._profiles[profile_id]
 
+    # Internal
+
     def _get_profile(self, profile_id):
         '''dict: Return the profile with the received ID as a dict (None if it
         doesn't exist).'''
@@ -107,9 +108,14 @@ class Registry(object):
 
     def _get_registry(self, registry_path_or_url):
         '''dict: Return the registry as dict with profiles keyed by id.'''
-        table = tabulator.Stream(registry_path_or_url, headers=1).open()
+        if registry_path_or_url.startswith('http'):
+            profiles = self._load_json_url(registry_path_or_url)
+        else:
+            profiles = self._load_json_file(registry_path_or_url)
         try:
-            registry = dict([(o['id'], o) for o in table.read(keyed=True)])
+            registry = {}
+            for profile in profiles:
+                registry[profile['id']] = profile
             return registry
         except KeyError as e:
             msg = (
