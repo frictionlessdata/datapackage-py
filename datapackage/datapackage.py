@@ -13,7 +13,9 @@ import zipfile
 import six
 import requests
 import warnings
+import jsonpointer
 import datapackage.schema
+from . import helpers
 from .resource import Resource
 from .exceptions import (
     DataPackageException,
@@ -51,12 +53,16 @@ class DataPackage(object):
             from the registry.
     '''
 
+    # Public
+
     def __init__(self, descriptor=None, schema='data-package', default_base_path=None):
         descriptor = self._extract_zip_if_possible(descriptor)
 
-        self._descriptor = self._load_descriptor(descriptor)
-        self._schema = self._load_schema(schema)
         self._base_path = self._get_base_path(descriptor, default_base_path)
+        self._descriptor = self._load_descriptor(descriptor)
+        self._dereference_descriptor(self._descriptor)
+
+        self._schema = self._load_schema(schema)
         self._resources = self._load_resources(self.descriptor,
                                                self.base_path)
 
@@ -252,6 +258,8 @@ class DataPackage(object):
         '''
         return self.schema.iter_errors(self.to_dict())
 
+    # Private
+
     def _extract_zip_if_possible(self, descriptor):
         '''str: Path to the extracted datapackage.json if descriptor points to
         ZIP, or the unaltered descriptor otherwise.'''
@@ -375,3 +383,51 @@ class DataPackage(object):
     def _remove_tempdir_if_exists(self):
         if hasattr(self, '_tempdir') and os.path.exists(self._tempdir):
             shutil.rmtree(self._tempdir, ignore_errors=True)
+
+    def _dereference_descriptor(self, descriptor):
+        PROPERTIES = ['schema', 'dialect']
+
+        # For every resource
+        for property in PROPERTIES:
+            for resource in descriptor.get('resources', []):
+                value = resource.get(property)
+
+                # URI -> No
+                if not isinstance(value, six.string_types):
+                    continue
+
+                # URI -> Pointer
+                if value.startswith('#'):
+                    try:
+                        pointer = jsonpointer.JsonPointer(value[1:])
+                        resource[property] = pointer.resolve(descriptor)
+                    except Exception as exception:
+                        raise DataPackageException(
+                            'Not resolved Pointer URI "%s" '
+                            'for resource.%s' % (value, property))
+
+                # URI -> Remote
+                elif value.startswith('http'):
+                    try:
+                        response = requests.get(value)
+                        response.raise_for_status()
+                        resource[property] = response.json()
+                    except Exception as exception:
+                        raise DataPackageException(
+                            'Not resolved Remote URI "%s" '
+                            'for resource.%s' % (value, property))
+
+                # URI -> Local
+                else:
+                    if not helpers.is_safe_path(value):
+                        raise DataPackageException(
+                            'Not safe path in Local URI "%s" '
+                            'for resource.%s' % (value, property))
+                    fullpath = os.path.join(self.base_path, value)
+                    try:
+                        with io.open(fullpath, encoding='utf-8') as file:
+                            resource[property] = json.load(file)
+                    except Exception as exception:
+                        raise DataPackageException(
+                            'Not resolved Local URI "%s" '
+                            'for resource.%s' % (value, property))

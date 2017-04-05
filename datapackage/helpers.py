@@ -11,11 +11,17 @@ import os
 
 def ensure_dir(path):
     """Ensure directory exists.
-
-    Args:
-        path (str): file path inside the directory to ensure
-
     """
     dirpath = os.path.dirname(path)
     if dirpath and not os.path.exists(dirpath):
         os.makedirs(dirpath)
+
+
+def is_safe_path(path):
+    """Check if path is safe and allowed.
+    """
+    if os.path.isabs(path):
+        return Fale
+    if '..%s' % os.path.sep in path:
+        return False
+    return True
