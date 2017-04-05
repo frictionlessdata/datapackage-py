@@ -43,7 +43,7 @@ class TestRegistry(object):
         registry = datapackage.registry.Registry(url)
 
         assert len(registry.available_profiles) == 1
-        assert registry.available_profiles.get('default') == {
+        assert registry.available_profiles.get('data-package') == {
             'id': 'data-package',
             'title': 'Data Package',
             'schema': 'https://specs.frictionlessdata.io/schemas/data-package.json',
@@ -106,14 +106,14 @@ class TestRegistry(object):
         registry = datapackage.registry.Registry(registry_path)
 
         assert len(registry.available_profiles) == 2
-        assert registry.available_profiles.get('default') == {
+        assert registry.available_profiles.get('data-package') == {
             'id': 'data-package',
             'title': 'Data Package',
             'schema': 'https://specs.frictionlessdata.io/schemas/data-package.json',
             'schema_path': 'data-package.json',
             'specification': 'https://specs.frictionlessdata.io/data-package/',
         }
-        assert registry.available_profiles.get('tabular') == {
+        assert registry.available_profiles.get('tabular-data-package') == {
             'id': 'tabular-data-package',
             'title': 'Tabular Data Package',
             'schema': 'https://specs.frictionlessdata.io/schemas/tabular-data-package.json',
@@ -131,7 +131,7 @@ class TestRegistry(object):
         registry = datapackage.registry.Registry(registry_path)
 
         assert len(registry.available_profiles) == 2
-        base_profile_metadata = registry.available_profiles.get('unicode')
+        base_profile_metadata = registry.available_profiles.get('unicode-data-package')
         assert base_profile_metadata['title'] == 'Iñtërnâtiônàlizætiøn'
 
     @httpretty.activate
@@ -141,9 +141,9 @@ class TestRegistry(object):
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
         registry = datapackage.registry.Registry(registry_path)
 
-        base_profile = registry.get('default')
+        base_profile = registry.get('data-package')
         assert base_profile is not None
-        assert base_profile['profile'] == 'default'
+        assert base_profile['profile'] == 'data-package'
 
     @httpretty.activate
     def test_get_loads_remote_file_if_local_copy_doesnt_exist(self):
@@ -159,7 +159,7 @@ class TestRegistry(object):
         ]
         """
         profile_url = 'http://example.com/one.json'
-        profile_body = '{ "profile": "default" }'
+        profile_body = '{ "profile": "data-package" }'
         httpretty.register_uri(httpretty.GET, profile_url, body=profile_body)
 
         with tempfile.NamedTemporaryFile(suffix='.csv') as tmpfile:
@@ -168,16 +168,16 @@ class TestRegistry(object):
 
             registry = datapackage.registry.Registry(tmpfile.name)
 
-        base_profile = registry.get('default')
+        base_profile = registry.get('data-package')
         assert base_profile is not None
-        assert base_profile == {'profile': 'default'}
+        assert base_profile == {'profile': 'data-package'}
 
     def test_get_raises_if_profile_isnt_a_json(self):
         registry_path = test_helpers.fixture_path('registry_with_notajson_profile.json')
         registry = datapackage.registry.Registry(registry_path)
 
         with pytest.raises(RegistryError):
-            registry.get('notajson')
+            registry.get('notajson-data-package')
 
     @httpretty.activate
     def test_get_raises_if_remote_profile_file_doesnt_exist(self):
@@ -200,7 +200,7 @@ class TestRegistry(object):
         registry = datapackage.registry.Registry(registry_url)
 
         with pytest.raises(RegistryError):
-            registry.get('default')
+            registry.get('data-package')
 
     @httpretty.activate
     def test_get_raises_if_local_profile_file_doesnt_exist(self):
@@ -225,7 +225,7 @@ class TestRegistry(object):
         httpretty.register_uri(httpretty.GET, profile_url, status=404)
 
         with pytest.raises(RegistryError):
-            registry.get('default')
+            registry.get('data-package')
 
     def test_get_returns_none_if_profile_doesnt_exist(self):
         registry = datapackage.registry.Registry()
@@ -235,11 +235,11 @@ class TestRegistry(object):
         registry_path = self.BASE_AND_TABULAR_REGISTRY_PATH
         registry = datapackage.registry.Registry(registry_path)
 
-        registry.get('base')
+        registry.get('data-package')
 
         m = mock.mock_open(read_data='{}')
         with mock.patch('datapackage.registry.open', m):
-            registry.get('base')
+            registry.get('data-package')
 
         assert not m.called, '.get() should memoize the profiles'
 

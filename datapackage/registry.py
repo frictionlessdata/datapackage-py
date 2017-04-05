@@ -115,13 +115,7 @@ class Registry(object):
         try:
             registry = {}
             for profile in profiles:
-                if profile['id'] == 'data-package':
-                    key = 'default'
-                elif profile['id'].endswith('-data-package'):
-                    key = profile['id'].replace('-data-package', '')
-                else:
-                    continue
-                registry[key] = profile
+                registry[profile['id']] = profile
             return registry
         except KeyError as e:
             msg = (

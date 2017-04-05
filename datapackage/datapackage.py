@@ -51,7 +51,7 @@ class DataPackage(object):
             from the registry.
     '''
 
-    def __init__(self, descriptor=None, schema='default', default_base_path=None):
+    def __init__(self, descriptor=None, schema='data-package', default_base_path=None):
         descriptor = self._extract_zip_if_possible(descriptor)
 
         self._descriptor = self._load_descriptor(descriptor)
