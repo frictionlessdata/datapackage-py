@@ -1,0 +1,9 @@
+{
+    "resources": [
+        {"name": "name1", "schema": "table_schema.json"},
+        {"name": "name2", "dialect": "#/dialects/main"}
+    ],
+    "dialects": {
+        "main": {"delimiter": ","}
+    }
+}

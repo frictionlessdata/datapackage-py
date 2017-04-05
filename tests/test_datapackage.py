@@ -4,14 +4,10 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-try:
-    import mock
-except ImportError:
-    import unittest.mock as mock
-
 import os
 import glob
 import json
+import mock
 import tempfile
 import zipfile
 import six
@@ -20,6 +16,8 @@ import httpretty
 import tests.test_helpers as test_helpers
 import datapackage
 
+
+# Tests
 
 class TestDataPackage(object):
     def test_init_uses_base_schema_by_default(self):
@@ -249,6 +247,100 @@ class TestDataPackage(object):
         }
         dp = datapackage.DataPackage(descriptor)
         assert json.loads(dp.to_json()) == descriptor
+
+    def test_descriptor_dereferencing_uri(self):
+        dp = datapackage.DataPackage('tests/fixtures/datapackage_with_dereferencing.json')
+        assert dp.descriptor['resources'] == [
+            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'dialect': {'delimiter': ','}},
+        ]
+
+    def test_descriptor_dereferencing_uri_pointer(self):
+        descriptor = {
+            'resources': [
+                {'name': 'name1', 'schema': '#/schemas/main'},
+                {'name': 'name2', 'dialect': '#/dialects/0'},
+             ],
+            'schemas': {'main': {'fields': [{'name': 'name'}]}},
+            'dialects': [{'delimiter': ','}],
+        }
+        dp = datapackage.DataPackage(descriptor)
+        assert dp.descriptor['resources'] == [
+            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'dialect': {'delimiter': ','}},
+        ]
+
+    def test_descriptor_dereferencing_uri_pointer_bad(self):
+        descriptor = {
+            'resources': [
+                {'name': 'name1', 'schema': '#/schemas/main'},
+             ],
+        }
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp = datapackage.DataPackage(descriptor)
+
+    @httpretty.activate
+    def test_descriptor_dereferencing_uri_remote(self):
+        # Mocks
+        httpretty.register_uri(httpretty.GET,
+            'http://example.com/schema', body='{"fields": [{"name": "name"}]}')
+        httpretty.register_uri(httpretty.GET,
+            'https://example.com/dialect', body='{"delimiter": ","}')
+        # Tests
+        descriptor = {
+            'resources': [
+                {'name': 'name1', 'schema': 'http://example.com/schema'},
+                {'name': 'name2', 'dialect': 'https://example.com/dialect'},
+             ],
+        }
+        dp = datapackage.DataPackage(descriptor)
+        assert dp.descriptor['resources'] == [
+            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'dialect': {'delimiter': ','}},
+        ]
+
+    def test_descriptor_dereferencing_uri_remote_bad(self):
+        # Mocks
+        httpretty.register_uri(httpretty.GET, 'http://example.com/schema', status=404)
+        # Tests
+        descriptor = {
+            'resources': [
+                {'name': 'name1', 'schema': 'http://example.com/schema'},
+             ],
+        }
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp = datapackage.DataPackage(descriptor)
+
+    def test_descriptor_dereferencing_uri_local(self):
+        descriptor = {
+            'resources': [
+                {'name': 'name1', 'schema': 'table_schema.json'},
+                {'name': 'name2', 'dialect': 'csv_dialect.json'},
+             ],
+        }
+        dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
+        assert dp.descriptor['resources'] == [
+            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'dialect': {'delimiter': ','}},
+        ]
+
+    def test_descriptor_dereferencing_uri_local_bad(self):
+        descriptor = {
+            'resources': [
+                {'name': 'name1', 'schema': 'bad_path.json'},
+             ],
+        }
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
+
+    def test_descriptor_dereferencing_uri_local_bad_not_safe(self):
+        descriptor = {
+            'resources': [
+                {'name': 'name1', 'schema': '../fixtures/table_schema.json'},
+             ],
+        }
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
 
 
 class TestDataPackageResources(object):
@@ -690,6 +782,8 @@ class TestSafeDataPackage(object):
         dp = datapackage.DataPackage(tmpfile.name, {})
         assert not dp.safe()
 
+
+# Fixtures
 
 @pytest.fixture
 def datapackage_zip(tmpfile):
