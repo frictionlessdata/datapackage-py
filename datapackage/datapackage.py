@@ -15,6 +15,7 @@ import requests
 import warnings
 import jsonpointer
 import datapackage.schema
+from . import config
 from . import helpers
 from .resource import Resource
 from .exceptions import (
@@ -61,6 +62,7 @@ class DataPackage(object):
         self._base_path = self._get_base_path(descriptor, default_base_path)
         self._descriptor = self._load_descriptor(descriptor)
         self._dereference_descriptor(self._descriptor)
+        self._apply_defaults(self._descriptor)
 
         self._schema = self._load_schema(schema)
         self._resources = self._load_resources(self.descriptor,
@@ -386,8 +388,6 @@ class DataPackage(object):
 
     def _dereference_descriptor(self, descriptor):
         PROPERTIES = ['schema', 'dialect']
-
-        # For every resource
         for property in PROPERTIES:
             for resource in descriptor.get('resources', []):
                 value = resource.get(property)
@@ -431,3 +431,24 @@ class DataPackage(object):
                         raise DataPackageException(
                             'Not resolved Local URI "%s" '
                             'for resource.%s' % (value, property))
+
+    def _apply_defaults(self, descriptor):
+        descriptor.setdefault('profile', config.DEFAULT_PACKAGE_PROFILE)
+        for resource in descriptor.get('resources', []):
+            resource.setdefault('profile', config.DEFAULT_RESOURCE_PROFILE)
+            resource.setdefault('encoding', config.DEFAULT_RESOURCE_ENCODING)
+            if resource['profile'] == 'tabular-data-resource':
+
+                # Schema
+                schema = resource.get('schema')
+                if schema is not None:
+                    for field in schema.get('fields', []):
+                        field.setdefault('type', config.DEFAULT_FIELD_TYPE)
+                        field.setdefault('format', config.DEFAULT_FIELD_FORMAT)
+                    schema.setdefault('missingValues', config.DEFAULT_MISSING_VALUES)
+
+                # Dialect
+                dialect = resource.get('dialect')
+                if dialect is not None:
+                    for key, value in config.DEFAULT_DIALECT.items():
+                        dialect.setdefault(key, value)
