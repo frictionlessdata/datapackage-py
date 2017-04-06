@@ -5,6 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import sys
 import glob
 import json
 import mock
@@ -26,14 +27,14 @@ class TestDataPackage(object):
 
     def test_init_accepts_dicts(self):
         descriptor = {
-            'foo': 'bar',
+            'profile': 'data-package',
         }
         dp = datapackage.DataPackage(descriptor)
         assert dp.descriptor == descriptor
 
     def test_init_accepts_filelike_object(self):
         descriptor = {
-            'foo': 'bar',
+            'profile': 'data-package',
         }
         filelike_descriptor = six.StringIO(json.dumps(descriptor))
         dp = datapackage.DataPackage(filelike_descriptor)
@@ -42,7 +43,9 @@ class TestDataPackage(object):
     def test_init_accepts_file_paths(self):
         path = test_helpers.fixture_path('empty_datapackage.json')
         dp = datapackage.DataPackage(path)
-        assert dp.descriptor == {}
+        assert dp.descriptor == {
+            'profile': 'data-package',
+        }
 
     def test_init_raises_if_file_path_doesnt_exist(self):
         path = 'this-file-doesnt-exist.json'
@@ -77,12 +80,12 @@ class TestDataPackage(object):
     @httpretty.activate
     def test_init_accepts_urls(self):
         url = 'http://someplace.com/datapackage.json'
-        body = '{"foo": "bar"}'
+        body = '{"profile": "data-package"}'
         httpretty.register_uri(httpretty.GET, url, body=body,
                                content_type='application/json')
 
         dp = datapackage.DataPackage(url)
-        assert dp.descriptor == {'foo': 'bar'}
+        assert dp.descriptor == {'profile': 'data-package'}
 
     @httpretty.activate
     def test_init_raises_if_url_doesnt_exist(self):
@@ -144,6 +147,7 @@ class TestDataPackage(object):
         descriptor = {
             'name': 'test',
             'title': 'a test',
+            'profile': 'data-package',
         }
         schema = {
             'properties': {
@@ -151,29 +155,30 @@ class TestDataPackage(object):
             }
         }
         dp = datapackage.DataPackage(descriptor, schema)
-        assert sorted(dp.attributes) == sorted(['name', 'title'])
+        assert sorted(dp.attributes) == sorted(['name', 'title', 'profile'])
 
     def test_attributes_can_be_set(self):
         descriptor = {
-            'name': 'foo',
+            'profile': 'data-package',
         }
         dp = datapackage.DataPackage(descriptor)
         dp.descriptor['title'] = 'bar'
-        assert dp.to_dict() == {'name': 'foo', 'title': 'bar'}
+        assert dp.to_dict() == {'profile': 'data-package', 'title': 'bar'}
 
     def test_attributes_arent_immutable(self):
         descriptor = {
+            'profile': 'data-package',
             'keywords': [],
         }
         dp = datapackage.DataPackage(descriptor)
         dp.descriptor['keywords'].append('foo')
-        assert dp.to_dict() == {'keywords': ['foo']}
+        assert dp.to_dict() == {'profile': 'data-package', 'keywords': ['foo']}
 
-    def test_attributes_return_an_empty_tuple_if_there_are_none(self):
+    def test_attributes_return_defaults_id_descriptor_is_empty(self):
         descriptor = {}
         schema = {}
         dp = datapackage.DataPackage(descriptor, schema)
-        assert dp.attributes == ()
+        assert dp.attributes == ('profile',)
 
     def test_validate(self):
         descriptor = {
@@ -235,11 +240,15 @@ class TestDataPackage(object):
         assert dp.required_attributes == ()
 
     def test_to_dict_value_can_be_altered_without_changing_the_dp(self):
-        descriptor = {}
+        descriptor = {
+            'profile': 'data-package',
+        }
         dp = datapackage.DataPackage(descriptor)
         dp_dict = dp.to_dict()
         dp_dict['foo'] = 'bar'
-        assert dp.descriptor == {}
+        assert dp.descriptor == {
+            'profile': 'data-package',
+        }
 
     def test_to_json(self):
         descriptor = {
@@ -248,14 +257,14 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(descriptor)
         assert json.loads(dp.to_json()) == descriptor
 
-    def test_descriptor_dereferencing_uri(self):
-        dp = datapackage.DataPackage('tests/fixtures/datapackage_with_dereferencing.json')
+    def test_descriptor_dereferencing_uri(self, NoDefaultsDataPackage):
+        dp = NoDefaultsDataPackage('tests/fixtures/datapackage_with_dereferencing.json')
         assert dp.descriptor['resources'] == [
             {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'dialect': {'delimiter': ','}},
         ]
 
-    def test_descriptor_dereferencing_uri_pointer(self):
+    def test_descriptor_dereferencing_uri_pointer(self, NoDefaultsDataPackage):
         descriptor = {
             'resources': [
                 {'name': 'name1', 'schema': '#/schemas/main'},
@@ -264,7 +273,7 @@ class TestDataPackage(object):
             'schemas': {'main': {'fields': [{'name': 'name'}]}},
             'dialects': [{'delimiter': ','}],
         }
-        dp = datapackage.DataPackage(descriptor)
+        dp = NoDefaultsDataPackage(descriptor)
         assert dp.descriptor['resources'] == [
             {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'dialect': {'delimiter': ','}},
@@ -280,7 +289,9 @@ class TestDataPackage(object):
             dp = datapackage.DataPackage(descriptor)
 
     @httpretty.activate
-    def test_descriptor_dereferencing_uri_remote(self):
+    @pytest.mark.skipif(sys.version_info < (3,3),
+        reason='Python2 conflict pytest/httpretty')
+    def test_descriptor_dereferencing_uri_remote(self, NoDefaultsDataPackage):
         # Mocks
         httpretty.register_uri(httpretty.GET,
             'http://example.com/schema', body='{"fields": [{"name": "name"}]}')
@@ -293,7 +304,7 @@ class TestDataPackage(object):
                 {'name': 'name2', 'dialect': 'https://example.com/dialect'},
              ],
         }
-        dp = datapackage.DataPackage(descriptor)
+        dp = NoDefaultsDataPackage(descriptor)
         assert dp.descriptor['resources'] == [
             {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'dialect': {'delimiter': ','}},
@@ -311,14 +322,14 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.DataPackageException):
             dp = datapackage.DataPackage(descriptor)
 
-    def test_descriptor_dereferencing_uri_local(self):
+    def test_descriptor_dereferencing_uri_local(self, NoDefaultsDataPackage):
         descriptor = {
             'resources': [
                 {'name': 'name1', 'schema': 'table_schema.json'},
                 {'name': 'name2', 'dialect': 'csv_dialect.json'},
              ],
         }
-        dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
+        dp = NoDefaultsDataPackage(descriptor, default_base_path='tests/fixtures')
         assert dp.descriptor['resources'] == [
             {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'dialect': {'delimiter': ','}},
@@ -341,6 +352,79 @@ class TestDataPackage(object):
         }
         with pytest.raises(datapackage.exceptions.DataPackageException):
             dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
+
+    def test_descriptor_apply_defaults(self):
+        descriptor = {}
+        dp = datapackage.DataPackage(descriptor)
+        assert descriptor == {
+            'profile': 'data-package',
+        }
+
+    def test_descriptor_apply_defaults_resource(self):
+        descriptor = {
+            'resources': [{'name': 'name'}],
+        }
+        dp = datapackage.DataPackage(descriptor)
+        assert descriptor == {
+            'profile': 'data-package',
+            'resources': [
+                {'name': 'name', 'profile': 'data-resource', 'encoding': 'utf-8'},
+            ]
+        }
+
+    def test_descriptor_apply_defaults_resource_tabular_schema(self):
+        descriptor = {
+            'resources': [{
+                'name': 'name',
+                'profile': 'tabular-data-resource',
+                'schema': {
+                    'fields': [{'name': 'name'}],
+                }
+            }],
+        }
+        dp = datapackage.DataPackage(descriptor)
+        assert descriptor == {
+            'profile': 'data-package',
+            'resources': [{
+                'name': 'name',
+                'profile': 'tabular-data-resource',
+                'encoding': 'utf-8',
+                'schema': {
+                    'fields': [{'name': 'name', 'type': 'string', 'format': 'default'}],
+                    'missingValues': [''],
+                }
+            }],
+        }
+
+    def test_descriptor_apply_defaults_resource_tabular_dialect(self):
+        descriptor = {
+            'resources': [{
+                'name': 'name',
+                'profile': 'tabular-data-resource',
+                'dialect': {
+                    'delimiter': 'custom',
+                }
+            }],
+        }
+        dp = datapackage.DataPackage(descriptor)
+        assert descriptor == {
+            'profile': 'data-package',
+            'resources': [{
+                'name': 'name',
+                'profile': 'tabular-data-resource',
+                'encoding': 'utf-8',
+                'dialect': {
+                    'delimiter': 'custom',
+                    'doubleQuote': True,
+                    'lineTerminator': '\r\n',
+                    'quoteChar': '""',
+                    'escapeChar': '\\',
+                    'skipInitialSpace': True,
+                    'header': True,
+                    'caseSensitiveHeader': False,
+                }
+            }],
+        }
 
 
 class TestDataPackageResources(object):
@@ -689,7 +773,7 @@ class TestImportingDataPackageFromZip(object):
 
     def test_it_can_load_from_zip_files_inner_folders(self, tmpfile):
         descriptor = {
-            'name': 'foo',
+            'profile': 'data-package',
         }
         with zipfile.ZipFile(tmpfile.name, 'w') as z:
             z.writestr('foo/datapackage.json', json.dumps(descriptor))

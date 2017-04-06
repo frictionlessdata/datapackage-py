@@ -41,7 +41,8 @@ def test_push_datapackage(storage):
     ]
 
 
-def test_pull_datapackage(storage, descriptor):
+@mock.patch.object(DataPackage, '_apply_defaults')
+def test_pull_datapackage(_apply_defaults, storage, descriptor):
 
     # Prepare and call
     storage.buckets = ['data___data']
