@@ -13,10 +13,11 @@ class Resource(object):
     """Data Resource representation.
 
     Arguments:
-        descriptor (dict): VALID Data Resource descriptor
+        descriptor (str/dict): VALID Data Resource descriptor
         base_path (str): base path to resolve relative paths
 
-    Descriptor updates:
+    Descriptor actions:
+        - retrieve
         - dereference
         - apply defaults
 
@@ -26,7 +27,8 @@ class Resource(object):
 
     def __init__(self, descriptor, base_path=None):
 
-        # Update descriptor
+        # Descriptor actions
+        descriptor = helpers.retrieve_descriptor(descriptor)
         descriptor = helpers.dereference_resource(descriptor, base_path)
         descriptor = helpers.apply_defaults_to_resource(descriptor)
 
