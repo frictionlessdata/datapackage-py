@@ -4,14 +4,77 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import io
 import os
+import six
+import json
+import requests
+import jsonpointer
 from . import config
+from . import exceptions
+
+
+# Dereference
+
+def dereference_data_package(descriptor, base_path):
+    """Dereference data package descriptor (IN-PLACE FOR NOW).
+    """
+    for resource in descriptor.get('resources', []):
+        dereference_resource(resource, base_path, descriptor)
+
+
+def dereference_resource(descriptor, base_path, base_descriptor):
+    """Dereference resource descriptor (IN-PLACE FOR NOW).
+    """
+    PROPERTIES = ['schema', 'dialect']
+    for property in PROPERTIES:
+        value = descriptor.get(property)
+
+        # URI -> No
+        if not isinstance(value, six.string_types):
+            continue
+
+        # URI -> Pointer
+        if value.startswith('#'):
+            try:
+                pointer = jsonpointer.JsonPointer(value[1:])
+                descriptor[property] = pointer.resolve(base_descriptor)
+            except Exception as exception:
+                raise exceptions.DataPackageException(
+                    'Not resolved Pointer URI "%s" '
+                    'for resource.%s' % (value, property))
+
+        # URI -> Remote
+        elif value.startswith('http'):
+            try:
+                response = requests.get(value)
+                response.raise_for_status()
+                descriptor[property] = response.json()
+            except Exception as exception:
+                raise exceptions.DataPackageException(
+                    'Not resolved Remote URI "%s" '
+                    'for resource.%s' % (value, property))
+
+        # URI -> Local
+        else:
+            if not is_safe_path(value):
+                raise exceptions.DataPackageException(
+                    'Not safe path in Local URI "%s" '
+                    'for resource.%s' % (value, property))
+            fullpath = os.path.join(base_path, value)
+            try:
+                with io.open(fullpath, encoding='utf-8') as file:
+                    descriptor[property] = json.load(file)
+            except Exception as exception:
+                raise exceptions.DataPackageException(
+                    'Not resolved Local URI "%s" '
+                    'for resource.%s' % (value, property))
 
 
 # Apply defaults
 
 def apply_defaults_to_data_package(descriptor):
-    """Apply defaults to Data Package descriptor (IN-PLACE FOR NOW).
+    """Apply defaults to data package descriptor (IN-PLACE FOR NOW).
     """
     descriptor.setdefault('profile', config.DEFAULT_DATA_PACKAGE_PROFILE)
     for resource in descriptor.get('resources', []):
@@ -19,7 +82,7 @@ def apply_defaults_to_data_package(descriptor):
 
 
 def apply_defaults_to_resource(descriptor):
-    """Apply defaults to Resource descriptor (IN-PLACE FOR NOW).
+    """Apply defaults to resource descriptor (IN-PLACE FOR NOW).
     """
     descriptor.setdefault('profile', config.DEFAULT_RESOURCE_PROFILE)
     descriptor.setdefault('encoding', config.DEFAULT_RESOURCE_ENCODING)

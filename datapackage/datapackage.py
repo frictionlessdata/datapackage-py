@@ -61,7 +61,8 @@ class DataPackage(object):
 
         self._base_path = self._get_base_path(descriptor, default_base_path)
         self._descriptor = self._load_descriptor(descriptor)
-        self._dereference_descriptor(self._descriptor)
+
+        helpers.dereference_data_package(self._descriptor, self._base_path)
         helpers.apply_defaults_to_data_package(self._descriptor)
 
         self._schema = self._load_schema(schema)
@@ -385,49 +386,3 @@ class DataPackage(object):
     def _remove_tempdir_if_exists(self):
         if hasattr(self, '_tempdir') and os.path.exists(self._tempdir):
             shutil.rmtree(self._tempdir, ignore_errors=True)
-
-    def _dereference_descriptor(self, descriptor):
-        PROPERTIES = ['schema', 'dialect']
-        for property in PROPERTIES:
-            for resource in descriptor.get('resources', []):
-                value = resource.get(property)
-
-                # URI -> No
-                if not isinstance(value, six.string_types):
-                    continue
-
-                # URI -> Pointer
-                if value.startswith('#'):
-                    try:
-                        pointer = jsonpointer.JsonPointer(value[1:])
-                        resource[property] = pointer.resolve(descriptor)
-                    except Exception as exception:
-                        raise DataPackageException(
-                            'Not resolved Pointer URI "%s" '
-                            'for resource.%s' % (value, property))
-
-                # URI -> Remote
-                elif value.startswith('http'):
-                    try:
-                        response = requests.get(value)
-                        response.raise_for_status()
-                        resource[property] = response.json()
-                    except Exception as exception:
-                        raise DataPackageException(
-                            'Not resolved Remote URI "%s" '
-                            'for resource.%s' % (value, property))
-
-                # URI -> Local
-                else:
-                    if not helpers.is_safe_path(value):
-                        raise DataPackageException(
-                            'Not safe path in Local URI "%s" '
-                            'for resource.%s' % (value, property))
-                    fullpath = os.path.join(self.base_path, value)
-                    try:
-                        with io.open(fullpath, encoding='utf-8') as file:
-                            resource[property] = json.load(file)
-                    except Exception as exception:
-                        raise DataPackageException(
-                            'Not resolved Local URI "%s" '
-                            'for resource.%s' % (value, property))
