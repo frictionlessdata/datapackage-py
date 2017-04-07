@@ -21,12 +21,15 @@ def dereference_data_package(descriptor, base_path):
     """
     for resource in descriptor.get('resources', []):
         dereference_resource(resource, base_path, descriptor)
+    return descriptor
 
 
-def dereference_resource(descriptor, base_path, base_descriptor):
+def dereference_resource(descriptor, base_path, base_descriptor=None):
     """Dereference resource descriptor (IN-PLACE FOR NOW).
     """
     PROPERTIES = ['schema', 'dialect']
+    if base_descriptor is None:
+        base_descriptor = descriptor
     for property in PROPERTIES:
         value = descriptor.get(property)
 
@@ -70,6 +73,8 @@ def dereference_resource(descriptor, base_path, base_descriptor):
                     'Not resolved Local URI "%s" '
                     'for resource.%s' % (value, property))
 
+    return descriptor
+
 
 # Apply defaults
 
@@ -79,6 +84,7 @@ def apply_defaults_to_data_package(descriptor):
     descriptor.setdefault('profile', config.DEFAULT_DATA_PACKAGE_PROFILE)
     for resource in descriptor.get('resources', []):
         apply_defaults_to_resource(resource)
+    return descriptor
 
 
 def apply_defaults_to_resource(descriptor):
@@ -101,6 +107,8 @@ def apply_defaults_to_resource(descriptor):
         if dialect is not None:
             for key, value in config.DEFAULT_DIALECT.items():
                 dialect.setdefault(key, value)
+
+    return descriptor
 
 
 # Miscellaneous

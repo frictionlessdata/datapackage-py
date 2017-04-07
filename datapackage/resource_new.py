@@ -16,11 +16,21 @@ class Resource(object):
         descriptor (dict): VALID Data Resource descriptor
         base_path (str): base path to resolve local paths
 
+    Descriptor updates:
+        - dereferencing
+        - applying defaults
+
     """
 
     # Public
 
     def __init__(self, descriptor, base_path=None):
+
+        # Update descriptor
+        descriptor = helpers.dereference_resource(descriptor, base_path)
+        descriptor = helpers.apply_defaults_to_resource(descriptor)
+
+        # Set attributes
         self.__descriptor = descriptor
         self.__base_path = base_path
 
