@@ -14,11 +14,11 @@ class Resource(object):
 
     Arguments:
         descriptor (dict): VALID Data Resource descriptor
-        base_path (str): base path to resolve local paths
+        base_path (str): base path to resolve relative paths
 
     Descriptor updates:
-        - dereferencing
-        - applying defaults
+        - dereference
+        - apply defaults
 
     """
 
@@ -35,6 +35,8 @@ class Resource(object):
         self.__base_path = base_path
 
     def descriptor(self):
+        """dict: resource descriptor
+        """
         return self.__descriptor
 
     @property
@@ -67,6 +69,7 @@ class Resource(object):
             else:
                 return 'multipart-remote'
 
+    @property
     def source(self):
         """any/str/str[0]: normalized data source
 
@@ -94,5 +97,6 @@ class Resource(object):
         if self.type in ['multipart-local', 'multipart-remote']:
             return self.descriptor['path']
 
+    @property
     def table(self):
         pass
