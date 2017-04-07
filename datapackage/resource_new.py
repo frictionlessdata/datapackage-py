@@ -16,10 +16,13 @@ class Resource(object):
         descriptor (str/dict): VALID Data Resource descriptor
         base_path (str): base path to resolve relative paths
 
-    Descriptor actions:
-        - retrieve
+    Descriptor processing:
+        - retrieve (if needed)
         - dereference
         - expand
+
+    After all this actions will take place the descriptor
+    will be available as `resource.descriptor`.
 
     """
 
@@ -31,7 +34,7 @@ class Resource(object):
         if base_path is None:
             base_path = helpers.get_descriptor_base_path(descriptor)
 
-        # Descriptor actions
+        # Process descriptor
         descriptor = helpers.retrieve_descriptor(descriptor)
         descriptor = helpers.dereference_resource_descriptor(descriptor, base_path)
         descriptor = helpers.expand_resource_descriptor(descriptor)

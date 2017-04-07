@@ -64,7 +64,7 @@ class DataPackage(object):
         # Get base path
         self._base_path = helpers.get_descriptor_base_path(descriptor) or default_base_path
 
-        # Descriptor actions
+        # Process actions
         self._descriptor = helpers.retrieve_descriptor(descriptor)
         helpers.dereference_data_package_descriptor(self._descriptor, self._base_path)
         helpers.expand_data_package_descriptor(self._descriptor)
