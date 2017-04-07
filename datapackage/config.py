@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 # Module API
 
-DEFAULT_PACKAGE_PROFILE = 'data-package'
+DEFAULT_DATA_PACKAGE_PROFILE = 'data-package'
 DEFAULT_RESOURCE_PROFILE = 'data-resource'
 DEFAULT_RESOURCE_ENCODING = 'utf-8'
 DEFAULT_FIELD_TYPE = 'string'

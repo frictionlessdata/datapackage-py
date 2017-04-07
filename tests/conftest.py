@@ -28,10 +28,3 @@ def txt_tmpfile():
 def csv_tmpfile():
     with tempfile.NamedTemporaryFile(suffix='.csv') as f:
         yield f
-
-
-@pytest.yield_fixture()
-def NoDefaultsDataPackage():
-    class NoDefaultsDataPackage(DataPackage):
-        _apply_defaults = mock.Mock()
-    yield NoDefaultsDataPackage
