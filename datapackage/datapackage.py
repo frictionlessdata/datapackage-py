@@ -57,14 +57,19 @@ class DataPackage(object):
     # Public
 
     def __init__(self, descriptor=None, schema='data-package', default_base_path=None):
+
+        # Extract from zip
         descriptor = self._extract_zip_if_possible(descriptor)
 
-        self._base_path = self._get_base_path(descriptor, default_base_path)
-        self._descriptor = helpers.retrieve_descriptor(descriptor)
+        # Get base path
+        self._base_path = helpers.get_descriptor_base_path(descriptor) or default_base_path
 
+        # Descriptor actions
+        self._descriptor = helpers.retrieve_descriptor(descriptor)
         helpers.dereference_data_package_descriptor(self._descriptor, self._base_path)
         helpers.expand_data_package_descriptor(self._descriptor)
 
+        # Set attributes
         self._schema = self._load_schema(schema)
         self._resources = self._load_resources(self.descriptor,
                                                self.base_path)
@@ -318,18 +323,6 @@ class DataPackage(object):
 
     def _load_schema(self, schema):
         return datapackage.schema.Schema(schema)
-
-    def _get_base_path(self, descriptor, default_base_path):
-        base_path = default_base_path
-
-        if isinstance(descriptor, six.string_types):
-            if os.path.exists(descriptor):
-                base_path = os.path.dirname(os.path.abspath(descriptor))
-            else:
-                # suppose descriptor is a URL
-                base_path = os.path.dirname(descriptor)
-
-        return base_path
 
     def _load_resources(self, descriptor, base_path):
         return self._update_resources((), descriptor, base_path)

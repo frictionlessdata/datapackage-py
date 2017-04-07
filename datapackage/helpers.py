@@ -14,6 +14,21 @@ from . import config
 from . import exceptions
 
 
+# Get descriptor base path
+
+def get_descriptor_base_path(descriptor):
+    """Get descriptor base path if string or return None.
+    """
+    base_path = None
+    if isinstance(descriptor, six.string_types):
+        if os.path.exists(descriptor):
+            base_path = os.path.dirname(os.path.abspath(descriptor))
+        else:
+            # suppose descriptor is a URL
+            base_path = os.path.dirname(descriptor)
+    return base_path
+
+
 # Retrieve descriptor
 
 def retrieve_descriptor(descriptor):

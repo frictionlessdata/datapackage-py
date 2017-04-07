@@ -27,6 +27,10 @@ class Resource(object):
 
     def __init__(self, descriptor, base_path=None):
 
+        # Get base path
+        if base_path is None:
+            base_path = helpers.get_descriptor_base_path(descriptor)
+
         # Descriptor actions
         descriptor = helpers.retrieve_descriptor(descriptor)
         descriptor = helpers.dereference_resource_descriptor(descriptor, base_path)
