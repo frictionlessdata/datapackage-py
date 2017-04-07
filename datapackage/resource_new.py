@@ -3,8 +3,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import six
 from jsontableschema import Table
+from . import helpers
 
 
 # Module API
@@ -17,7 +17,7 @@ class Resource(object):
         base_path (str): base path to resolve relative paths
 
     Descriptor processing:
-        - retrieve (if needed)
+        - retrieve
         - dereference
         - expand
 
@@ -43,6 +43,7 @@ class Resource(object):
         self.__descriptor = descriptor
         self.__base_path = base_path
 
+    @property
     def descriptor(self):
         """dict: resource descriptor
         """
@@ -50,7 +51,7 @@ class Resource(object):
 
     @property
     def type(self):
-        """str: resource type:
+        """str: resource type
 
         Resource types:
             - inline
@@ -60,8 +61,8 @@ class Resource(object):
             - multipart-remote
 
         """
-        data = descriptor.get('data')
-        path = descriptor.get('path')
+        data = self.descriptor.get('data')
+        path = self.descriptor.get('path')
         # Inline
         if data is not None:
             return 'inline'
@@ -108,4 +109,46 @@ class Resource(object):
 
     @property
     def table(self):
-        pass
+        """None/tableschema.Table: provide Table API for tabular resource
+        """
+        source = self.source
+
+        # Non tabular resource
+        if self.descriptor['profile'] != 'tabular-data-resource':
+           return None
+
+        # Multipart local resource
+        if self.type == 'multipart-local':
+            # TODO: implement
+            source = source
+
+        # Multipart remote resource
+        elif self.type == 'multipart-remote':
+            # TODO: implement
+            source = source
+
+        schema = self.descriptor['schema']
+        options = _get_table_options(self.descriptor)
+        table = Table(source, schema, **options)
+        return table
+
+
+# Internal
+
+def _get_table_options(descriptor):
+    DIALECT_KEYS = [
+        'delimiter',
+        'doubleQuote',
+        'lineTerminator',
+        'quoteChar',
+        'escapeChar',
+        'skipInitialSpace',
+    ]
+    options = {}
+    options['format'] = 'csv'
+    options['encoding'] = descriptor['encoding']
+    dialect = descriptor.get('dialect')
+    if dialect:
+        for key in DIALECT_KEYS:
+            options[key.lower()] = dialect[key]
+    return options
