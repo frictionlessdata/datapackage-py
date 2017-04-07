@@ -1,0 +1,9 @@
+{
+    "name": "name",
+    "data": "data",
+    "schema": "table_schema.json",
+    "dialect": "#/dialects/main",
+    "dialects": {
+        "main": {"delimiter": ","}
+    }
+}
