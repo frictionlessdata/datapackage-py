@@ -19,7 +19,7 @@ class Resource(object):
     Descriptor actions:
         - retrieve
         - dereference
-        - apply defaults
+        - expand
 
     """
 
@@ -29,8 +29,8 @@ class Resource(object):
 
         # Descriptor actions
         descriptor = helpers.retrieve_descriptor(descriptor)
-        descriptor = helpers.dereference_resource(descriptor, base_path)
-        descriptor = helpers.apply_defaults_to_resource(descriptor)
+        descriptor = helpers.dereference_resource_descriptor(descriptor, base_path)
+        descriptor = helpers.expand_resource_descriptor(descriptor)
 
         # Set attributes
         self.__descriptor = descriptor

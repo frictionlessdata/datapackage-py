@@ -62,8 +62,8 @@ class DataPackage(object):
         self._base_path = self._get_base_path(descriptor, default_base_path)
         self._descriptor = helpers.retrieve_descriptor(descriptor)
 
-        helpers.dereference_data_package(self._descriptor, self._base_path)
-        helpers.apply_defaults_to_data_package(self._descriptor)
+        helpers.dereference_data_package_descriptor(self._descriptor, self._base_path)
+        helpers.expand_data_package_descriptor(self._descriptor)
 
         self._schema = self._load_schema(schema)
         self._resources = self._load_resources(self.descriptor,

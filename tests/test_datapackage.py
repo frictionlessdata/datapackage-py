@@ -257,7 +257,7 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(descriptor)
         assert json.loads(dp.to_json()) == descriptor
 
-    @mock.patch('datapackage.helpers.apply_defaults_to_data_package')
+    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
     def test_descriptor_dereferencing_uri(self, _):
         dp = datapackage.DataPackage('tests/fixtures/datapackage_with_dereferencing.json')
         assert dp.descriptor['resources'] == [
@@ -265,7 +265,7 @@ class TestDataPackage(object):
             {'name': 'name2', 'dialect': {'delimiter': ','}},
         ]
 
-    @mock.patch('datapackage.helpers.apply_defaults_to_data_package')
+    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
     def test_descriptor_dereferencing_uri_pointer(self, _):
         descriptor = {
             'resources': [
@@ -291,7 +291,7 @@ class TestDataPackage(object):
             dp = datapackage.DataPackage(descriptor)
 
     @httpretty.activate
-    @mock.patch('datapackage.helpers.apply_defaults_to_data_package')
+    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
     def test_descriptor_dereferencing_uri_remote(self, _):
         # Mocks
         httpretty.register_uri(httpretty.GET,
@@ -323,7 +323,7 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.DataPackageException):
             dp = datapackage.DataPackage(descriptor)
 
-    @mock.patch('datapackage.helpers.apply_defaults_to_data_package')
+    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
     def test_descriptor_dereferencing_uri_local(self, _):
         descriptor = {
             'resources': [

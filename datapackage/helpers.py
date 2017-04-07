@@ -14,7 +14,7 @@ from . import config
 from . import exceptions
 
 
-# Retrieve
+# Retrieve descriptor
 
 def retrieve_descriptor(descriptor):
     """Retrieve descriptor.
@@ -54,17 +54,17 @@ def retrieve_descriptor(descriptor):
     return the_descriptor
 
 
-# Dereference
+# Dereference descriptor
 
-def dereference_data_package(descriptor, base_path):
+def dereference_data_package_descriptor(descriptor, base_path):
     """Dereference data package descriptor (IN-PLACE FOR NOW).
     """
     for resource in descriptor.get('resources', []):
-        dereference_resource(resource, base_path, descriptor)
+        dereference_resource_descriptor(resource, base_path, descriptor)
     return descriptor
 
 
-def dereference_resource(descriptor, base_path, base_descriptor=None):
+def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None):
     """Dereference resource descriptor (IN-PLACE FOR NOW).
     """
     PROPERTIES = ['schema', 'dialect']
@@ -116,18 +116,18 @@ def dereference_resource(descriptor, base_path, base_descriptor=None):
     return descriptor
 
 
-# Apply defaults
+# Expand descriptor
 
-def apply_defaults_to_data_package(descriptor):
+def expand_data_package_descriptor(descriptor):
     """Apply defaults to data package descriptor (IN-PLACE FOR NOW).
     """
     descriptor.setdefault('profile', config.DEFAULT_DATA_PACKAGE_PROFILE)
     for resource in descriptor.get('resources', []):
-        apply_defaults_to_resource(resource)
+        expand_resource_descriptor(resource)
     return descriptor
 
 
-def apply_defaults_to_resource(descriptor):
+def expand_resource_descriptor(descriptor):
     """Apply defaults to resource descriptor (IN-PLACE FOR NOW).
     """
     descriptor.setdefault('profile', config.DEFAULT_RESOURCE_PROFILE)

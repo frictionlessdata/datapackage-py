@@ -41,7 +41,7 @@ def test_push_datapackage(storage):
     ]
 
 
-@mock.patch('datapackage.helpers.apply_defaults_to_data_package')
+@mock.patch('datapackage.helpers.expand_data_package_descriptor')
 def test_pull_datapackage(_, storage, descriptor):
 
     # Prepare and call
