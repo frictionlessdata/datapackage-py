@@ -438,8 +438,45 @@ def test_descriptor_table_tabular_remote(patch_get):
         'schema': 'resource_schema.json',
     }
     # Mocks
-    patch_get('http://example.com/resource_data.csv',
-        body="id,name\n1,english\n2,中国人")
+    patch_get('http://example.com/resource_data.csv', body="id,name\n1,english\n2,中国人")
+    # Tests
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_descriptor_table_tabular_multipart_local():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['chunk1.csv', 'chunk2.csv'],
+        'schema': 'resource_schema.json',
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+@httpretty.activate
+def test_descriptor_table_tabular_multipart_remote(patch_get):
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': [
+            'http://example.com/chunk1.csv',
+            'http://example.com/chunk2.csv',
+            'http://example.com/chunk3.csv',
+        ],
+        'schema': 'resource_schema.json',
+    }
+    # Mocks
+    patch_get('http://example.com/chunk1.csv', body="id,name\n")
+    patch_get('http://example.com/chunk2.csv', body="1,english")
+    patch_get('http://example.com/chunk3.csv', body="2,中国人\n")
     # Tests
     resource = Resource(descriptor, base_path='tests/fixtures')
     assert resource.table.read(keyed=True) == [

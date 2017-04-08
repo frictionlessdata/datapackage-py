@@ -119,6 +119,10 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
                 raise exceptions.DataPackageException(
                     'Not safe path in Local URI "%s" '
                     'for resource.%s' % (value, property))
+            if not base_path:
+                raise exceptions.DataPackageException(
+                    'Local URI "%s" requires base path '
+                    'for resource.%s' % (value, property))
             fullpath = os.path.join(base_path, value)
             try:
                 with io.open(fullpath, encoding='utf-8') as file:

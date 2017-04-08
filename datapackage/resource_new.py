@@ -3,9 +3,12 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import io
 import os
+from itertools import chain
 from jsontableschema import Table
 from six.moves.urllib.parse import urljoin
+from six.moves.urllib.request import urlopen
 from . import exceptions
 from . import helpers
 
@@ -101,23 +104,29 @@ class Resource(object):
     @property
     def table(self):
         """None/tableschema.Table: provide Table API for tabular resource
-        """
-        source = self.source
 
-        # Non tabular resource
+        Example:
+        ```
+        if resource.table:
+            resource.schema
+            resource.iter()
+            resource.read(keyed=True)
+            resource.save('table.csv')
+        ```
+
+        Reference:
+            https://github.com/frictionlessdata/tableschema-py#table
+
+        """
+
+        # Resource -> Regular
         if self.descriptor['profile'] != 'tabular-data-resource':
            return None
 
-        # Multipart local resource
-        if self.source_type == 'multipart-local':
-            # TODO: implement
-            source = source
-
-        # Multipart remote resource
-        elif self.source_type == 'multipart-remote':
-            # TODO: implement
-            source = source
-
+        # Resource -> Tabular
+        source = self.source
+        if self.source_type.startswith('multipart'):
+            source = _MultipartSource(self.source, self.source_type)
         schema = self.descriptor['schema']
         options = _get_table_options(self.descriptor)
         table = Table(source, schema, **options)
@@ -190,3 +199,61 @@ def _get_table_options(descriptor):
             options[key.lower()] = dialect[key]
 
     return options
+
+
+class _MultipartSource(object):
+
+    # Public
+
+    def __init__(self, source, source_type):
+        self.__source = source
+        self.__source_type = source_type
+        self.__rows = self.__iter_rows()
+
+    def __iter__(self):
+        return self.__rows
+
+    @property
+    def closed(self):
+        return False
+
+    def readable(self):
+        return True
+
+    def seekable(self):
+        return True
+
+    def writable(self):
+        return False
+
+    def flush(self):
+        pass
+
+    def seek(self, offset):
+        assert offset == 0
+        self.__rows = self.__iter_rows()
+
+    def read(self, size):
+        res = b''
+        while True:
+            try:
+                res += next(self.__rows)
+            except StopIteration:
+                break
+            if len(res) > size:
+                break
+        return res
+
+    # Private
+
+    def __iter_rows(self):
+        streams = []
+        if self.__source_type == 'multipart-local':
+            streams = [io.open(chunk, 'rb') for chunk in self.__source]
+        elif self.__source_type == 'multipart-remote':
+            streams = [urlopen(chunk) for chunk in self.__source]
+        for stream in streams:
+            for row in stream:
+                if not row.endswith(b'\n'):
+                    row += b'\n'
+                yield row
