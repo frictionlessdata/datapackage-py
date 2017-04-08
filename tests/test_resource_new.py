@@ -479,6 +479,20 @@ def test_descriptor_table_tabular_multipart_remote(patch_get):
     ]
 
 
+def test_descriptor_table_tabular_skip_rows():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['resource_data.csv'],
+        'schema': 'resource_schema.json',
+        'skipRows': [2],
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
 # Helpers
 
 @pytest.fixture

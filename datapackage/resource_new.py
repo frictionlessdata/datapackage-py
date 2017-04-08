@@ -191,6 +191,7 @@ def _get_table_options(descriptor):
     if not descriptor.get('data'):
         options['format'] = 'csv'
     options['encoding'] = descriptor['encoding']
+    options['skip_rows'] = descriptor.get('skipRows', [])
 
     # Dialect
     dialect = descriptor.get('dialect')
