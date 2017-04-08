@@ -419,7 +419,7 @@ class TestDataPackage(object):
                     'delimiter': 'custom',
                     'doubleQuote': True,
                     'lineTerminator': '\r\n',
-                    'quoteChar': '""',
+                    'quoteChar': '"',
                     'escapeChar': '\\',
                     'skipInitialSpace': True,
                     'header': True,

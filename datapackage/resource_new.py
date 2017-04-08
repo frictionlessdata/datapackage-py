@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 
 import io
 import os
-from itertools import chain
 from jsontableschema import Table
 from six.moves.urllib.parse import urljoin
 from six.moves.urllib.request import urlopen
@@ -17,6 +16,9 @@ from . import helpers
 
 class Resource(object):
     """Data Resource representation.
+
+    Provided descriptor must be valid. For non valid descriptor
+    the class behaviour is undefined.
 
     Arguments:
         descriptor (str/dict): VALID Data Resource descriptor
@@ -31,7 +33,7 @@ class Resource(object):
         - expand
 
     After all this actions will take place the descriptor
-    will be available as `resource.descriptor`.
+    is available as `resource.descriptor`.
 
     """
 
@@ -121,7 +123,7 @@ class Resource(object):
 
         # Resource -> Regular
         if self.descriptor['profile'] != 'tabular-data-resource':
-           return None
+            return None
 
         # Resource -> Tabular
         source = self.source
