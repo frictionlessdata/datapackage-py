@@ -17,7 +17,7 @@ DEFAULT_DIALECT = {
     'delimiter': ',',
     'doubleQuote': True,
     'lineTerminator': '\r\n',
-    'quoteChar': '""',
+    'quoteChar': '"',
     'escapeChar': '\\',
     'skipInitialSpace': True,
     'header': True,

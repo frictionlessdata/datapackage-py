@@ -196,6 +196,8 @@ def _get_table_options(descriptor):
     # Dialect
     dialect = descriptor.get('dialect')
     if dialect:
+        if not dialect['header']:
+            options['headers'] = None
         for key in _DIALECT_KEYS:
             options[key.lower()] = dialect[key]
 

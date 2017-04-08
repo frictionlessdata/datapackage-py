@@ -223,7 +223,7 @@ def test_descriptor_expand_tabular_dialect():
             'delimiter': 'custom',
             'doubleQuote': True,
             'lineTerminator': '\r\n',
-            'quoteChar': '""',
+            'quoteChar': '"',
             'escapeChar': '\\',
             'skipInitialSpace': True,
             'header': True,
@@ -486,6 +486,20 @@ def test_descriptor_table_tabular_skip_rows():
         'path': ['resource_data.csv'],
         'schema': 'resource_schema.json',
         'skipRows': [2],
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_descriptor_table_tabular_dialect_header_false():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['chunk2.csv'],
+        'schema': 'resource_schema.json',
+        'dialect': {'header': False},
     }
     resource = Resource(descriptor, base_path='tests/fixtures')
     assert resource.table.read(keyed=True) == [
