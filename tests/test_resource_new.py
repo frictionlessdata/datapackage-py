@@ -39,7 +39,6 @@ def test_descriptor_retrieve_path_bad():
         Resource(descriptor).descriptor
 
 
-@httpretty.activate
 def test_descriptor_retrieve_url(patch_get):
     descriptor = 'http://example.com/descriptor.json'
     descriptor_contents = {
@@ -54,7 +53,6 @@ def test_descriptor_retrieve_url(patch_get):
     assert actual == expect
 
 
-@httpretty.activate
 def test_descriptor_retrieve_url_bad(patch_get):
     descriptor = 'http://example.com/descriptor.json'
     # Mocks
@@ -104,7 +102,6 @@ def test_descriptor_dereference_pointer_bad():
         resource = Resource(descriptor)
 
 
-@httpretty.activate
 def test_descriptor_dereference_remote(patch_get):
     descriptor = {
         'name': 'name',
@@ -122,7 +119,6 @@ def test_descriptor_dereference_remote(patch_get):
     })
 
 
-@httpretty.activate
 def test_descriptor_dereference_remote_bad(patch_get):
     descriptor = {
         'name': 'name',
@@ -429,7 +425,6 @@ def test_descriptor_table_tabular_local():
     ]
 
 
-@httpretty.activate
 def test_descriptor_table_tabular_remote(patch_get):
     descriptor = {
         'name': 'name',
@@ -461,7 +456,6 @@ def test_descriptor_table_tabular_multipart_local():
     ]
 
 
-@httpretty.activate
 def test_descriptor_table_tabular_multipart_remote(patch_get):
     descriptor = {
         'name': 'name',
@@ -489,4 +483,7 @@ def test_descriptor_table_tabular_multipart_remote(patch_get):
 
 @pytest.fixture
 def patch_get():
-    return partial(httpretty.register_uri, httpretty.GET)
+    httpretty.enable()
+    yield partial(httpretty.register_uri, httpretty.GET)
+    httpretty.disable()
+    httpretty.reset()

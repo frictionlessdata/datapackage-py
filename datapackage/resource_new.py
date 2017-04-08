@@ -229,6 +229,9 @@ class _MultipartSource(object):
     def flush(self):
         pass
 
+    def read1(self, size):
+        return self.read(size)
+
     def seek(self, offset):
         assert offset == 0
         self.__rows = self.__iter_rows()
