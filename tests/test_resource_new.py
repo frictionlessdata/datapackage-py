@@ -493,6 +493,27 @@ def test_descriptor_table_tabular_skip_rows():
     ]
 
 
+def test_descriptor_table_tabular_dialect_custom():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['dialect.csv'],
+        'schema': 'resource_schema.json',
+        'dialect': {
+            'delimiter': '|',
+            'quoteChar': '#',
+            'escapeChar': '-',
+            'doubleQuote': False,
+            'skipInitialSpace': False,
+        },
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': ' |##'},
+    ]
+
+
 def test_descriptor_table_tabular_dialect_header_false():
     descriptor = {
         'name': 'name',
