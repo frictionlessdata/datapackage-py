@@ -190,8 +190,9 @@ def _get_table_options(descriptor):
 
     # General
     options = {}
-    if not descriptor.get('data'):
-        options['format'] = 'csv'
+    options['format'] = 'csv'
+    if descriptor.get('data'):
+        options['format'] = 'native'
     options['encoding'] = descriptor['encoding']
     options['skip_rows'] = descriptor.get('skipRows', [])
 
