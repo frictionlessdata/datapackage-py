@@ -257,14 +257,16 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(descriptor)
         assert json.loads(dp.to_json()) == descriptor
 
-    def test_descriptor_dereferencing_uri(self, NoDefaultsDataPackage):
-        dp = NoDefaultsDataPackage('tests/fixtures/datapackage_with_dereferencing.json')
+    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
+    def test_descriptor_dereferencing_uri(self, _):
+        dp = datapackage.DataPackage('tests/fixtures/datapackage_with_dereferencing.json')
         assert dp.descriptor['resources'] == [
             {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'dialect': {'delimiter': ','}},
         ]
 
-    def test_descriptor_dereferencing_uri_pointer(self, NoDefaultsDataPackage):
+    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
+    def test_descriptor_dereferencing_uri_pointer(self, _):
         descriptor = {
             'resources': [
                 {'name': 'name1', 'schema': '#/schemas/main'},
@@ -273,7 +275,7 @@ class TestDataPackage(object):
             'schemas': {'main': {'fields': [{'name': 'name'}]}},
             'dialects': [{'delimiter': ','}],
         }
-        dp = NoDefaultsDataPackage(descriptor)
+        dp = datapackage.DataPackage(descriptor)
         assert dp.descriptor['resources'] == [
             {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'dialect': {'delimiter': ','}},
@@ -289,9 +291,8 @@ class TestDataPackage(object):
             dp = datapackage.DataPackage(descriptor)
 
     @httpretty.activate
-    @pytest.mark.skipif(sys.version_info < (3,3),
-        reason='Python2 conflict pytest/httpretty')
-    def test_descriptor_dereferencing_uri_remote(self, NoDefaultsDataPackage):
+    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
+    def test_descriptor_dereferencing_uri_remote(self, _):
         # Mocks
         httpretty.register_uri(httpretty.GET,
             'http://example.com/schema', body='{"fields": [{"name": "name"}]}')
@@ -304,7 +305,7 @@ class TestDataPackage(object):
                 {'name': 'name2', 'dialect': 'https://example.com/dialect'},
              ],
         }
-        dp = NoDefaultsDataPackage(descriptor)
+        dp = datapackage.DataPackage(descriptor)
         assert dp.descriptor['resources'] == [
             {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'dialect': {'delimiter': ','}},
@@ -322,14 +323,15 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.DataPackageException):
             dp = datapackage.DataPackage(descriptor)
 
-    def test_descriptor_dereferencing_uri_local(self, NoDefaultsDataPackage):
+    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
+    def test_descriptor_dereferencing_uri_local(self, _):
         descriptor = {
             'resources': [
                 {'name': 'name1', 'schema': 'table_schema.json'},
                 {'name': 'name2', 'dialect': 'csv_dialect.json'},
              ],
         }
-        dp = NoDefaultsDataPackage(descriptor, default_base_path='tests/fixtures')
+        dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
         assert dp.descriptor['resources'] == [
             {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'dialect': {'delimiter': ','}},
@@ -417,7 +419,7 @@ class TestDataPackage(object):
                     'delimiter': 'custom',
                     'doubleQuote': True,
                     'lineTerminator': '\r\n',
-                    'quoteChar': '""',
+                    'quoteChar': '"',
                     'escapeChar': '\\',
                     'skipInitialSpace': True,
                     'header': True,

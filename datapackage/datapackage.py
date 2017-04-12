@@ -57,13 +57,19 @@ class DataPackage(object):
     # Public
 
     def __init__(self, descriptor=None, schema='data-package', default_base_path=None):
+
+        # Extract from zip
         descriptor = self._extract_zip_if_possible(descriptor)
 
-        self._base_path = self._get_base_path(descriptor, default_base_path)
-        self._descriptor = self._load_descriptor(descriptor)
-        self._dereference_descriptor(self._descriptor)
-        self._apply_defaults(self._descriptor)
+        # Get base path
+        self._base_path = helpers.get_descriptor_base_path(descriptor) or default_base_path
 
+        # Process actions
+        self._descriptor = helpers.retrieve_descriptor(descriptor)
+        helpers.dereference_data_package_descriptor(self._descriptor, self._base_path)
+        helpers.expand_data_package_descriptor(self._descriptor)
+
+        # Set attributes
         self._schema = self._load_schema(schema)
         self._resources = self._load_resources(self.descriptor,
                                                self.base_path)
@@ -315,55 +321,8 @@ class DataPackage(object):
             msg = 'DataPackage must have only one "datapackage.json" (had {n})'
             raise DataPackageException(msg.format(n=len(datapackage_jsons)))
 
-    def _load_descriptor(self, descriptor):
-        the_descriptor = descriptor
-
-        if the_descriptor is None:
-            the_descriptor = {}
-
-        if isinstance(the_descriptor, six.string_types):
-            try:
-                if os.path.isfile(the_descriptor):
-                    with open(the_descriptor, 'r') as f:
-                        the_descriptor = json.load(f)
-                else:
-                    req = requests.get(the_descriptor)
-                    req.raise_for_status()
-                    the_descriptor = req.json()
-            except (IOError, requests.exceptions.RequestException) as error:
-                message = 'Unable to load JSON at "%s"' % descriptor
-                six.raise_from(DataPackageException(message), error)
-            except ValueError as error:
-                # Python2 doesn't have json.JSONDecodeError (use ValueErorr)
-                message = 'Unable to parse JSON at "%s". %s' % (descriptor, error)
-                six.raise_from(DataPackageException(message), error)
-
-        if hasattr(the_descriptor, 'read'):
-            try:
-                the_descriptor = json.load(the_descriptor)
-            except ValueError as e:
-                six.raise_from(DataPackageException(str(e)), e)
-
-        if not isinstance(the_descriptor, dict):
-            msg = 'Data must be a \'dict\', but was a \'{0}\''
-            raise DataPackageException(msg.format(type(the_descriptor).__name__))
-
-        return the_descriptor
-
     def _load_schema(self, schema):
         return datapackage.schema.Schema(schema)
-
-    def _get_base_path(self, descriptor, default_base_path):
-        base_path = default_base_path
-
-        if isinstance(descriptor, six.string_types):
-            if os.path.exists(descriptor):
-                base_path = os.path.dirname(os.path.abspath(descriptor))
-            else:
-                # suppose descriptor is a URL
-                base_path = os.path.dirname(descriptor)
-
-        return base_path
 
     def _load_resources(self, descriptor, base_path):
         return self._update_resources((), descriptor, base_path)
@@ -385,70 +344,3 @@ class DataPackage(object):
     def _remove_tempdir_if_exists(self):
         if hasattr(self, '_tempdir') and os.path.exists(self._tempdir):
             shutil.rmtree(self._tempdir, ignore_errors=True)
-
-    def _dereference_descriptor(self, descriptor):
-        PROPERTIES = ['schema', 'dialect']
-        for property in PROPERTIES:
-            for resource in descriptor.get('resources', []):
-                value = resource.get(property)
-
-                # URI -> No
-                if not isinstance(value, six.string_types):
-                    continue
-
-                # URI -> Pointer
-                if value.startswith('#'):
-                    try:
-                        pointer = jsonpointer.JsonPointer(value[1:])
-                        resource[property] = pointer.resolve(descriptor)
-                    except Exception as exception:
-                        raise DataPackageException(
-                            'Not resolved Pointer URI "%s" '
-                            'for resource.%s' % (value, property))
-
-                # URI -> Remote
-                elif value.startswith('http'):
-                    try:
-                        response = requests.get(value)
-                        response.raise_for_status()
-                        resource[property] = response.json()
-                    except Exception as exception:
-                        raise DataPackageException(
-                            'Not resolved Remote URI "%s" '
-                            'for resource.%s' % (value, property))
-
-                # URI -> Local
-                else:
-                    if not helpers.is_safe_path(value):
-                        raise DataPackageException(
-                            'Not safe path in Local URI "%s" '
-                            'for resource.%s' % (value, property))
-                    fullpath = os.path.join(self.base_path, value)
-                    try:
-                        with io.open(fullpath, encoding='utf-8') as file:
-                            resource[property] = json.load(file)
-                    except Exception as exception:
-                        raise DataPackageException(
-                            'Not resolved Local URI "%s" '
-                            'for resource.%s' % (value, property))
-
-    def _apply_defaults(self, descriptor):
-        descriptor.setdefault('profile', config.DEFAULT_PACKAGE_PROFILE)
-        for resource in descriptor.get('resources', []):
-            resource.setdefault('profile', config.DEFAULT_RESOURCE_PROFILE)
-            resource.setdefault('encoding', config.DEFAULT_RESOURCE_ENCODING)
-            if resource['profile'] == 'tabular-data-resource':
-
-                # Schema
-                schema = resource.get('schema')
-                if schema is not None:
-                    for field in schema.get('fields', []):
-                        field.setdefault('type', config.DEFAULT_FIELD_TYPE)
-                        field.setdefault('format', config.DEFAULT_FIELD_FORMAT)
-                    schema.setdefault('missingValues', config.DEFAULT_MISSING_VALUES)
-
-                # Dialect
-                dialect = resource.get('dialect')
-                if dialect is not None:
-                    for key, value in config.DEFAULT_DIALECT.items():
-                        dialect.setdefault(key, value)
