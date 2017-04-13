@@ -4,6 +4,7 @@
         {
             "name": "data",
             "path": "data.csv",
+            "profile": "tabular-data-resource",
             "dialect": {
                 "quoteChar": "|"
             },

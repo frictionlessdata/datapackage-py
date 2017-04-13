@@ -1,7 +1,7 @@
 {
     "resources": [
-        {"name": "name1", "schema": "table_schema.json"},
-        {"name": "name2", "dialect": "#/dialects/main"}
+        {"name": "name1", "data": "data", "schema": "table_schema.json"},
+        {"name": "name2", "data": "data", "dialect": "#/dialects/main"}
     ],
     "dialects": {
         "main": {"delimiter": ","}
