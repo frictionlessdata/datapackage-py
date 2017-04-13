@@ -6,15 +6,15 @@ from __future__ import unicode_literals
 
 import io
 import os
+import re
 import six
 import json
 import unicodecsv as csv
 from copy import deepcopy
 from importlib import import_module
 from jsontableschema import Schema
-from . import helpers
-from . import mappers
 from .datapackage import DataPackage
+from . import helpers
 
 
 # Module API
@@ -47,7 +47,7 @@ def push_datapackage(descriptor, backend, **backend_options):
     # Collect tables/schemas/data
     for resource in model.resources:
         name = resource.descriptor.get('name', None)
-        table = mappers.convert_path(resource.descriptor['path'][0], name)
+        table = _convert_path(resource.descriptor['path'][0], name)
         schema = resource.descriptor['schema']
         data = resource.table.iter(keyed=True)
         # TODO: review
@@ -62,7 +62,7 @@ def push_datapackage(descriptor, backend, **backend_options):
         datamap[table] = values(schema, data)
         if name is not None:
             mapping[name] = table
-    schemas = mappers.convert_schemas(mapping, schemas)
+    schemas = _convert_schemas(mapping, schemas)
 
     # Create tables
     for table in tables:
@@ -104,7 +104,7 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
         # Prepare
         schema = storage.describe(table)
         base = os.path.dirname(descriptor)
-        path, name = mappers.restore_path(table)
+        path, name = _restore_path(table)
         fullpath = os.path.join(base, path)
 
         # Write data
@@ -129,7 +129,7 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
     if six.PY2:
         mode = 'wb'
         encoding = None
-    resources = mappers.restore_resources(resources)
+    resources = _restore_resources(resources)
     helpers.ensure_dir(descriptor)
     with io.open(descriptor,
                  mode=mode,
@@ -140,3 +140,96 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
         }
         json.dump(descriptor, file, indent=4)
     return storage
+
+
+# Internal
+
+def _convert_path(path, name):
+    """Convert resource's path and name to storage's table name.
+
+    Args:
+        path (str): resource path
+        name (str): resource name
+
+    Returns:
+        str: table name
+
+    """
+    table = os.path.splitext(path)[0]
+    table = table.replace(os.path.sep, '__')
+    if name is not None:
+        table = '___'.join([table, name])
+    table = re.sub('[^0-9a-zA-Z_]+', '_', table)
+    table = table.lower()
+    return table
+
+
+def _restore_path(table):
+    """Restore resource's path and name from storage's table.
+
+    Args:
+        table (str): table name
+
+    Returns:
+        (str, str): resource path and name
+
+    """
+    name = None
+    splited = table.split('___')
+    path = splited[0]
+    if len(splited) == 2:
+        name = splited[1]
+    path = path.replace('__', os.path.sep)
+    path += '.csv'
+    return path, name
+
+
+def _convert_schemas(mapping, schemas):
+    """Convert schemas to be compatible with storage schemas.
+
+    Foreign keys related operations.
+
+    Args:
+        mapping (dict): mapping between resource name and table name
+        schemas (list): schemas
+
+    Raises:
+        ValueError: if there is no resource
+            for some foreign key in given mapping
+
+    Returns:
+        list: converted schemas
+
+    """
+    schemas = deepcopy(schemas)
+    for schema in schemas:
+        for fk in schema.get('foreignKeys', []):
+            resource = fk['reference']['resource']
+            if resource != 'self':
+                if resource not in mapping:
+                    message = 'Not resource "%s" for foreign key "%s"'
+                    message = message % (resource, fk)
+                    raise ValueError(message)
+                fk['reference']['resource'] = mapping[resource]
+    return schemas
+
+
+def _restore_resources(resources):
+    """Restore schemas from being compatible with storage schemas.
+
+    Foreign keys related operations.
+
+    Args:
+        list: resources from storage
+
+    Returns:
+        list: restored resources
+
+    """
+    resources = deepcopy(resources)
+    for resource in resources:
+        schema = resource['schema']
+        for fk in schema.get('foreignKeys', []):
+            _, name = _restore_path(fk['reference']['resource'])
+            fk['reference']['resource'] = name
+    return resources
