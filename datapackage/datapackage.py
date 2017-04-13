@@ -16,9 +16,9 @@ import warnings
 import jsonpointer
 import datapackage.schema
 from .resource import Resource
-from .exceptions import DataPackageException
-from . import config
+from . import exceptions
 from . import helpers
+from . import config
 
 
 class DataPackage(object):
@@ -194,7 +194,7 @@ class DataPackage(object):
         except (IOError,
                 zipfile.BadZipfile,
                 zipfile.LargeZipFile) as e:
-            six.raise_from(DataPackageException(e), e)
+            six.raise_from(exceptions.DataPackageException(e), e)
 
     def validate(self):
         """"Validate this Data Package.
@@ -269,7 +269,7 @@ class DataPackage(object):
                              if f.endswith('datapackage.json')]
         if len(datapackage_jsons) != 1:
             msg = 'DataPackage must have only one "datapackage.json" (had {n})'
-            raise DataPackageException(msg.format(n=len(datapackage_jsons)))
+            raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
 
     def _update_resources(self, current_resources, descriptor, base_path):
         resources_dicts = descriptor.get('resources')
