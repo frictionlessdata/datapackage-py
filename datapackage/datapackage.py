@@ -100,16 +100,6 @@ class DataPackage(object):
         return self._descriptor
 
     @property
-    def schema(self):
-        """:class:`.Schema`: This data package's schema.
-
-        Check https://github.com/okfn/datapackage-validate-py for documentation
-        on its attributes.
-
-        """
-        return self._schema
-
-    @property
     def resources(self):
         """"The resources defined in this data package (can be empty).
 
@@ -355,3 +345,16 @@ class DataPackage(object):
             pass
 
         return required
+
+    @property
+    def schema(self):
+        """:class:`.Schema`: This data package's schema.
+        """
+
+        # Deprecate
+        warnings.warn(
+            'DataPackage.schema is deprecated.',
+            UserWarning)
+        required = ()
+
+        return self._schema
