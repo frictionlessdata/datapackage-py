@@ -4,578 +4,535 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
+import io
+import json
 import pytest
 import httpretty
-import tests.test_helpers as test_helpers
-import datapackage
-import datapackage.resource
-import datapackage.exceptions
-
-TabularResource = datapackage.resource.TabularResource
+from functools import partial
+from datapackage.resource import Resource
+from datapackage.helpers import expand_resource_descriptor as expand
+from datapackage import exceptions
 
 
-class TestResource(object):
-    def test_descriptor_are_available(self):
-        resource_dict = {
-            'name': 'foo',
-            'url': 'http://someplace.com/foo.json',
-            'path': 'foo.json',
-            'data': {'foo': 'bar'},
+# Resource.descriptor (retrieve)
+
+def test_descriptor_retrieve_dict():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+    }
+    actual = Resource(descriptor).descriptor
+    expect = expand(descriptor)
+    assert actual == expect
+
+
+def test_descriptor_retrieve_path():
+    descriptor = 'tests/fixtures/data-resource.json'
+    actual = Resource(descriptor).descriptor
+    expect = expand(json.load(io.open(descriptor, encoding='utf-8')))
+    assert actual == expect
+
+
+def test_descriptor_retrieve_path_bad():
+    descriptor = 'tests/fixtures/bad-path.json'
+    with pytest.raises(exceptions.DataPackageException):
+        Resource(descriptor).descriptor
+
+
+def test_descriptor_retrieve_url(patch_get):
+    descriptor = 'http://example.com/descriptor.json'
+    descriptor_contents = {
+        'name': 'name',
+        'data': 'data',
+    }
+    # Mocks
+    patch_get(descriptor, body=json.dumps(descriptor_contents))
+    # Tests
+    actual = Resource(descriptor).descriptor
+    expect = expand(descriptor_contents)
+    assert actual == expect
+
+
+def test_descriptor_retrieve_url_bad(patch_get):
+    descriptor = 'http://example.com/descriptor.json'
+    # Mocks
+    patch_get(descriptor, status=500)
+    # Tests
+    with pytest.raises(exceptions.DataPackageException):
+        Resource(descriptor).descriptor
+
+
+# Resource.descriptor (dereference)
+
+def test_descriptor_dereference():
+    descriptor = 'tests/fixtures/resource_with_dereferencing.json'
+    resource = Resource(descriptor)
+    assert resource.descriptor == expand({
+        'name': 'name',
+        'data': 'data',
+        'schema': {'fields': [{'name': 'name'}]},
+        'dialect': {'delimiter': ','},
+        'dialects': {'main': {'delimiter': ','}},
+    })
+
+
+def test_descriptor_dereference_pointer():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'schema': '#/schemas/main',
+        'schemas': {'main': {'fields': [{'name': 'name'}]}},
+    }
+    resource = Resource(descriptor)
+    assert resource.descriptor == expand({
+        'name': 'name',
+        'data': 'data',
+        'schema': {'fields': [{'name': 'name'}]},
+        'schemas': {'main': {'fields': [{'name': 'name'}]}},
+    })
+
+
+def test_descriptor_dereference_pointer_bad():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'schema': '#/schemas/main',
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor)
+
+
+def test_descriptor_dereference_remote(patch_get):
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'schema': 'http://example.com/schema',
+    }
+    # Mocks
+    patch_get('http://example.com/schema', body='{"fields": [{"name": "name"}]}')
+    # Tests
+    resource = Resource(descriptor)
+    assert resource.descriptor == expand({
+        'name': 'name',
+        'data': 'data',
+        'schema': {'fields': [{'name': 'name'}]},
+    })
+
+
+def test_descriptor_dereference_remote_bad(patch_get):
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'schema': 'http://example.com/schema',
+    }
+    # Mocks
+    patch_get('http://example.com/schema', status=404)
+    # Tests
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor)
+
+
+def test_descriptor_dereference_local():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'schema': 'table_schema.json',
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.descriptor == expand({
+        'name': 'name',
+        'data': 'data',
+        'schema': {'fields': [{'name': 'name'}]},
+    })
+
+
+def test_descriptor_dereference_local_bad():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'schema': 'bad_path.json',
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor, base_path='tests/fixtures')
+
+
+def test_descriptor_dereference_local_bad_not_safe():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'schema': '../fixtures/table_schema.json',
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor, base_path='tests/fixtures')
+
+
+# Resource.descriptor (expand)
+
+def test_descriptor_expand():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+    }
+    resource = Resource(descriptor)
+    assert resource.descriptor == {
+        'name': 'name',
+        'data': 'data',
+        'profile': 'data-resource',
+        'encoding': 'utf-8',
+    }
+
+
+def test_descriptor_expand_tabular_schema():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'profile': 'tabular-data-resource',
+        'schema': {
+            'fields': [{'name': 'name'}],
+        },
+    }
+    resource = Resource(descriptor)
+    assert resource.descriptor == {
+        'name': 'name',
+        'data': 'data',
+        'profile': 'tabular-data-resource',
+        'encoding': 'utf-8',
+        'schema': {
+            'fields': [{'name': 'name', 'type': 'string', 'format': 'default'}],
+            'missingValues': [''],
         }
-        resource = datapackage.Resource(resource_dict)
-        assert resource.descriptor == resource_dict
+    }
 
-    def test_descriptor_cant_be_assigned(self):
-        resource_dict = {}
-        resource = datapackage.Resource(resource_dict)
-        with pytest.raises(AttributeError):
-            resource.descriptor = {}
 
-    def test_data_is_none_by_default(self):
-        resource_dict = {}
-        resource = datapackage.Resource(resource_dict)
-        assert resource.data is None
-
-    def test_data_returns_the_resource_data(self):
-        resource_dict = {
-            'data': 'foo',
+def test_descriptor_expand_tabular_dialect():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'profile': 'tabular-data-resource',
+        'dialect': {
+            'delimiter': 'custom',
         }
-        resource = datapackage.Resource(resource_dict)
-        assert resource.data == resource_dict['data']
-
-    def test_data_cant_be_assigned(self):
-        resource_dict = {}
-        resource = datapackage.Resource(resource_dict)
-        with pytest.raises(AttributeError):
-            resource.data = 'foo'
-
-    @httpretty.activate
-    def test_data_is_lazily_loaded(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        resource_dict = {
-            'url': 'http://someplace.com/somefile.txt',
+    }
+    resource = Resource(descriptor)
+    assert resource.descriptor == {
+        'name': 'name',
+        'data': 'data',
+        'profile': 'tabular-data-resource',
+        'encoding': 'utf-8',
+        'dialect': {
+            'delimiter': 'custom',
+            'doubleQuote': True,
+            'lineTerminator': '\r\n',
+            'quoteChar': '"',
+            'escapeChar': '\\',
+            'skipInitialSpace': True,
+            'header': True,
+            'caseSensitiveHeader': False,
         }
-        resource = datapackage.Resource.load(resource_dict)
-
-        httpretty.register_uri(httpretty.GET, resource_dict['url'], body='foo')
-
-        assert resource.data == b'foo'
-
-    def test_load_inline_string(self):
-        resource_dict = {
-            'data': '万事开头难'
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == resource_dict['data']
-
-    def test_load_inline_number(self):
-        resource_dict = {
-            'data': 51
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == resource_dict['data']
-
-    def test_load_tabular_data_returns_tabularresource_instance(self):
-        resource_dict = {
-            'data': [
-                {'country': 'China', 'value': '中国'},
-                {'country': 'Brazil', 'value': 'Brasil'}
-            ],
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert isinstance(resource, TabularResource)
-
-    def test_load_prefers_loading_inline_data_over_path_and_url(self):
-        resource_dict = {
-            'data': [
-                {'country': 'China', 'value': '中国'},
-                {'country': 'Brazil', 'value': 'Brasil'}
-            ],
-            'path': 'inexistent-file.json',
-            'url': 'http://someplace.com/inexistent-file.json',
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == resource_dict['data']
-
-    @httpretty.activate
-    def test_load_prefers_loading_local_data_over_url(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        resource_dict = {
-            'path': test_helpers.fixture_path('foo.txt'),
-            'url': 'http://someplace.com/inexistent-file.txt',
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == b'foo\n'
-
-    @httpretty.activate
-    def test_load_loads_from_url_if_local_path_doesnt_exist(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        base_url = 'http://someplace.com'
-        path = 'resource.txt'
-        url = '{base_url}/{path}'.format(base_url=base_url, path=path)
-        httpretty.register_uri(httpretty.GET, url, body='foo')
-        httpretty.register_uri(httpretty.GET,
-                               '{0}/nonexistent-file.txt'.format(base_url),
-                               status=404)
-
-        resource_dict = {
-            'path': 'nonexistent-file.txt',
-            'url': url
-        }
-
-        resource = datapackage.Resource.load(resource_dict,
-                                             default_base_path=base_url)
-        assert resource.data == b'foo'
-
-    @httpretty.activate
-    def test_load_accepts_url(self):
-        url = 'http://someplace/resource.txt'
-        httpretty.register_uri(httpretty.GET, url, body='foo')
-
-        resource_dict = {
-            'url': url,
-        }
-
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == b'foo'
-
-    def test_load_accepts_absolute_paths(self):
-        path = test_helpers.fixture_path('foo.txt')
-        resource_dict = {
-            'path': path,
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.data == b'foo\n'
-
-    def test_load_accepts_relative_paths(self):
-        filename = 'foo.txt'
-        base_path = os.path.dirname(
-            test_helpers.fixture_path(filename)
-        )
-        resource_dict = {
-            'path': filename,
-        }
-        resource = datapackage.Resource.load(resource_dict, base_path)
-        assert resource.data == b'foo\n'
-
-    def test_load_binary_data(self):
-        resource_dict = {
-            'path': test_helpers.fixture_path('image.gif'),
-        }
-        resource = datapackage.Resource.load(resource_dict)
-
-        with open(resource_dict['path'], 'rb') as f:
-            assert resource.data == f.read()
-
-    @httpretty.activate
-    def test_load_accepts_relative_urls(self):
-        base_url = 'http://someplace.com'
-        path = 'resource.txt'
-        url = '{base_url}/{path}'.format(base_url=base_url, path=path)
-        httpretty.register_uri(httpretty.GET, url, body='foo')
-
-        resource_dict = {
-            'path': path,
-        }
-
-        resource = datapackage.Resource.load(resource_dict,
-                                             default_base_path=base_url)
-        assert resource.data == b'foo'
-
-    @httpretty.activate
-    def test_data_raises_if_url_doesnt_exist(self):
-        url = 'http://someplace/resource.txt'
-        httpretty.register_uri(httpretty.GET, url, status=404)
-
-        resource_dict = {
-            'url': url,
-        }
-
-        with pytest.raises(IOError):
-            datapackage.Resource.load(resource_dict).data
-
-    def test_data_raises_if_path_doesnt_exist(self):
-        resource_dict = {
-            'path': 'inexistent-file.json',
-        }
-
-        with pytest.raises(IOError):
-            datapackage.Resource.load(resource_dict).data
-
-    def test_can_change_data_path_after_creation(self):
-        original_path = test_helpers.fixture_path('unicode.txt')
-        new_path = test_helpers.fixture_path('foo.txt')
-        resource_dict = {
-            'path': original_path
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        resource.descriptor['path'] = new_path
-        assert resource.data == b'foo\n'
-
-    @httpretty.activate
-    def test_can_change_data_url_after_creation(self):
-        original_url = 'http://someplace.com/foo.txt'
-        httpretty.register_uri(httpretty.GET, original_url,
-                               body='foo')
-        new_url = 'http://someplace.com/bar.txt'
-        httpretty.register_uri(httpretty.GET, new_url,
-                               body='bar')
-
-        resource_dict = {
-            'url': original_url
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        resource.descriptor['url'] = new_url
-        assert resource.data == b'bar'
-
-    def test_can_change_the_data_after_creation(self):
-        resource_dict = {
-            'data': ['foo']
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        resource.descriptor['data'] = ['bar']
-        assert resource.data == ['bar']
-
-    def test_local_data_path_returns_the_unmodified_path(self):
-        resource_dict = {
-            'path': test_helpers.fixture_path('unicode.txt'),
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.local_data_path == resource_dict['path']
-
-    def test_local_data_path_returns_the_absolute_path(self):
-        base_path = test_helpers.fixture_path('')
-        path = os.path.join(base_path, '..', 'fixtures', 'unicode.txt')
-        resource_dict = {
-            'path': path,
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        abs_path = os.path.join(base_path, 'unicode.txt')
-        assert resource.local_data_path == abs_path
-
-    def test_local_data_path_returns_none_if_theres_no_file(self):
-        resource_dict = {
-            'data': 'foo',
-            'url': 'http://someplace.com/foo.txt'
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.local_data_path is None
-
-    def test_local_data_path_returns_abs_path_even_if_it_doesnt_exist(self):
-        path = 'nonexistent.csv'
-        resource_dict = {
-            'data': 'foo',  # Avoid throwing error because path doesn't exist
-            'path': path,
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.local_data_path == os.path.abspath(path)
-
-    def test_remote_data_path_returns_the_unmodified_url(self):
-        resource_dict = {
-            'url': 'http://somewhere.com/data.txt',
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.remote_data_path == resource_dict['url']
-
-    def test_remote_data_path_returns_none_if_theres_no_remote_data(self):
-        resource_dict = {
-            'data': 'foo',
-            'path': test_helpers.fixture_path('unicode.txt'),
-        }
-        resource = datapackage.Resource.load(resource_dict)
-        assert resource.remote_data_path is None
-
-    def test_iterator_with_inline_data(self):
-        contents = (
-            'first line\n'
-            'second line\n'
-        )
-        resource = datapackage.Resource.load({'data': contents})
-
-        data = [row for row in resource.iter()]
-        assert data == [b'first line\n', b'second line\n']
-
-    def test_iterator_with_inline_numerical_data(self):
-        contents = 51
-        resource = datapackage.Resource.load({'data': contents})
-
-        assert [row for row in resource.iter()] == [51]
-
-    def test_iterator_with_local_data(self, txt_tmpfile):
-        contents = (
-            'first line\n'
-            'second line\n'
-        )
-
-        txt_tmpfile.write(contents.encode('utf-8'))
-        txt_tmpfile.flush()
-        resource = datapackage.Resource.load({'path': txt_tmpfile.name})
-        data = [row for row in resource.iter()]
-
-        assert data == [b'first line\n', b'second line\n']
-
-    @httpretty.activate
-    def test_iterator_with_remote_data(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        contents = (
-            'first line\n'
-            'second line\n'
-        )
-        resource_dict = {
-            'url': 'http://someplace.com/data.txt',
-        }
-        httpretty.register_uri(httpretty.GET, resource_dict['url'],
-                               body=contents)
-
-        resource = datapackage.Resource.load(resource_dict)
-
-        data = [row for row in resource.iter()]
-        assert data == [b'first line\n', b'second line\n']
-
-    def test_iterator_raises_valueerror_if_theres_no_data(self):
-        resource = datapackage.Resource.load({})
-        with pytest.raises(ValueError):
-            [row for row in resource.iter()]
-
-    def test_iterator_raises_if_file_doesnt_exist(self):
-        resource = datapackage.Resource.load({'path': 'inexistent-file.txt'})
-        with pytest.raises(IOError):
-            [row for row in resource.iter()]
-
-    @httpretty.activate
-    def test_iterator_raises_resourceerror_if_url_doesnt_exist(self):
-        url = 'http://someplace.com/inexistent-file.txt'
-        httpretty.register_uri(httpretty.GET, url, status=404)
-        resource = datapackage.Resource.load({'url': url})
-        with pytest.raises(IOError):
-            [row for row in resource.iter()]
-
-
-class TestTabularResource(object):
-    def test_load_inline_list(self):
-        resource_dict = {
-            'data': [
-                {'country': 'China', 'value': '中国'},
-                {'country': 'Brazil', 'value': 'Brasil'}
-            ],
-        }
-        resource = TabularResource(resource_dict)
-        assert resource.data == resource_dict['data']
-
-    @httpretty.activate
-    def test_load_url(self):
-        url = 'http://someplace/resource.json'
-        body = (
-            '['
-            '{"country": "China", "value": "中国"},'
-            '{"country": "Brazil", "value": "Brasil"}'
-            ']'
-        )
-        httpretty.register_uri(httpretty.GET, url,
-                               body=body, content_type='application/json')
-
-        resource_dict = {
-            'url': url,
-            'encoding': 'utf-8',
-        }
-
-        resource = TabularResource(resource_dict)
-        assert len(resource.data) == 2
-        assert resource.data[0] == {'country': 'China', 'value': '中国'}
-        assert resource.data[1] == {'country': 'Brazil', 'value': 'Brasil'}
-
-    def test_load_tsv(self):
-        resource_dict = {
-            'path': test_helpers.fixture_path('cities.tsv')
-        }
-
-        resource = TabularResource(resource_dict)
-        assert resource.data == [
-            {'Area': '1807.92', 'Name': 'Acrelândia', 'Population': '12538', 'State': 'AC'},
-            {'Area': '186.53', 'Name': 'Boca da Mata', 'Population': '25776', 'State': 'AL'},
-            {'Area': '242.62', 'Name': 'Capela', 'Population': '17077', 'State': 'AL'},
-            {'Area': '6709.66', 'Name': 'Tartarugalzinho', 'Population': '12563', 'State': 'AP'},
-            {'Area': '837.72', 'Name': 'América Dourada', 'Population': None, 'State': 'BA'},
-            {'Area': '204.79', 'Name': 'Jijoca de Jericoacoara', 'Population': '17002', 'State': 'CE'},
-            {'Area': '6953.67', 'Name': 'Cavalcante', 'Population': '9392', 'State': 'GO'},
-            {'Area': '8258.42', 'Name': 'Centro Novo do Maranhão', 'Population': '17622', 'State': 'MA'},
-            {'Area': '3651.18', 'Name': 'Ped\\ro G\\omes', 'Population': '7967', 'State': 'MS'},
-            {'Area': '881.06', 'Name': 'Abadia dos Dourados', 'Population': '6704', 'State': 'MG'},
-        ]
-
-    def test_accepts_urls_with_query_components_and_fragments(self):
-        url = 'http://someplace.com/resource.csv?foo=bar#foobar'
-        resource_dict = {
-            'url': url,
-        }
-
-        assert TabularResource.can_handle(resource_dict)
-
-    def test_raises_valueerror_if_data_is_dict(self):
-        resource_dict = {
-            'data': {
-                'foo': 'bar',
-            },
-        }
-
-        with pytest.raises(ValueError):
-            TabularResource(resource_dict).data
-
-    def test_raises_valueerror_if_data_is_number(self):
-        resource_dict = {
-            'data': 51,
-        }
-        with pytest.raises(ValueError):
-            TabularResource(resource_dict).data
-
-    def test_raises_valueerror_if_data_is_none(self):
-        resource_dict = {
-            'data': None,
-        }
-        with pytest.raises(ValueError):
-            TabularResource(resource_dict).data
-
-    def test_raises_valueerror_if_theres_no_data(self):
-        resource_dict = {}
-        with pytest.raises(ValueError):
-            TabularResource(resource_dict).data
-
-    def test_iterator_with_inline_data(self):
-        data = [
-            {'country': 'China', 'value': '中国'},
-            {'country': 'Brazil', 'value': 'Brasil'},
-        ]
-        resource = TabularResource({'data': data})
-
-        assert [row for row in resource.iter()] == data
-
-    def test_iterator_with_local_data(self, csv_tmpfile):
-        csv_contents = (
-            'country,value\n'
-            'China,中国\n'
-            'Brazil,Brasil\n'
-        ).encode('utf-8')
-        csv_tmpfile.write(csv_contents)
-        csv_tmpfile.flush()
-
-        resource = TabularResource({'path': csv_tmpfile.name, 'encoding': 'utf-8'})
-        data = [row for row in resource.iter()]
-
-        assert data == [
-            {'country': 'China', 'value': '中国'},
-            {'country': 'Brazil', 'value': 'Brasil'},
-        ]
-
-    def test_raises_with_wrong_encoding(self, csv_tmpfile):
-        csv_contents = (
-            'country,value\n'
-            'China,中国\n'
-            'Brazil,Brasil\n'
-        ).encode('utf-8')
-        csv_tmpfile.write(csv_contents)
-        csv_tmpfile.flush()
-
-        resource = TabularResource({'path': csv_tmpfile.name, 'encoding': 'utf-16'})
-        with pytest.raises(ValueError):
-            data = [row for row in resource.iter()]
-
-    def test_iterator_with_schema(self, csv_tmpfile):
-        csv_contents = (
-            'superhero,awesomeness\n'
-            'Captain America,8\n'
-            'Iron Man,10\n'
-            'Ant Man,5\n'
-            'SuperMan,7\n'
-        ).encode('utf-8')
-        csv_tmpfile.write(csv_contents)
-        csv_tmpfile.flush()
-
-        resource = TabularResource(
-            {'path': csv_tmpfile.name,
-             'schema': {
-                 'fields':[
-                     {
-                         'name': 'superhero',
-                         'type': 'string'
-                     },
-                     {
-                         'name': 'awesomeness',
-                         'type': 'integer'
-                     }
-                 ]
-             }
-            })
-        data = [row for row in resource.iter()]
-
-        assert data == [
-            {'superhero': 'Captain America',  'awesomeness': 8},
-            {'superhero': 'Iron Man',         'awesomeness': 10},
-            {'superhero': 'Ant Man',          'awesomeness': 5},
-            {'superhero': 'SuperMan',         'awesomeness': 7},
-        ]
-
-    @httpretty.activate
-    def test_iterator_with_remote_data(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        csv_contents = (
-            'country,value\n'
-            'China,中国\n'
-            'Brazil,Brasil\n'
-        ).encode('utf-8')
-        resource_dict = {
-            'url': 'http://someplace.com/data.csv',
-        }
-        httpretty.register_uri(httpretty.GET, resource_dict['url'],
-                               body=csv_contents)
-
-        resource = TabularResource(resource_dict)
-
-        assert [row for row in resource.iter()] == [
-            {'country': 'China', 'value': '中国'},
-            {'country': 'Brazil', 'value': 'Brasil'},
-        ]
-
-    def test_iterator_with_inline_non_tabular_data(self):
-        resource = TabularResource({'data': 'foo'})
-        with pytest.raises(ValueError):
-            [row for row in resource.iter()]
-
-    def test_iterator_with_local_non_tabular_data(self, txt_tmpfile):
-        txt_tmpfile.write('foo'.encode('utf-8'))
-        txt_tmpfile.flush()
-        resource = TabularResource({'path': txt_tmpfile.name})
-        with pytest.raises(ValueError):
-            [row for row in resource.iter()]
-
-    @httpretty.activate
-    def test_iterator_with_remote_non_tabular_data(self):
-        httpretty.HTTPretty.allow_net_connect = False
-        resource_dict = {
-            'url': 'http://someplace.com/data.txt',
-        }
-        httpretty.register_uri(httpretty.GET, resource_dict['url'],
-                               body='foo')
-
-        resource = TabularResource(resource_dict)
-
-        with pytest.raises(ValueError):
-            [row for row in resource.iter()]
-
-    def test_iterator_raises_valueerror_if_theres_no_data(self):
-        resource = TabularResource({})
-        with pytest.raises(ValueError):
-            [row for row in resource.iter()]
-
-    def test_iterator_raises_if_file_doesnt_exist(self):
-        resource = TabularResource({'path': 'inexistent-file.csv'})
-        with pytest.raises(IOError):
-            [row for row in resource.iter()]
-
-    @httpretty.activate
-    def test_iterator_raises_if_url_doesnt_exist(self):
-        url = 'http://someplace.com/inexistent-file.csv'
-        httpretty.register_uri(httpretty.GET, url, status=404)
-        resource = TabularResource({'url': url})
-        with pytest.raises(ValueError):
-            [row for row in resource.iter()]
+    }
+
+
+# Resource.type/source
+
+def test_source_inline():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+        'path': ['path'],
+    }
+    resource = Resource(descriptor)
+    assert resource.source == 'data'
+    assert resource.source_type == 'inline'
+
+
+def test_source_local():
+    descriptor = {
+        'name': 'name',
+        'path': ['table.csv'],
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.source == 'tests/fixtures/table.csv'
+    assert resource.source_type == 'local'
+
+
+def test_source_local_bad_no_base_path():
+    descriptor = {
+        'name': 'name',
+        'path': ['table.csv'],
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor)
+
+
+def test_source_local_bad_not_safe_absolute():
+    descriptor = {
+        'name': 'name',
+        'path': ['/fixtures/table.csv'],
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor, base_path='tests/fixtures')
+
+
+def test_source_local_bad_not_safe_traversing():
+    descriptor = {
+        'name': 'name',
+        'path': ['../fixtures/table.csv'],
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor, base_path='tests/fixtures')
+
+
+def test_source_remote():
+    descriptor = {
+        'name': 'name',
+        'path': ['http://example.com/table.csv'],
+    }
+    resource = Resource(descriptor)
+    assert resource.source == 'http://example.com/table.csv'
+    assert resource.source_type == 'remote'
+
+
+def test_source_remote_path_relative_and_base_path_remote():
+    descriptor = {
+        'name': 'name',
+        'path': ['table.csv'],
+    }
+    resource = Resource(descriptor, base_path='http://example.com/')
+    assert resource.source == 'http://example.com/table.csv'
+    assert resource.source_type == 'remote'
+
+
+def test_source_remote_path_remote_and_base_path_remote():
+    descriptor = {
+        'name': 'name',
+        'path': ['http://example1.com/table.csv'],
+    }
+    resource = Resource(descriptor, base_path='http://example2.com/')
+    assert resource.source == 'http://example1.com/table.csv'
+    assert resource.source_type == 'remote'
+
+
+def test_source_multipart_local():
+    descriptor = {
+        'name': 'name',
+        'path': ['chunk1.csv', 'chunk2.csv'],
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.source == ['tests/fixtures/chunk1.csv', 'tests/fixtures/chunk2.csv']
+    assert resource.source_type == 'multipart-local'
+
+
+def test_source_multipart_local_bad_no_base_path():
+    descriptor = {
+        'name': 'name',
+        'path': ['chunk1.csv', 'chunk2.csv'],
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor)
+
+
+def test_source_multipart_local_bad_not_safe_absolute():
+    descriptor = {
+        'name': 'name',
+        'path': ['/fixtures/chunk1.csv', 'chunk2.csv'],
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor, base_path='tests/fixtures')
+
+
+def test_source_multipart_local_bad_not_safe_traversing():
+    descriptor = {
+        'name': 'name',
+        'path': ['chunk1.csv', '../fixtures/chunk2.csv'],
+    }
+    with pytest.raises(exceptions.DataPackageException):
+        resource = Resource(descriptor, base_path='tests/fixtures')
+
+
+def test_source_multipart_remote():
+    descriptor = {
+        'name': 'name',
+        'path': ['http://example.com/chunk1.csv', 'http://example.com/chunk2.csv'],
+    }
+    resource = Resource(descriptor)
+    assert resource.source == [
+        'http://example.com/chunk1.csv', 'http://example.com/chunk2.csv']
+    assert resource.source_type == 'multipart-remote'
+
+
+def test_source_multipart_remote_path_relative_and_base_path_remote():
+    descriptor = {
+        'name': 'name',
+        'path': ['chunk1.csv', 'chunk2.csv'],
+    }
+    resource = Resource(descriptor, base_path='http://example.com')
+    assert resource.source == [
+        'http://example.com/chunk1.csv', 'http://example.com/chunk2.csv']
+    assert resource.source_type == 'multipart-remote'
+
+
+def test_source_multipart_remote_path_remote_and_base_path_remote():
+    descriptor = {
+        'name': 'name',
+        'path': ['chunk1.csv', 'http://example2.com/chunk2.csv'],
+    }
+    resource = Resource(descriptor, base_path='http://example1.com')
+    assert resource.source == [
+        'http://example1.com/chunk1.csv', 'http://example2.com/chunk2.csv']
+    assert resource.source_type == 'multipart-remote'
+
+
+# Resource.table
+
+def test_descriptor_table():
+    descriptor = {
+        'name': 'name',
+        'data': 'data',
+    }
+    resource = Resource(descriptor)
+    assert resource.table is None
+
+
+def test_descriptor_table_tabular_inline():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'data': [
+            ['id', 'name'],
+            ['1', 'english'],
+            ['2', '中国人'],
+        ],
+        'schema': 'resource_schema.json',
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_descriptor_table_tabular_local():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['resource_data.csv'],
+        'schema': 'resource_schema.json',
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_descriptor_table_tabular_remote(patch_get):
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['http://example.com/resource_data.csv'],
+        'schema': 'resource_schema.json',
+    }
+    # Mocks
+    patch_get('http://example.com/resource_data.csv', body="id,name\n1,english\n2,中国人")
+    # Tests
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_descriptor_table_tabular_multipart_local():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['chunk1.csv', 'chunk2.csv'],
+        'schema': 'resource_schema.json',
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_descriptor_table_tabular_multipart_remote(patch_get):
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': [
+            'http://example.com/chunk1.csv',
+            'http://example.com/chunk2.csv',
+            'http://example.com/chunk3.csv',
+        ],
+        'schema': 'resource_schema.json',
+    }
+    # Mocks
+    patch_get('http://example.com/chunk1.csv', body="id,name\n")
+    patch_get('http://example.com/chunk2.csv', body="1,english")
+    patch_get('http://example.com/chunk3.csv', body="2,中国人\n")
+    # Tests
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_descriptor_table_tabular_skip_rows():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['resource_data.csv'],
+        'schema': 'resource_schema.json',
+        'skipRows': [2],
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_descriptor_table_tabular_dialect_custom():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['dialect.csv'],
+        'schema': 'resource_schema.json',
+        'dialect': {
+            'delimiter': '|',
+            'quoteChar': '#',
+            'escapeChar': '-',
+            'doubleQuote': False,
+            'skipInitialSpace': False,
+        },
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': ' |##'},
+    ]
+
+
+def test_descriptor_table_tabular_dialect_header_false():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['chunk2.csv'],
+        'schema': 'resource_schema.json',
+        'dialect': {'header': False},
+    }
+    resource = Resource(descriptor, base_path='tests/fixtures')
+    assert resource.table.read(keyed=True) == [
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+# Helpers
+
+@pytest.fixture
+def patch_get():
+    httpretty.enable()
+    yield partial(httpretty.register_uri, httpretty.GET)
+    httpretty.disable()
+    httpretty.reset()

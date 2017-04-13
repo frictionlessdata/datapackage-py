@@ -47,9 +47,9 @@ def push_datapackage(descriptor, backend, **backend_options):
     # Collect tables/schemas/data
     for resource in model.resources:
         name = resource.descriptor.get('name', None)
-        table = mappers.convert_path(resource.descriptor['path'], name)
+        table = mappers.convert_path(resource.descriptor['path'][0], name)
         schema = resource.descriptor['schema']
-        data = resource.iter()
+        data = resource.table.iter(keyed=True)
         # TODO: review
         def values(schema, data):
             for item in data:

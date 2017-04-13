@@ -257,42 +257,45 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(descriptor)
         assert json.loads(dp.to_json()) == descriptor
 
+    @mock.patch('datapackage.helpers.expand_resource_descriptor')
     @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-    def test_descriptor_dereferencing_uri(self, _):
+    def test_descriptor_dereferencing_uri(self, m1, m2):
         dp = datapackage.DataPackage('tests/fixtures/datapackage_with_dereferencing.json')
         assert dp.descriptor['resources'] == [
-            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
-            {'name': 'name2', 'dialect': {'delimiter': ','}},
+            {'name': 'name1', 'data': 'data', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'data': 'data', 'dialect': {'delimiter': ','}},
         ]
 
+    @mock.patch('datapackage.helpers.expand_resource_descriptor')
     @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-    def test_descriptor_dereferencing_uri_pointer(self, _):
+    def test_descriptor_dereferencing_uri_pointer(self, m1, m2):
         descriptor = {
             'resources': [
-                {'name': 'name1', 'schema': '#/schemas/main'},
-                {'name': 'name2', 'dialect': '#/dialects/0'},
+                {'name': 'name1', 'data': 'data', 'schema': '#/schemas/main'},
+                {'name': 'name2', 'data': 'data', 'dialect': '#/dialects/0'},
              ],
             'schemas': {'main': {'fields': [{'name': 'name'}]}},
             'dialects': [{'delimiter': ','}],
         }
         dp = datapackage.DataPackage(descriptor)
         assert dp.descriptor['resources'] == [
-            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
-            {'name': 'name2', 'dialect': {'delimiter': ','}},
+            {'name': 'name1', 'data': 'data', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'data': 'data', 'dialect': {'delimiter': ','}},
         ]
 
     def test_descriptor_dereferencing_uri_pointer_bad(self):
         descriptor = {
             'resources': [
-                {'name': 'name1', 'schema': '#/schemas/main'},
+                {'name': 'name1', 'data': 'data', 'schema': '#/schemas/main'},
              ],
         }
         with pytest.raises(datapackage.exceptions.DataPackageException):
             dp = datapackage.DataPackage(descriptor)
 
     @httpretty.activate
+    @mock.patch('datapackage.helpers.expand_resource_descriptor')
     @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-    def test_descriptor_dereferencing_uri_remote(self, _):
+    def test_descriptor_dereferencing_uri_remote(self, m1, m2):
         # Mocks
         httpretty.register_uri(httpretty.GET,
             'http://example.com/schema', body='{"fields": [{"name": "name"}]}')
@@ -301,14 +304,14 @@ class TestDataPackage(object):
         # Tests
         descriptor = {
             'resources': [
-                {'name': 'name1', 'schema': 'http://example.com/schema'},
-                {'name': 'name2', 'dialect': 'https://example.com/dialect'},
+                {'name': 'name1', 'data': 'data', 'schema': 'http://example.com/schema'},
+                {'name': 'name2', 'data': 'data', 'dialect': 'https://example.com/dialect'},
              ],
         }
         dp = datapackage.DataPackage(descriptor)
         assert dp.descriptor['resources'] == [
-            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
-            {'name': 'name2', 'dialect': {'delimiter': ','}},
+            {'name': 'name1', 'data': 'data', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'data': 'data', 'dialect': {'delimiter': ','}},
         ]
 
     def test_descriptor_dereferencing_uri_remote_bad(self):
@@ -317,30 +320,31 @@ class TestDataPackage(object):
         # Tests
         descriptor = {
             'resources': [
-                {'name': 'name1', 'schema': 'http://example.com/schema'},
+                {'name': 'name1', 'data': 'data', 'schema': 'http://example.com/schema'},
              ],
         }
         with pytest.raises(datapackage.exceptions.DataPackageException):
             dp = datapackage.DataPackage(descriptor)
 
+    @mock.patch('datapackage.helpers.expand_resource_descriptor')
     @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-    def test_descriptor_dereferencing_uri_local(self, _):
+    def test_descriptor_dereferencing_uri_local(self, m1, m2):
         descriptor = {
             'resources': [
-                {'name': 'name1', 'schema': 'table_schema.json'},
-                {'name': 'name2', 'dialect': 'csv_dialect.json'},
+                {'name': 'name1', 'data': 'data', 'schema': 'table_schema.json'},
+                {'name': 'name2', 'data': 'data', 'dialect': 'csv_dialect.json'},
              ],
         }
         dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
         assert dp.descriptor['resources'] == [
-            {'name': 'name1', 'schema': {'fields': [{'name': 'name'}]}},
-            {'name': 'name2', 'dialect': {'delimiter': ','}},
+            {'name': 'name1', 'data': 'data', 'schema': {'fields': [{'name': 'name'}]}},
+            {'name': 'name2', 'data': 'data', 'dialect': {'delimiter': ','}},
         ]
 
     def test_descriptor_dereferencing_uri_local_bad(self):
         descriptor = {
             'resources': [
-                {'name': 'name1', 'schema': 'bad_path.json'},
+                {'name': 'name1', 'data': 'data', 'schema': 'bad_path.json'},
              ],
         }
         with pytest.raises(datapackage.exceptions.DataPackageException):
@@ -349,7 +353,7 @@ class TestDataPackage(object):
     def test_descriptor_dereferencing_uri_local_bad_not_safe(self):
         descriptor = {
             'resources': [
-                {'name': 'name1', 'schema': '../fixtures/table_schema.json'},
+                {'name': 'name1', 'data': 'data', 'schema': '../fixtures/table_schema.json'},
              ],
         }
         with pytest.raises(datapackage.exceptions.DataPackageException):
@@ -364,13 +368,13 @@ class TestDataPackage(object):
 
     def test_descriptor_apply_defaults_resource(self):
         descriptor = {
-            'resources': [{'name': 'name'}],
+            'resources': [{'name': 'name', 'data': 'data'}],
         }
         dp = datapackage.DataPackage(descriptor)
         assert descriptor == {
             'profile': 'data-package',
             'resources': [
-                {'name': 'name', 'profile': 'data-resource', 'encoding': 'utf-8'},
+                {'name': 'name', 'data': 'data', 'profile': 'data-resource', 'encoding': 'utf-8'},
             ]
         }
 
@@ -378,6 +382,7 @@ class TestDataPackage(object):
         descriptor = {
             'resources': [{
                 'name': 'name',
+                'data': 'data',
                 'profile': 'tabular-data-resource',
                 'schema': {
                     'fields': [{'name': 'name'}],
@@ -389,6 +394,7 @@ class TestDataPackage(object):
             'profile': 'data-package',
             'resources': [{
                 'name': 'name',
+                'data': 'data',
                 'profile': 'tabular-data-resource',
                 'encoding': 'utf-8',
                 'schema': {
@@ -402,6 +408,7 @@ class TestDataPackage(object):
         descriptor = {
             'resources': [{
                 'name': 'name',
+                'data': 'data',
                 'profile': 'tabular-data-resource',
                 'dialect': {
                     'delimiter': 'custom',
@@ -413,6 +420,7 @@ class TestDataPackage(object):
             'profile': 'data-package',
             'resources': [{
                 'name': 'name',
+                'data': 'data',
                 'profile': 'tabular-data-resource',
                 'encoding': 'utf-8',
                 'dialect': {
@@ -473,36 +481,15 @@ class TestDataPackageResources(object):
         }
         dp = datapackage.DataPackage(descriptor)
         assert len(dp.resources) == 2
-        assert dp.resources[0].data == 'foo'
-        assert dp.resources[1].data == 'bar'
-
-    def test_local_resource_with_absolute_path_is_loaded(self):
-        path = test_helpers.fixture_path('foo.txt')
-        descriptor = {
-            'resources': [
-                {'path': path},
-            ],
-        }
-        dp = datapackage.DataPackage(descriptor)
-        assert len(dp.resources) == 1
-        assert dp.resources[0].data == b'foo\n'
+        assert dp.resources[0].source == 'foo'
+        assert dp.resources[1].source == 'bar'
 
     def test_local_resource_with_relative_path_is_loaded(self):
         datapackage_filename = 'datapackage_with_foo.txt_resource.json'
         path = test_helpers.fixture_path(datapackage_filename)
         dp = datapackage.DataPackage(path)
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == b'foo\n'
-
-    def test_raises_if_local_resource_path_doesnt_exist(self):
-        descriptor = {
-            'resources': [
-                {'path': 'inexistent-file.json'},
-            ],
-        }
-
-        with pytest.raises(IOError):
-            datapackage.DataPackage(descriptor).resources[0].data
+        assert dp.resources[0].source.endswith('foo.txt')
 
     @httpretty.activate
     def test_remote_resource_is_loaded(self):
@@ -516,38 +503,7 @@ class TestDataPackageResources(object):
 
         dp = datapackage.DataPackage(descriptor)
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == b'foo'
-
-    @httpretty.activate
-    def test_raises_if_remote_resource_url_doesnt_exist(self):
-        url = 'http://someplace.com/inexistent-file.json'
-        httpretty.register_uri(httpretty.GET, url, status=404)
-        descriptor = {
-            'resources': [
-                {'url': url},
-            ],
-        }
-
-        with pytest.raises(ValueError):
-            datapackage.DataPackage(descriptor).resources[0].data
-
-    @httpretty.activate
-    def test_remote_resource_has_no_local_data_path(self):
-        url = 'http://someplace.com/datapackage.json'
-
-        package = '''{
-                    "resources": [
-                        {"path": "data.csv"}
-                    ]
-                }'''
-
-        httpretty.register_uri(httpretty.GET, url,
-                               body=package,
-                               content_type='application/json')
-
-        dp = datapackage.DataPackage(url)
-
-        assert dp.resources[0].local_data_path is None
+        assert dp.resources[0].source == 'http://someplace.com/resource.txt'
 
     def test_changing_resource_descriptor_changes_it_in_the_datapackage(self):
         descriptor = {
@@ -572,7 +528,7 @@ class TestDataPackageResources(object):
         dp.descriptor['resources'] = resources
 
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == '万事开头难'
+        assert dp.resources[0].source == '万事开头难'
 
     def test_can_remove_resource(self):
         descriptor = {
@@ -585,7 +541,7 @@ class TestDataPackageResources(object):
         del dp.descriptor['resources'][1]
 
         assert len(dp.resources) == 1
-        assert dp.resources[0].data == '万事开头难'
+        assert dp.resources[0].source == '万事开头难'
 
 
 class TestSavingDataPackages(object):
@@ -614,16 +570,16 @@ class TestSavingDataPackages(object):
         assert json.loads(dp_json) == json.loads(dp.to_json())
 
     def test_generates_filenames_for_named_resources(self, tmpfile):
-        resource_path = test_helpers.fixture_path('unicode.txt')
         descriptor = {
             'name': 'proverbs',
             'resources': [
-                {'name': 'proverbs', 'format': 'TXT', 'path': resource_path},
-                {'name': 'proverbs_without_format', 'path': resource_path}
+                {'name': 'proverbs', 'format': 'TXT', 'path': 'unicode.txt'},
+                {'name': 'proverbs_without_format', 'path': 'unicode.txt'}
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(descriptor, schema)
+        dp = datapackage.DataPackage(
+            descriptor, schema, default_base_path='tests/fixtures')
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             assert 'data/proverbs.txt' in z.namelist()
@@ -633,27 +589,28 @@ class TestSavingDataPackages(object):
         descriptor = {
             'name': 'proverbs',
             'resources': [
-                {'path': test_helpers.fixture_path('unicode.txt')},
-                {'path': test_helpers.fixture_path('foo.txt')}
+                {'path': 'unicode.txt'},
+                {'path': 'foo.txt'}
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(descriptor, schema)
+        dp = datapackage.DataPackage(
+            descriptor, schema, default_base_path='tests/fixtures')
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             files = z.namelist()
             assert sorted(set(files)) == sorted(files)
 
     def test_adds_resources_inside_data_subfolder(self, tmpfile):
-        resource_path = test_helpers.fixture_path('unicode.txt')
         descriptor = {
             'name': 'proverbs',
             'resources': [
-                {'path': resource_path}
+                {'path': 'unicode.txt'}
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(descriptor, schema)
+        dp = datapackage.DataPackage(
+            descriptor, schema, default_base_path='tests/fixtures')
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             filename = [name for name in z.namelist()
@@ -663,21 +620,22 @@ class TestSavingDataPackages(object):
         assert resource_data == '万事开头难\n'
 
     def test_fixes_resources_paths_to_be_relative_to_package(self, tmpfile):
-        resource_path = test_helpers.fixture_path('unicode.txt')
         descriptor = {
             'name': 'proverbs',
             'resources': [
-                {'name': 'unicode', 'format': 'txt', 'path': resource_path}
+                {'name': 'unicode', 'format': 'txt', 'path': 'unicode.txt'}
             ]
         }
         schema = {}
-        dp = datapackage.DataPackage(descriptor, schema)
+        dp = datapackage.DataPackage(
+            descriptor, schema, default_base_path='tests/fixtures')
         dp.save(tmpfile)
         with zipfile.ZipFile(tmpfile, 'r') as z:
             json_string = z.read('datapackage.json').decode('utf-8')
             generated_dp_dict = json.loads(json_string)
         assert generated_dp_dict['resources'][0]['path'] == 'data/unicode.txt'
 
+    @pytest.mark.skip(reason='Wait for specs-v1.rc2 resource.data/path')
     def test_works_with_resources_with_relative_paths(self, tmpfile):
         path = test_helpers.fixture_path(
             'datapackage_with_foo.txt_resource.json'
@@ -728,18 +686,21 @@ class TestSavingDataPackages(object):
 
 
 class TestImportingDataPackageFromZip(object):
+    @pytest.mark.skip(reason='Wait for specs-v1.rc2 resource.data/path')
     def test_it_works_with_local_paths(self, datapackage_zip):
         dp = datapackage.DataPackage(datapackage_zip.name)
         assert dp.descriptor['name'] == 'proverbs'
         assert len(dp.resources) == 1
         assert dp.resources[0].data == b'foo\n'
 
+    @pytest.mark.skip(reason='Wait for specs-v1.rc2 resource.data/path')
     def test_it_works_with_file_objects(self, datapackage_zip):
         dp = datapackage.DataPackage(datapackage_zip)
         assert dp.descriptor['name'] == 'proverbs'
         assert len(dp.resources) == 1
         assert dp.resources[0].data == b'foo\n'
 
+    @pytest.mark.skip(reason='Wait for specs-v1.rc2 resource.data/path')
     def test_it_works_with_remote_files(self, datapackage_zip):
         httpretty.enable()
 
@@ -755,6 +716,7 @@ class TestImportingDataPackageFromZip(object):
 
         httpretty.disable()
 
+    @pytest.mark.skip(reason='Wait for specs-v1.rc2 resource.data/path')
     def test_it_removes_temporary_directories(self, datapackage_zip):
         tempdirs_glob = os.path.join(tempfile.gettempdir(), '*-datapackage')
         original_tempdirs = glob.glob(tempdirs_glob)
@@ -764,6 +726,7 @@ class TestImportingDataPackageFromZip(object):
 
         assert glob.glob(tempdirs_glob) == original_tempdirs
 
+    @pytest.mark.skip(reason='Wait for specs-v1.rc2 resource.data/path')
     def test_local_data_path(self, datapackage_zip):
         dp = datapackage.DataPackage(datapackage_zip)
 
@@ -814,8 +777,8 @@ class TestSafeDataPackage(object):
                 {'path': '/foo/bar'},
             ]
         }
-        dp = datapackage.DataPackage(descriptor, {})
-        assert not dp.safe()
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp = datapackage.DataPackage(descriptor, {})
 
     def test_with_local_resources_with_existent_path_isnt_safe(self):
         descriptor = {
@@ -823,8 +786,8 @@ class TestSafeDataPackage(object):
                 {'path': test_helpers.fixture_path('foo.txt')},
             ]
         }
-        dp = datapackage.DataPackage(descriptor, {})
-        assert not dp.safe()
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp = datapackage.DataPackage(descriptor, {})
 
     def test_descriptor_dict_without_local_resources_is_safe(self):
         descriptor = {
@@ -850,9 +813,10 @@ class TestSafeDataPackage(object):
         }
         tmpfile.write(json.dumps(descriptor).encode('utf-8'))
         tmpfile.flush()
-        dp = datapackage.DataPackage(tmpfile.name, {})
-        assert not dp.safe()
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp = datapackage.DataPackage(tmpfile.name, {})
 
+    @pytest.mark.skip(reason='Wait for specs-v1.rc2 resource.data/path')
     def test_zip_with_relative_resources_paths_is_safe(self, datapackage_zip):
         dp = datapackage.DataPackage(datapackage_zip.name, {})
         assert dp.safe()
@@ -865,8 +829,8 @@ class TestSafeDataPackage(object):
         }
         with zipfile.ZipFile(tmpfile.name, 'w') as z:
             z.writestr('datapackage.json', json.dumps(descriptor))
-        dp = datapackage.DataPackage(tmpfile.name, {})
-        assert not dp.safe()
+        with pytest.raises(datapackage.exceptions.DataPackageException):
+            dp = datapackage.DataPackage(tmpfile.name, {})
 
 
 # Fixtures
@@ -876,9 +840,9 @@ def datapackage_zip(tmpfile):
     descriptor = {
         'name': 'proverbs',
         'resources': [
-            {'name': 'name', 'path': test_helpers.fixture_path('foo.txt')},
+            {'name': 'name', 'path': 'foo.txt'},
         ]
     }
-    dp = datapackage.DataPackage(descriptor)
+    dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
     dp.save(tmpfile)
     return tmpfile

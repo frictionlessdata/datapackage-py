@@ -69,6 +69,23 @@ class DataPackage(object):
         helpers.dereference_data_package_descriptor(self._descriptor, self._base_path)
         helpers.expand_data_package_descriptor(self._descriptor)
 
+        # Handle deprecated resource.path/url
+        for resource in self._descriptor.get('resources', []):
+            url = resource.pop('url', None)
+            if url is not None:
+                warnings.warn(
+                    'Resource property "url: <url>" is deprecated. '
+                    'Please use "path: [url]" instead (as array).',
+                    UserWarning)
+                resource['path'] = [url]
+            path = resource.get('path', None)
+            if isinstance(path, six.string_types):
+                warnings.warn(
+                    'Resource property "path: <path>" is deprecated. '
+                    'Please use "path: [path]" instead (as array).',
+                    UserWarning)
+                resource['path'] = [path]
+
         # Set attributes
         self._schema = self._load_schema(schema)
         self._resources = self._load_resources(self.descriptor,
@@ -142,32 +159,6 @@ class DataPackage(object):
         '''str: Convert this Data Package to a JSON string.'''
         return json.dumps(self.descriptor)
 
-    def safe(self):
-        '''bool: Return if it's safe to load this datapackage's resources.
-
-        A Data Package is safe if it has no resources, or if all of its
-        resources are either:
-            * Inline;
-            * Remote;
-            * Local relative to the Data Package's base path.
-
-        Even though we don't check the remote resources' URLs, keep in mind
-        that they can be an attack vector as well. For example, a malicious
-        user may set a resource URL to an address only accessible by the
-        machine that's parsing the datapackage. That might be a problem or not,
-        depending on your specific usage.
-        '''
-        local_resources = [resource for resource in self.resources
-                           if resource.local_data_path]
-        if not self.base_path:
-            return len(local_resources) == 0
-        else:
-            for resource in local_resources:
-                if not resource.local_data_path.startswith(self.base_path):
-                    return False
-
-        return True
-
     def save(self, file_or_path):
         '''Validates and saves this Data Package contents into a zip file.
 
@@ -225,7 +216,9 @@ class DataPackage(object):
             with zipfile.ZipFile(file_or_path, 'w') as z:
                 descriptor = json.loads(self.to_json())
                 for i, resource in enumerate(self.resources):
-                    path = resource.local_data_path
+                    path = None
+                    if resource.source_type == 'local':
+                        path = os.path.abspath(resource.source)
                     if path:
                         path_inside_dp = arcname(resource)
                         z.write(path, path_inside_dp)
@@ -243,19 +236,6 @@ class DataPackage(object):
             ValidationError: If the Data Package is invalid.
         '''
         descriptor = self.to_dict()
-
-        # TODO: move to __init__ after Resource update
-        # Handle deprecated resource.path/url
-        for resource in descriptor.get('resources', []):
-            for key in ['path', 'url']:
-                value = resource.pop(key, None)
-                if value is not None:
-                    warnings.warn(
-                        'Resource property "{key}: <{key}>" is deprecated. '
-                        'Please use "data: [<{key}>]" instead.'.format(key=key),
-                        UserWarning)
-                    resource['data'] = [value]
-
         self.schema.validate(descriptor)
 
     def iter_errors(self):
@@ -265,6 +245,14 @@ class DataPackage(object):
             iter: ValidationError for each error in the data.
         '''
         return self.schema.iter_errors(self.to_dict())
+
+    # Deprecated
+
+    def safe(self):
+        warnings.warn(
+            'DataPackage.safe is deprecated. Now it\'s always safe.',
+            UserWarning)
+        return True
 
     # Private
 
@@ -336,7 +324,7 @@ class DataPackage(object):
                 resource = [res for res in current_resources
                             if res.descriptor == resource_dict]
                 if not resource:
-                    resource = [Resource.load(resource_dict, base_path)]
+                    resource = [Resource(resource_dict, base_path)]
                 new_resources.append(resource[0])
 
         return tuple(new_resources)

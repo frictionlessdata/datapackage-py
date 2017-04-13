@@ -29,8 +29,9 @@ def test_push_datapackage(storage):
     storage.create.assert_called_with(
         ['data___data'],
         [{'fields': [
-            {'name': 'id', 'type': 'integer'},
-            {'name': 'city', 'type': 'string'}]}])
+            {'name': 'id', 'type': 'integer', 'format': 'default'},
+            {'name': 'city', 'type': 'string', 'format': 'default'}],
+          'missingValues': ['']}])
     storage.write.assert_called_with('data___data', ANY)
 
     # Assert writen data
@@ -41,8 +42,9 @@ def test_push_datapackage(storage):
     ]
 
 
+@mock.patch('datapackage.helpers.expand_resource_descriptor')
 @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-def test_pull_datapackage(_, storage, descriptor):
+def test_pull_datapackage(m1, m2, storage, descriptor):
 
     # Prepare and call
     storage.buckets = ['data___data']
@@ -59,7 +61,7 @@ def test_pull_datapackage(_, storage, descriptor):
     # Assert pulled datapackage
     dp = DataPackage(descriptor)
     assert dp.descriptor == {'name': 'name', 'resources': [
-        {'path': 'data.csv', 'name': 'data', 'schema':
+        {'path': ['data.csv'], 'name': 'data', 'schema':
             {'fields': [
                 {'name': 'id', 'type': 'integer'},
                 {'name': 'city', 'type': 'string'}]}}]}
