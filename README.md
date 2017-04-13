@@ -8,7 +8,7 @@
 
 A model for working with [Data Packages].
 
-  [Data Packages]: http://dataprotocols.org/data-packages/
+  [Data Packages]: http://specs.frictionlessdata.io/data-package/
 
 ## Install
 
