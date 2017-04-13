@@ -15,16 +15,14 @@ import requests
 import warnings
 import jsonpointer
 import datapackage.schema
+from .resource import Resource
+from .exceptions import DataPackageException
 from . import config
 from . import helpers
-from .resource import Resource
-from .exceptions import (
-    DataPackageException,
-)
 
 
 class DataPackage(object):
-    '''Class for loading, validating and working with a Data Package.
+    """"Class for loading, validating and working with a Data Package.
 
     Args:
         descriptor (dict, str or file-like object, optional): The contents of the
@@ -52,7 +50,7 @@ class DataPackage(object):
         SchemaError: If the :data:`schema` couldn't be loaded or was invalid.
         RegistryError: If there was some problem loading the :data:`schema`
             from the registry.
-    '''
+    """
 
     # Public
 
@@ -87,80 +85,48 @@ class DataPackage(object):
                 resource['path'] = [path]
 
         # Set attributes
-        self._schema = self._load_schema(schema)
-        self._resources = self._load_resources(self.descriptor,
-                                               self.base_path)
+        self._schema = datapackage.schema.Schema(schema)
+        self._resources = self._update_resources((), self.descriptor, self.base_path)
 
     def __del__(self):
-        self._remove_tempdir_if_exists()
+        if hasattr(self, '_tempdir') and os.path.exists(self._tempdir):
+            shutil.rmtree(self._tempdir, ignore_errors=True)
 
     @property
     def descriptor(self):
-        '''dict: The descriptor of this data package. Its attributes can be
-        changed.'''
+        """"dict: The descriptor of this data package. Its attributes can be
+        changed.
+        """
         return self._descriptor
 
     @property
     def schema(self):
-        ''':class:`.Schema`: This data package's schema.
+        """:class:`.Schema`: This data package's schema.
 
         Check https://github.com/okfn/datapackage-validate-py for documentation
         on its attributes.
-        '''
+
+        """
         return self._schema
 
     @property
-    def base_path(self):
-        '''str: The base path of this Data Package (can be None).'''
-        return self._base_path
-
-    @property
     def resources(self):
-        '''The resources defined in this data package (can be empty).
+        """"The resources defined in this data package (can be empty).
 
         To add or remove resources, alter the `resources` attribute of the
         :data:`descriptor`.
 
         :returns: The resources.
         :rtype: tuple of :class:`.Resource`
-        '''
+
+        """
         self._resources = self._update_resources(self._resources,
                                                  self.descriptor,
                                                  self.base_path)
         return self._resources
 
-    @property
-    def attributes(self):
-        '''tuple: The union of the attributes defined in the schema and the
-        data package (can be empty).'''
-        attributes = set(self.to_dict().keys())
-        try:
-            attributes.update(self.schema.properties.keys())
-        except AttributeError:
-            pass
-        return tuple(attributes)
-
-    @property
-    def required_attributes(self):
-        '''tuple: The schema's required attributed (can be empty).'''
-        required = ()
-        try:
-            if self.schema.required is not None:
-                required = tuple(self.schema.required)
-        except AttributeError:
-            pass
-        return required
-
-    def to_dict(self):
-        '''dict: Convert this Data Package to dict.'''
-        return copy.deepcopy(self.descriptor)
-
-    def to_json(self):
-        '''str: Convert this Data Package to a JSON string.'''
-        return json.dumps(self.descriptor)
-
     def save(self, file_or_path):
-        '''Validates and saves this Data Package contents into a zip file.
+        """"Validates and saves this Data Package contents into a zip file.
 
         It creates a zip file into ``file_or_path`` with the contents of this
         Data Package and its resources. Every resource which content lives in
@@ -199,7 +165,8 @@ class DataPackage(object):
         Raises:
             ValidationError: If the Data Package is invalid.
             DataPackageException: If there was some error writing the package.
-        '''
+
+        """
         self.validate()
 
         def arcname(resource):
@@ -230,35 +197,30 @@ class DataPackage(object):
             six.raise_from(DataPackageException(e), e)
 
     def validate(self):
-        '''Validate this Data Package.
+        """"Validate this Data Package.
 
         Raises:
             ValidationError: If the Data Package is invalid.
-        '''
+
+        """
         descriptor = self.to_dict()
         self.schema.validate(descriptor)
 
     def iter_errors(self):
-        '''Lazily yields each ValidationError for the received data dict.
+        """"Lazily yields each ValidationError for the received data dict.
 
         Returns:
             iter: ValidationError for each error in the data.
-        '''
+
+        """
         return self.schema.iter_errors(self.to_dict())
-
-    # Deprecated
-
-    def safe(self):
-        warnings.warn(
-            'DataPackage.safe is deprecated. Now it\'s always safe.',
-            UserWarning)
-        return True
 
     # Private
 
     def _extract_zip_if_possible(self, descriptor):
-        '''str: Path to the extracted datapackage.json if descriptor points to
-        ZIP, or the unaltered descriptor otherwise.'''
+        """"str: Path to the extracted datapackage.json if descriptor points to
+        ZIP, or the unaltered descriptor otherwise.
+        """
         result = descriptor
         try:
             if isinstance(descriptor, six.string_types):
@@ -309,12 +271,6 @@ class DataPackage(object):
             msg = 'DataPackage must have only one "datapackage.json" (had {n})'
             raise DataPackageException(msg.format(n=len(datapackage_jsons)))
 
-    def _load_schema(self, schema):
-        return datapackage.schema.Schema(schema)
-
-    def _load_resources(self, descriptor, base_path):
-        return self._update_resources((), descriptor, base_path)
-
     def _update_resources(self, current_resources, descriptor, base_path):
         resources_dicts = descriptor.get('resources')
         new_resources = []
@@ -329,6 +285,73 @@ class DataPackage(object):
 
         return tuple(new_resources)
 
-    def _remove_tempdir_if_exists(self):
-        if hasattr(self, '_tempdir') and os.path.exists(self._tempdir):
-            shutil.rmtree(self._tempdir, ignore_errors=True)
+    # Additional
+
+    @property
+    def base_path(self):
+        """"str: The base path of this Data Package (can be None).
+        """
+        return self._base_path
+
+    def to_dict(self):
+        """"dict: Convert this Data Package to dict.
+        """
+        return copy.deepcopy(self.descriptor)
+
+    def to_json(self):
+        """"str: Convert this Data Package to a JSON string.
+        """
+        return json.dumps(self.descriptor)
+
+    # Deprecated
+
+    def safe(self):
+        """True: datapackage is always safe.
+        """
+
+        # Deprecate
+        warnings.warn(
+            'DataPackage.safe is deprecated. '
+            'Now it\'s always safe.',
+            UserWarning)
+
+        return True
+
+    @property
+    def attributes(self):
+        """tuple: Attributes defined in the schema and the data package.
+        """
+
+        # Deprecate
+        warnings.warn(
+            'DataPackage.attributes is deprecated.',
+            UserWarning)
+
+        # Get attributes
+        attributes = set(self.to_dict().keys())
+        try:
+            attributes.update(self.schema.properties.keys())
+        except AttributeError:
+            pass
+
+        return tuple(attributes)
+
+    @property
+    def required_attributes(self):
+        """tuple: The schema's required attributed.
+        """
+
+        # Deprecate
+        warnings.warn(
+            'DataPackage.attributes_attributes is deprecated.',
+            UserWarning)
+        required = ()
+
+        # Get required
+        try:
+            if self.schema.required is not None:
+                required = tuple(self.schema.required)
+        except AttributeError:
+            pass
+
+        return required
