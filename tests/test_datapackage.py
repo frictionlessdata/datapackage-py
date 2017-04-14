@@ -16,6 +16,7 @@ import pytest
 import httpretty
 import tests.test_helpers as test_helpers
 import datapackage
+from datapackage import helpers
 
 
 # Tests
@@ -257,18 +258,14 @@ class TestDataPackage(object):
         dp = datapackage.DataPackage(descriptor)
         assert json.loads(dp.to_json()) == descriptor
 
-    @mock.patch('datapackage.helpers.expand_resource_descriptor')
-    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-    def test_descriptor_dereferencing_uri(self, m1, m2):
+    def test_descriptor_dereferencing_uri(self):
         dp = datapackage.DataPackage('tests/fixtures/datapackage_with_dereferencing.json')
-        assert dp.descriptor['resources'] == [
+        assert dp.descriptor['resources'] == list(map(helpers.expand_resource_descriptor, [
             {'name': 'name1', 'data': 'data', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'data': 'data', 'dialect': {'delimiter': ','}},
-        ]
+        ]))
 
-    @mock.patch('datapackage.helpers.expand_resource_descriptor')
-    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-    def test_descriptor_dereferencing_uri_pointer(self, m1, m2):
+    def test_descriptor_dereferencing_uri_pointer(self):
         descriptor = {
             'resources': [
                 {'name': 'name1', 'data': 'data', 'schema': '#/schemas/main'},
@@ -278,10 +275,10 @@ class TestDataPackage(object):
             'dialects': [{'delimiter': ','}],
         }
         dp = datapackage.DataPackage(descriptor)
-        assert dp.descriptor['resources'] == [
+        assert dp.descriptor['resources'] == list(map(helpers.expand_resource_descriptor, [
             {'name': 'name1', 'data': 'data', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'data': 'data', 'dialect': {'delimiter': ','}},
-        ]
+        ]))
 
     def test_descriptor_dereferencing_uri_pointer_bad(self):
         descriptor = {
@@ -293,9 +290,7 @@ class TestDataPackage(object):
             dp = datapackage.DataPackage(descriptor)
 
     @httpretty.activate
-    @mock.patch('datapackage.helpers.expand_resource_descriptor')
-    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-    def test_descriptor_dereferencing_uri_remote(self, m1, m2):
+    def test_descriptor_dereferencing_uri_remote(self):
         # Mocks
         httpretty.register_uri(httpretty.GET,
             'http://example.com/schema', body='{"fields": [{"name": "name"}]}')
@@ -309,10 +304,10 @@ class TestDataPackage(object):
              ],
         }
         dp = datapackage.DataPackage(descriptor)
-        assert dp.descriptor['resources'] == [
+        assert dp.descriptor['resources'] == list(map(helpers.expand_resource_descriptor, [
             {'name': 'name1', 'data': 'data', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'data': 'data', 'dialect': {'delimiter': ','}},
-        ]
+        ]))
 
     def test_descriptor_dereferencing_uri_remote_bad(self):
         # Mocks
@@ -326,9 +321,7 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.DataPackageException):
             dp = datapackage.DataPackage(descriptor)
 
-    @mock.patch('datapackage.helpers.expand_resource_descriptor')
-    @mock.patch('datapackage.helpers.expand_data_package_descriptor')
-    def test_descriptor_dereferencing_uri_local(self, m1, m2):
+    def test_descriptor_dereferencing_uri_local(self):
         descriptor = {
             'resources': [
                 {'name': 'name1', 'data': 'data', 'schema': 'table_schema.json'},
@@ -336,10 +329,10 @@ class TestDataPackage(object):
              ],
         }
         dp = datapackage.DataPackage(descriptor, default_base_path='tests/fixtures')
-        assert dp.descriptor['resources'] == [
+        assert dp.descriptor['resources'] == list(map(helpers.expand_resource_descriptor, [
             {'name': 'name1', 'data': 'data', 'schema': {'fields': [{'name': 'name'}]}},
             {'name': 'name2', 'data': 'data', 'dialect': {'delimiter': ','}},
-        ]
+        ]))
 
     def test_descriptor_dereferencing_uri_local_bad(self):
         descriptor = {

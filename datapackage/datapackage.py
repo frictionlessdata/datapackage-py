@@ -54,7 +54,7 @@ class DataPackage(object):
 
     # Public
 
-    def __init__(self, descriptor=None, schema='data-package', default_base_path=None):
+    def __init__(self, descriptor=None, schema=None, default_base_path=None):
 
         # Extract from zip
         descriptor = self._extract_zip_if_possible(descriptor)
@@ -66,6 +66,24 @@ class DataPackage(object):
         self._descriptor = helpers.retrieve_descriptor(descriptor)
         helpers.dereference_data_package_descriptor(self._descriptor, self._base_path)
         helpers.expand_data_package_descriptor(self._descriptor)
+
+        # Get profile
+        profile = self._descriptor['profile']
+
+        # Handle deprecated schema argument
+        if schema is not None:
+            warnings.warn(
+                'Argument "schema" is deprecated. '
+                'Please use "descriptor.profile" property.',
+                UserWarning)
+            if isinstance(schema, six.string_types):
+                if schema in ['base', 'default']:
+                    schema = 'data-package'
+                elif schema == 'tabular':
+                    schema = 'tabular-data-package'
+                elif schema == 'fiscal':
+                    schema = 'fiscal-data-package'
+            profile = schema
 
         # Handle deprecated resource.path/url
         for resource in self._descriptor.get('resources', []):
@@ -85,7 +103,7 @@ class DataPackage(object):
                 resource['path'] = [path]
 
         # Set attributes
-        self._schema = datapackage.schema.Schema(schema)
+        self._schema = datapackage.schema.Schema(profile)
         self._resources = self._update_resources((), self.descriptor, self.base_path)
 
     def __del__(self):
@@ -98,6 +116,12 @@ class DataPackage(object):
         changed.
         """
         return self._descriptor
+
+    @property
+    def profile(self):
+        """"str: The profile of this data package.
+        """
+        return self._descriptor['profile']
 
     @property
     def resources(self):
@@ -308,6 +332,19 @@ class DataPackage(object):
         return True
 
     @property
+    def schema(self):
+        """:class:`.Schema`: This data package's schema.
+        """
+
+        # Deprecate
+        warnings.warn(
+            'DataPackage.schema is deprecated.',
+            UserWarning)
+        required = ()
+
+        return self._schema
+
+    @property
     def attributes(self):
         """tuple: Attributes defined in the schema and the data package.
         """
@@ -345,16 +382,3 @@ class DataPackage(object):
             pass
 
         return required
-
-    @property
-    def schema(self):
-        """:class:`.Schema`: This data package's schema.
-        """
-
-        # Deprecate
-        warnings.warn(
-            'DataPackage.schema is deprecated.',
-            UserWarning)
-        required = ()
-
-        return self._schema

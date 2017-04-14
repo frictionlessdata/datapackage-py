@@ -9,10 +9,11 @@ import mock
 import pytest
 import shutil
 import tempfile
-import tests.test_helpers as helpers
 from mock import patch, ANY
 from datapackage import DataPackage
+from datapackage import helpers
 from importlib import import_module
+from tests import test_helpers
 module = import_module('datapackage.pushpull')
 
 
@@ -21,7 +22,7 @@ module = import_module('datapackage.pushpull')
 def test_push_datapackage(storage):
 
     # Prepare and call
-    descriptor = helpers.fixture_path('datapackage', 'datapackage.json')
+    descriptor = test_helpers.fixture_path('datapackage', 'datapackage.json')
     storage.buckets = ['data___data']  # Without patch it's a reflection
     module.push_datapackage(descriptor=descriptor, backend='backend')
 
@@ -42,9 +43,7 @@ def test_push_datapackage(storage):
     ]
 
 
-@mock.patch('datapackage.helpers.expand_resource_descriptor')
-@mock.patch('datapackage.helpers.expand_data_package_descriptor')
-def test_pull_datapackage(m1, m2, storage, descriptor):
+def test_pull_datapackage(storage, descriptor):
 
     # Prepare and call
     storage.buckets = ['data___data']
@@ -60,11 +59,15 @@ def test_pull_datapackage(m1, m2, storage, descriptor):
 
     # Assert pulled datapackage
     dp = DataPackage(descriptor)
-    assert dp.descriptor == {'name': 'name', 'resources': [
-        {'path': ['data.csv'], 'name': 'data', 'schema':
-            {'fields': [
-                {'name': 'id', 'type': 'integer'},
-                {'name': 'city', 'type': 'string'}]}}]}
+    assert dp.descriptor == helpers.expand_data_package_descriptor(
+        {'name': 'name',
+        'resources': [
+            {'path': ['data.csv'],
+             'name': 'data',
+             'schema':
+                {'fields': [
+                    {'name': 'id', 'type': 'integer'},
+                    {'name': 'city', 'type': 'string'}]}}]})
 
 
 def test_convert_path():
