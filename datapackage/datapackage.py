@@ -14,8 +14,8 @@ import six
 import requests
 import warnings
 import jsonpointer
-import datapackage.schema
 from .resource import Resource
+from .profile import Profile
 from . import exceptions
 from . import helpers
 from . import config
@@ -103,7 +103,7 @@ class DataPackage(object):
                 resource['path'] = [path]
 
         # Set attributes
-        self._schema = datapackage.schema.Schema(profile)
+        self._profile = Profile(profile)
         self._resources = self._update_resources((), self.descriptor, self.base_path)
 
     def __del__(self):
@@ -121,7 +121,7 @@ class DataPackage(object):
     def profile(self):
         """"str: The profile of this data package.
         """
-        return self._descriptor['profile']
+        return self._profile
 
     @property
     def resources(self):
@@ -218,7 +218,7 @@ class DataPackage(object):
 
         """
         descriptor = self.to_dict()
-        self.schema.validate(descriptor)
+        self.profile.validate(descriptor)
 
     def iter_errors(self):
         """"Lazily yields each ValidationError for the received data dict.
@@ -227,7 +227,25 @@ class DataPackage(object):
             iter: ValidationError for each error in the data.
 
         """
-        return self.schema.iter_errors(self.to_dict())
+        return self.profile.iter_errors(self.to_dict())
+
+    # Additional
+
+    @property
+    def base_path(self):
+        """"str: The base path of this Data Package (can be None).
+        """
+        return self._base_path
+
+    def to_dict(self):
+        """"dict: Convert this Data Package to dict.
+        """
+        return copy.deepcopy(self.descriptor)
+
+    def to_json(self):
+        """"str: Convert this Data Package to a JSON string.
+        """
+        return json.dumps(self.descriptor)
 
     # Private
 
@@ -299,24 +317,6 @@ class DataPackage(object):
 
         return tuple(new_resources)
 
-    # Additional
-
-    @property
-    def base_path(self):
-        """"str: The base path of this Data Package (can be None).
-        """
-        return self._base_path
-
-    def to_dict(self):
-        """"dict: Convert this Data Package to dict.
-        """
-        return copy.deepcopy(self.descriptor)
-
-    def to_json(self):
-        """"str: Convert this Data Package to a JSON string.
-        """
-        return json.dumps(self.descriptor)
-
     # Deprecated
 
     def safe(self):
@@ -342,7 +342,7 @@ class DataPackage(object):
             UserWarning)
         required = ()
 
-        return self._schema
+        return self._profile
 
     @property
     def attributes(self):
@@ -357,7 +357,7 @@ class DataPackage(object):
         # Get attributes
         attributes = set(self.to_dict().keys())
         try:
-            attributes.update(self.schema.properties.keys())
+            attributes.update(self.profile.properties.keys())
         except AttributeError:
             pass
 
@@ -376,8 +376,8 @@ class DataPackage(object):
 
         # Get required
         try:
-            if self.schema.required is not None:
-                required = tuple(self.schema.required)
+            if self.profile.required is not None:
+                required = tuple(self.profile.required)
         except AttributeError:
             pass
 

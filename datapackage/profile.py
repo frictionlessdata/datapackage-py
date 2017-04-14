@@ -10,17 +10,16 @@ import requests
 import json
 import jsonschema
 import datapackage.registry
-from .exceptions import (
-    SchemaError,
-    ValidationError,
-)
+from .exceptions import SchemaError, ValidationError
 
 
-class Schema(object):
-    '''Abstracts a JSON Schema and allows validation of data against it.
+# Module API
+
+class Profile(object):
+    """Abstracts a JSON Schema and allows validation of data against it.
 
     Args:
-        schema (str or dict): The JSON Schema itself as a dict, a local path
+        profile (str or dict): The JSON Schema itself as a dict, a local path
             or URL to it.
 
     Raises:
@@ -30,42 +29,66 @@ class Schema(object):
     Warning:
         The schema objects created with this class are read-only. You should
         change any of its attributes after creation.
-    '''
-    def __init__(self, schema):
+
+    """
+
+    # Public
+
+    def __init__(self, profile):
+        self._name = profile
         self._registry = self._load_registry()
-        self._schema = self._load_schema(schema, self._registry)
+        self._schema = self._load_schema(profile, self._registry)
         self._validator = self._load_validator(self._schema, self._registry)
         self._check_schema()
 
-    def to_dict(self):
-        '''dict: Convert this :class:`.Schema` to dict.'''
-        return copy.deepcopy(self._schema)
+    @property
+    def name(self):
+        """str: profile name, path or URL.
+        """
+        return self._name
+
+    @property
+    def jsonschema(self):
+        """dict: profile jsonschema.
+        """
+        return self._schema
 
     def validate(self, data):
-        '''Validates a data dict against this schema.
+        """Validates a data dict against this schema.
 
         Args:
             data (dict): The data to be validated.
 
         Raises:
             ValidationError: If the data is invalid.
-        '''
+
+        """
         try:
             self._validator.validate(data)
         except jsonschema.ValidationError as e:
             six.raise_from(ValidationError.create_from(e), e)
 
     def iter_errors(self, data):
-        '''Lazily yields each ValidationError for the received data dict.
+        """Lazily yields each ValidationError for the received data dict.
 
         Args:
             data (dict): The data to be validated.
 
         Returns:
             iter: ValidationError for each error in the data.
-        '''
+
+        """
         for error in self._validator.iter_errors(data):
             yield ValidationError.create_from(error)
+
+    # Additional
+
+    def to_dict(self):
+        """dict: Convert this :class:`.Schema` to dict.
+        """
+        return copy.deepcopy(self._schema)
+
+    # Private
 
     def _load_registry(self):
         return datapackage.registry.Registry()

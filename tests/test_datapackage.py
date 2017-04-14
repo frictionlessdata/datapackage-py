@@ -216,13 +216,13 @@ class TestDataPackage(object):
         with pytest.raises(datapackage.exceptions.ValidationError):
             dp.validate()
 
-    @mock.patch('datapackage.schema.Schema')
-    def test_iter_errors_returns_schemas_iter_errors(self, schema_mock):
+    @mock.patch('datapackage.datapackage.Profile')
+    def test_iter_errors_returns_schemas_iter_errors(self, profile_mock):
         iter_errors_mock = mock.Mock()
         iter_errors_mock.return_value = 'the iter errors'
-        schema_mock.return_value.iter_errors = iter_errors_mock
+        profile_mock.return_value.iter_errors = iter_errors_mock
 
-        descriptor = {}
+        descriptor = {'resources': [{'name': 'name', 'data': ['data']}]}
         dp = datapackage.DataPackage(descriptor)
 
         assert dp.iter_errors() == 'the iter errors'
