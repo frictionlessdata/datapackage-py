@@ -67,6 +67,12 @@ class Resource(object):
         return self.__descriptor
 
     @property
+    def name(self):
+        """dict: resource name
+        """
+        return self.__descriptor['name']
+
+    @property
     def source_type(self):
         """str: data source type
 
