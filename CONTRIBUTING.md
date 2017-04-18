@@ -3,14 +3,14 @@
 Helping out with the development of **datapackage** is much appreciated
 and we try to be a newcomer friendly project! There's a lot to do if we
 are supposed to be the goto python package for working with [data
-packages](http://www.dataprotocols.org/en/latest/data-packages.html).
+packages](http://specs.frictionlessdata.io/data-package/).
 
 We don't track an awful lot except for perhaps bugs and feature requests
 from non-developers (or very busy developers) in our issue tracker so
 the development is mostly fueled by the *scratch your own itch* mantra.
 
 So start off by looking at what [data
-packages](http://www.dataprotocols.org/en/latest/data-packages.html) can
+packages](http://specs.frictionlessdata.io/data-package/) can
 do and what feature you would like to see and use. Then just implement
 it!
 

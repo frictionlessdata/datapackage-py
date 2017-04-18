@@ -36,7 +36,7 @@ setup(
     name='datapackage',
     version='1.0.0-alpha1',
     description=(
-        'Utilities to work with Data Packages as defined on dataprotocols.org'
+        'Utilities to work with Data Packages as defined on specs.frictionlessdata.io'
     ),
     long_description=long_description,
 
@@ -62,7 +62,7 @@ setup(
         'Programming Language :: Python :: 3.5',
     ],
 
-    keywords='data dataprotocols jsontableschema frictionlessdata datascience',
+    keywords='data jsontableschema frictionlessdata datascience',
 
     packages=find_packages(exclude=['tests']),
     package_data={'datapackage': schema_files()},
