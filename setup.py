@@ -34,7 +34,7 @@ def schema_files():
 
 setup(
     name='datapackage',
-    version='1.0.0-alpha1',
+    version='1.0.0-alpha2',
     description=(
         'Utilities to work with Data Packages as defined on specs.frictionlessdata.io'
     ),
