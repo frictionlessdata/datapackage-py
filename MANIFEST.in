@@ -1,2 +1,9 @@
-include LICENSE
+global-include VERSION
+include LICENSE.md
+include Makefile
+include pylama.ini
+include pytest.ini
 include README.md
+include tox.ini
+
+global-include *.json
