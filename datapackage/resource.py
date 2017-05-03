@@ -166,7 +166,8 @@ def _get_source_with_type(data, path, base_path):
             source = path[0]
             source_type = 'remote'
         elif base_path and base_path.startswith('http'):
-            source = urljoin(base_path + '/', path[0])
+            norm_base_path = base_path if base_path.endswith('/') else base_path + '/'
+            source = urljoin(norm_base_path, path[0])
             source_type = 'remote'
         else:
             if not helpers.is_safe_path(path[0]):
