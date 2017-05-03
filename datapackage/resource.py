@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import io
 import os
-from jsontableschema import Table
+from tableschema import Table
 from six.moves.urllib.parse import urljoin
 from six.moves.urllib.request import urlopen
 from . import exceptions
