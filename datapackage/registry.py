@@ -24,7 +24,7 @@ class Registry(object):
 
     # Public
 
-    DEFAULT_REGISTRY_URL = 'https://specs.frictionlessdata.io/specs/registry.json'
+    DEFAULT_REGISTRY_URL = 'https://specs.frictionlessdata.io/schemas/registry.json'
     DEFAULT_REGISTRY_PATH = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
         'profiles',
