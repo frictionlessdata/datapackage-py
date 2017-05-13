@@ -92,7 +92,7 @@ class TestRegistry(object):
             datapackage.registry.Registry(registry_path)
 
     def test_it_has_default_registry_url_const(self):
-        url = 'https://specs.frictionlessdata.io/specs/registry.json'
+        url = 'https://specs.frictionlessdata.io/schemas/registry.json'
         assert datapackage.registry.Registry.DEFAULT_REGISTRY_URL == url
 
     def test_available_profiles_returns_empty_dict_when_registry_is_empty(self):
