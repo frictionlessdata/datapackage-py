@@ -11,7 +11,7 @@ with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='datapackage',
-    version='1.0.0-alpha4',
+    version='1.0.0-alpha5',
     description=(
         'Utilities to work with Data Packages as defined on specs.frictionlessdata.io'
     ),
