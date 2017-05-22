@@ -239,7 +239,7 @@
           },
           "context": "This property is not legally binding and does not guarantee that the package is licensed under the terms defined herein.",
           "examples": [
-            "{\n  \"licenses\": [\n    {\n      \"name\": \"ODC-PDDL-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
+            "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
           ]
         },
         "resources": {
@@ -1922,7 +1922,7 @@
                 },
                 "context": "This property is not legally binding and does not guarantee that the package is licensed under the terms defined herein.",
                 "examples": [
-                  "{\n  \"licenses\": [\n    {\n      \"name\": \"ODC-PDDL-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
+                  "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
                 ]
               },
               "dialect": {
@@ -3830,7 +3830,7 @@
                 },
                 "context": "This property is not legally binding and does not guarantee that the package is licensed under the terms defined herein.",
                 "examples": [
-                  "{\n  \"licenses\": [\n    {\n      \"name\": \"ODC-PDDL-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
+                  "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
                 ]
               },
               "dialect": {

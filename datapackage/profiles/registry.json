@@ -16,7 +16,7 @@
   {
     "id": "fiscal-data-package",
     "title": "Fiscal Data Package",
-    "schema": "https://specs.frictionlessdata.io/fiscal-data-package.json",
+    "schema": "https://specs.frictionlessdata.io/schemas/fiscal-data-package.json",
     "schema_path": "fiscal-data-package.json",
     "specification": "https://specs.frictionlessdata.io/fiscal-data-package/"
   }
