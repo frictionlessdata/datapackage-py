@@ -8,6 +8,8 @@ output = shippable/codecoverage/coverage.xml
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
+    pragma: no cover
+
     # Don't complain about missing debug-only code:
     def __repr__
     if self\.debug
