@@ -525,6 +525,7 @@ class TestTabularResource(object):
         ).encode('utf-8')
         resource_dict = {
             'url': 'http://someplace.com/data.csv',
+            'encoding': 'utf-8',
         }
         httpretty.register_uri(httpretty.GET, resource_dict['url'],
                                body=csv_contents)
