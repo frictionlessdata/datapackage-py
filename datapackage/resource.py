@@ -199,7 +199,7 @@ def _get_table_options(descriptor):
     options = {}
     options['format'] = 'csv'
     if descriptor.get('data'):
-        options['format'] = 'native'
+        options['format'] = 'inline'
     options['encoding'] = descriptor['encoding']
     options['skip_rows'] = descriptor.get('skipRows', [])
 
