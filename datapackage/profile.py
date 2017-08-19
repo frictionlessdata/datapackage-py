@@ -16,25 +16,12 @@ from .exceptions import SchemaError, ValidationError
 # Module API
 
 class Profile(object):
-    """Abstracts a JSON Schema and allows validation of data against it.
-
-    Args:
-        profile (str or dict): The JSON Schema itself as a dict, a local path
-            or URL to it.
-
-    Raises:
-        SchemaError: If unable to load schema or it was invalid.
-        RegistryError: If there was some error loading the schema registry.
-
-    Warning:
-        The schema objects created with this class are read-only. You should
-        change any of its attributes after creation.
-
-    """
 
     # Public
 
     def __init__(self, profile):
+        """https://github.com/frictionlessdata/datapackage-py#schema
+        """
         self._name = profile
         self._registry = self._load_registry()
         self._schema = self._load_schema(profile, self._registry)
@@ -43,50 +30,23 @@ class Profile(object):
 
     @property
     def name(self):
-        """str: profile name, path or URL.
+        """https://github.com/frictionlessdata/datapackage-py#schema
         """
         return self._name
 
     @property
     def jsonschema(self):
-        """dict: profile jsonschema.
+        """https://github.com/frictionlessdata/datapackage-py#schema
         """
         return self._schema
 
     def validate(self, data):
-        """Validates a data dict against this schema.
-
-        Args:
-            data (dict): The data to be validated.
-
-        Raises:
-            ValidationError: If the data is invalid.
-
+        """https://github.com/frictionlessdata/datapackage-py#schema
         """
         try:
             self._validator.validate(data)
         except jsonschema.ValidationError as e:
             six.raise_from(ValidationError.create_from(e), e)
-
-    def iter_errors(self, data):
-        """Lazily yields each ValidationError for the received data dict.
-
-        Args:
-            data (dict): The data to be validated.
-
-        Returns:
-            iter: ValidationError for each error in the data.
-
-        """
-        for error in self._validator.iter_errors(data):
-            yield ValidationError.create_from(error)
-
-    # Additional
-
-    def to_dict(self):
-        """dict: Convert this :class:`.Schema` to dict.
-        """
-        return copy.deepcopy(self._schema)
 
     # Private
 
@@ -144,3 +104,23 @@ class Profile(object):
 
     def __dir__(self):
         return list(self.__dict__.keys()) + list(self._schema.keys())
+
+    # Deprecated
+
+    def iter_errors(self, data):
+        """Lazily yields each ValidationError for the received data dict.
+
+        Args:
+            data (dict): The data to be validated.
+
+        Returns:
+            iter: ValidationError for each error in the data.
+
+        """
+        for error in self._validator.iter_errors(data):
+            yield ValidationError.create_from(error)
+
+    def to_dict(self):
+        """dict: Convert this :class:`.Schema` to dict.
+        """
+        return copy.deepcopy(self._schema)

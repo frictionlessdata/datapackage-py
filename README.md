@@ -1,152 +1,179 @@
-# DataPackage.py
+# datapackage-py
 
+[![Travis](https://travis-ci.org/frictionlessdata/datapackage-py.svg?branch=master)](https://travis-ci.org/frictionlessdata/datapackage-py)
+[![Coveralls](https://coveralls.io/repos/github/frictionlessdata/datapackage-py/badge.svg?branch=master)](https://coveralls.io/github/frictionlessdata/datapackage-py?branch=master)
+[![PyPi](https://img.shields.io/pypi/v/datapackage.svg)](https://pypi.python.org/pypi/datapackage)
 [![Gitter](https://img.shields.io/gitter/room/frictionlessdata/chat.svg)](https://gitter.im/frictionlessdata/chat)
-[![Build Status](https://travis-ci.org/frictionlessdata/datapackage-py.svg?branch=master)](https://travis-ci.org/frictionlessdata/datapackage-py)
-[![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/frictionlessdata/datapackage-py?branch=master&svg=true)](https://ci.appveyor.com/project/vitorbaptista/datapackage-py)
-[![Test Coverage](https://coveralls.io/repos/frictionlessdata/datapackage-py/badge.svg?branch=master&service=github)](https://coveralls.io/github/frictionlessdata/datapackage-py)
-![Support Python versions 2.7, 3.3, 3.4 and 3.5](https://img.shields.io/badge/python-2.7%2C%203.3%2C%203.4%2C%203.5-blue.svg)
 
-A model for working with [Data Packages].
+A library for working with [Data Packages](http://specs.frictionlessdata.io/data-package/).
 
-  [Data Packages]: http://specs.frictionlessdata.io/data-package/
+> Version v1.0 includes various important changes. Please read a [migration guide](#v10).
 
-## Install
+## Features
 
+ - `Package` class for working with data packages
+ - `Resource` class for working with data resources
+ - `Profile` class for working with profiles
+ - `validate` function for validating data package descriptors
+ - `infer` function for inferring data package descriptors
+
+### Installation
+
+The package use semantic versioning. It means that major versions  could include breaking changes. It's highly recommended to specify `datapackage` version range in your `setup/requirements` file e.g. `datapackage>=1.0,<2.0`.
+
+```bash
+$ pip install datapackage
 ```
-pip install datapackage
-```
 
-## Examples
+### Examples
 
-
-### Reading a Data Package and its resource
+Code examples in this readme requires Python 3.3+ interpreter. You could see even more example in [examples](https://github.com/frictionlessdata/datapacakge-py/tree/master/examples) directory.
 
 ```python
-import datapackage
+from datapackage import Package
 
-dp = datapackage.DataPackage('http://data.okfn.org/data/core/gdp/datapackage.json')
-brazil_gdp = [{'Year': row['Year'].year, 'Value': float(row['Value'])}
-              for row in dp.resources[0].data if row['Country Code'] == 'BRA']
-
-max_gdp = max(brazil_gdp, key=lambda x: x['Value'])
-min_gdp = min(brazil_gdp, key=lambda x: x['Value'])
-percentual_increase = max_gdp['Value'] / min_gdp['Value']
-
-msg = (
-    'The highest Brazilian GDP occured in {max_gdp_year}, when it peaked at US$ '
-    '{max_gdp:1,.0f}. This was {percentual_increase:1,.2f}% more than its '
-    'minimum GDP in {min_gdp_year}.'
-).format(max_gdp_year=max_gdp['Year'],
-         max_gdp=max_gdp['Value'],
-         percentual_increase=percentual_increase,
-         min_gdp_year=min_gdp['Year'])
-
-print(msg)
-# The highest Brazilian GDP occured in 2011, when it peaked at US$ 2,615,189,973,181. This was 172.44% more than its minimum GDP in 1960.
+package = Package('descriptor.json')
+package.getResource('resource').table.read()
 ```
 
-### Validating a Data Package
+## Documentation
 
-```python
-import datapackage
+### Package
 
-dp = datapackage.DataPackage('http://data.okfn.org/data/core/gdp/datapackage.json')
-try:
-    dp.validate()
-except datapackage.exceptions.ValidationError as e:
-    # Handle the ValidationError
-    pass
+A class for working with data packages. It provides various capabilities like loading local or remote data package, inferring a data package descriptor, saving a data package descriptor and many more.
+
+> TODO: insert tutorial here
+
+> TODO: insert reference here
+
+### Resource
+
+A class for working with data resources. You can read or iterate tabular resources using the `table` property.
+
+> TODO: insert tutorial here
+
+> TODO: insert reference here
+
+### Profile
+
+A component to represent JSON Schema profile from [Profiles Registry]( https://specs.frictionlessdata.io/schemas/registry.json).
+
+#### `Profile(profile)`
+
+Constuctor to instantiate `Profile` class.
+
+- `profile (str)` - profile name in registry or URL to JSON Schema
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(Profile)` - returns profile class instance
+
+#### `profile.name`
+
+- `(str/None)` - returns profile name if available
+
+#### `profile.jsonschema`
+
+- `(dict)` - returns profile JSON Schema contents
+
+#### `profile.validate(descriptor)`
+
+Validate a data package `descriptor` against the profile.
+
+- `descriptor (dict)` - retrieved and dereferenced data package descriptor
+- `(exceptions.ValidationError)` - raises if not valid
+- `(bool)` - returns True if valid
+
+### Validate
+
+A standalone function to validate a data package descriptor.
+
+> TODO: insert tutorial here
+
+> TODO: insert reference here
+
+### Infer
+
+A standalone function to infer a data package descriptor.
+
+> TODO: insert tutorial here
+
+> TODO: insert reference here
+
+### Exceptions
+
+> TODO: insert reference here
+
+### CLI
+
+> It's a provisional API. If you use it as a part of other program please pin concrete `goodtables` version to your requirements file.
+
+The library ships with a simple CLI.
+
+> TODO: insert reference here
+
+## Contributing
+
+The project follows the [Open Knowledge International coding standards](https://github.com/okfn/coding-standards).
+
+Recommended way to get started is to create and activate a project virtual environment.
+To install package and development dependencies into active environment:
+
+```
+$ make install
 ```
 
-### Retrieving all validation errors from a Data Package
+To run tests with linting and coverage:
 
-```python
-import datapackage
-
-# This descriptor has two errors:
-#   * It has no "name", which is required;
-#   * Its resource has no "data", "path" or "url".
-descriptor = {
-    'resources': [
-        {},
-    ]
-}
-
-dp = datapackage.DataPackage(descriptor)
-
-for error in dp.iter_errors():
-    # Handle error
+```bash
+$ make test
 ```
 
-### Creating a Data Package
+For linting `pylama` configured in `pylama.ini` is used. On this stage it's already
+installed into your environment and could be used separately with more fine-grained control
+as described in documentation - https://pylama.readthedocs.io/en/latest/.
 
-```python
-import datapackage
+For example to sort results by error type:
 
-dp = datapackage.DataPackage()
-dp.descriptor['name'] = 'my_sleep_duration'
-dp.descriptor['resources'] = [
-    {'name': 'data'}
-]
-
-resource = dp.resources[0]
-resource.descriptor['data'] = [
-    7, 8, 5, 6, 9, 7, 8
-]
-
-with open('datapackage.json', 'w') as f:
-  f.write(dp.to_json())
-# {"name": "my_sleep_duration", "resources": [{"data": [7, 8, 5, 6, 9, 7, 8], "name": "data"}]}
+```bash
+$ pylama --sort <path>
 ```
 
-### Using a schema that's not in the local cache
+For testing `tox` configured in `tox.ini` is used.
+It's already installed into your environment and could be used separately with more fine-grained control as described in documentation - https://testrun.org/tox/latest/.
 
-```python
-import datapackage
-import datapackage.registry
+For example to check subset of tests against Python 2 environment with increased verbosity.
+All positional arguments and options after `--` will be passed to `py.test`:
 
-# This constant points to the official registry URL
-# You can use any URL or path that points to a registry CSV
-registry_url = datapackage.registry.Registry.DEFAULT_REGISTRY_URL
-registry = datapackage.registry.Registry(registry_url)
-
-descriptor = {}  # The datapackage.json file
-schema = registry.get('tabular')  # Change to your schema ID
-
-dp = datapackage.DataPackage(descriptor, schema)
+```bash
+tox -e py27 -- -v tests/<path>
 ```
 
-### Push/pull Data Package to storage
+Under the hood `tox` uses `pytest` configured in `pytest.ini`, `coverage`
+and `mock` packages. This packages are available only in tox envionments.
 
-Package provides `push_datapackage` and `pull_datapackage` utilities to
-push and pull to/from storage.
+Here is a list of the library contributors:
+- Tryggvi Björgvinsson <tryggvi.bjorgvinsson@okfn.org>
+- Gunnlaugur Thor Briem <gunnlaugur@gmail.com>
+- Edouard <edou4rd@gmail.com>
+- Michael Bauer <mihi@lo-res.org>
+- Alex Chandel <alexchandel@gmail.com>
+- Jessica B. Hamrick <jhamrick@berkeley.edu>
+- Ricardo Lafuente
+- Paul Walsh <paulywalsh@gmail.com>
+- Luiz Armesto <luiz.armesto@gmail.com>
+- hansl <hansl@edge-net.net>
+- femtotrader <femto.trader@gmail.com>
+- Vitor Baptista <vitor@vitorbaptista.com>
+- Bryon Jacob <bryon@data.world>
 
-This functionality requires `jsontableschema` storage plugin installed. See
-[plugins](#https://github.com/frictionlessdata/jsontableschema-py#plugins)
-section of `jsontableschema` docs for more information. Let's imagine
-we have installed `jsontableschema-mystorage` (not a real name) plugin.
 
-Then we could push and pull datapackage to/from the storage:
+## Changelog
 
-> All parameters should be used as keyword arguments.
+Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
-```python
-from datapackage import push_datapackage, pull_datapackage
+### v1.0
 
-# Push
-push_datapackage(
-    descriptor='descriptor_path',
-    backend='mystorage', **<mystorage_options>)
+This version includes various big changes. A migration guide is under development and will be published here.
 
-# Import
-pull_datapackage(
-    descriptor='descriptor_path', name='datapackage_name',
-    backend='mystorage', **<mystorage_options>)
-```
+### v0.8
 
-Options could be a SQLAlchemy engine or a BigQuery project and dataset name etc.
-Detailed description you could find in a concrete plugin documentation.
-
-See concrete examples in
-[plugins](#https://github.com/frictionlessdata/jsontableschema-py#plugins)
-section of `jsontableschema` docs.
+Last pre-v1 stable version of the library.
