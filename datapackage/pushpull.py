@@ -13,7 +13,7 @@ import unicodecsv as csv
 from copy import deepcopy
 from importlib import import_module
 from jsontableschema import Schema
-from .datapackage import DataPackage
+from .package import Package
 from . import helpers
 
 
@@ -38,7 +38,7 @@ def push_datapackage(descriptor, backend, **backend_options):
     mapping = {}
 
     # Init model
-    model = DataPackage(descriptor)
+    model = Package(descriptor)
 
     # Get storage
     plugin = import_module('jsontableschema.plugins.%s' % backend)

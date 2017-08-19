@@ -21,7 +21,7 @@ from . import helpers
 from . import config
 
 
-class DataPackage(object):
+class Package(object):
     """"Class for loading, validating and working with a Data Package.
 
     Args:
