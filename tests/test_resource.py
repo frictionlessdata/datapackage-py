@@ -242,7 +242,7 @@ def test_source_inline():
     }
     resource = Resource(descriptor)
     assert resource.source == 'data'
-    assert resource.source_type == 'inline'
+    assert resource.inline == True
 
 
 def test_source_local():
@@ -252,7 +252,7 @@ def test_source_local():
     }
     resource = Resource(descriptor, base_path='tests/fixtures')
     assert resource.source == 'tests/fixtures/table.csv'
-    assert resource.source_type == 'local'
+    assert resource.local == True
 
 
 def test_source_local_bad_no_base_path():
@@ -289,7 +289,7 @@ def test_source_remote():
     }
     resource = Resource(descriptor)
     assert resource.source == 'http://example.com/table.csv'
-    assert resource.source_type == 'remote'
+    assert resource.remote == True
 
 
 def test_source_remote_path_relative_and_base_path_remote():
@@ -299,7 +299,7 @@ def test_source_remote_path_relative_and_base_path_remote():
     }
     resource = Resource(descriptor, base_path='http://example.com/')
     assert resource.source == 'http://example.com/table.csv'
-    assert resource.source_type == 'remote'
+    assert resource.remote == True
 
 
 def test_source_remote_path_remote_and_base_path_remote():
@@ -309,7 +309,7 @@ def test_source_remote_path_remote_and_base_path_remote():
     }
     resource = Resource(descriptor, base_path='http://example2.com/')
     assert resource.source == 'http://example1.com/table.csv'
-    assert resource.source_type == 'remote'
+    assert resource.remote == True
 
 
 def test_source_multipart_local():
@@ -319,7 +319,8 @@ def test_source_multipart_local():
     }
     resource = Resource(descriptor, base_path='tests/fixtures')
     assert resource.source == ['tests/fixtures/chunk1.csv', 'tests/fixtures/chunk2.csv']
-    assert resource.source_type == 'multipart-local'
+    assert resource.local == True
+    assert resource.multipart == True
 
 
 def test_source_multipart_local_bad_no_base_path():
@@ -357,7 +358,8 @@ def test_source_multipart_remote():
     resource = Resource(descriptor)
     assert resource.source == [
         'http://example.com/chunk1.csv', 'http://example.com/chunk2.csv']
-    assert resource.source_type == 'multipart-remote'
+    assert resource.remote == True
+    assert resource.multipart == True
 
 
 def test_source_multipart_remote_path_relative_and_base_path_remote():
@@ -368,7 +370,8 @@ def test_source_multipart_remote_path_relative_and_base_path_remote():
     resource = Resource(descriptor, base_path='http://example.com')
     assert resource.source == [
         'http://example.com/chunk1.csv', 'http://example.com/chunk2.csv']
-    assert resource.source_type == 'multipart-remote'
+    assert resource.remote == True
+    assert resource.multipart == True
 
 
 def test_source_multipart_remote_path_remote_and_base_path_remote():
@@ -379,7 +382,8 @@ def test_source_multipart_remote_path_remote_and_base_path_remote():
     resource = Resource(descriptor, base_path='http://example1.com')
     assert resource.source == [
         'http://example1.com/chunk1.csv', 'http://example2.com/chunk2.csv']
-    assert resource.source_type == 'multipart-remote'
+    assert resource.remote == True
+    assert resource.multipart == True
 
 
 # Resource.table

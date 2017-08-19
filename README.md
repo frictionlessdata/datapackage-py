@@ -52,7 +52,105 @@ A class for working with data resources. You can read or iterate tabular resourc
 
 > TODO: insert tutorial here
 
-> TODO: insert reference here
+#### `Resource(descriptor, basePath=None, strict=False)`
+
+Constructor to instantiate `Resource` class.
+
+- `descriptor (str/dict)` - data resource descriptor as local path, url or object
+- `base_path (str)` - base path for all relative paths
+- `strict (bool)` - strict flag to alter validation behavior. Setting it to `true` leads to throwing errors on any operation with invalid descriptor
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(Resource)` - returns resource class instance
+
+#### `resource.valid`
+
+- `(bool)` - returns validation status. It always true in strict mode.
+
+#### `resource.errors`
+
+- `(Error[])` - returns validation errors. It always empty in strict mode.
+
+#### `resource.profile`
+
+- `(Profile)` - returns an instance of `Profile` class (see below).
+
+#### `resource.descriptor`
+
+- (dict) - returns resource descriptor
+
+#### `resource.name`
+
+- `(str)` - returns resource name
+
+#### `resource.inline`
+
+- `(bool)` - returns true if resource is inline
+
+#### `resource.local`
+
+- `(bool)` - returns true if resource is local
+
+#### `resource.remote`
+
+- `(bool)` - returns true if resource is remote
+
+#### `resource.multipart`
+
+- `(bool)` - returns true if resource is multipart
+
+#### `resource.tabular`
+
+- `(bool)` - returns true if resource is tabular
+
+#### `resource.source`
+
+- `(list/str)` - returns `data` or `path` property
+
+Combination of `resource.source` and `resource.inline/local/remote/multipart` provides predictable interface to work with resource data.
+
+#### `resource.table`
+
+For tabular resources it returns `Table` instance to interact with data table. Read API documentation - [tableschema.Table](https://github.com/frictionlessdata/tableschema-py#table).
+
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(None/tableschema.Table)` - returns table instance if resource is tabular
+
+#### `resource.iter(filelike=False)`
+
+Iterate over data chunks as bytes. If `filelike` is true File-like object will be returned.
+
+- `filelike (bool)` - File-like object will be returned
+- `(bytes[]/filelike)` - returns byte[]/filelike
+
+#### `resource.read()`
+
+Returns resource data as bytes.
+
+- (bytes) - returns resource data in bytes
+
+#### `resource.infer()`
+
+Infer resource metadata like name, format, mediatype, encoding, schema and profile. It commits this changes into resource instance.
+
+- `(dict)` - returns resource descriptor
+
+#### `resource.commit(strict=None)`
+
+Update resource instance if there are in-place changes in the descriptor.
+
+- `strict (bool)` - alter `strict` mode for further work
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(bool)` - returns true on success and false if not modified
+
+#### `resource.save(target)`
+
+> For now only descriptor will be saved.
+
+Save resource to target destination.
+
+- `target (str)` - path where to save a resource
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(bool)` - returns true on success
 
 ### Profile
 

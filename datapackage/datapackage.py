@@ -198,7 +198,7 @@ class DataPackage(object):
                 descriptor = json.loads(self.to_json())
                 for i, resource in enumerate(self.resources):
                     path = None
-                    if resource.source_type == 'local':
+                    if resource.local:
                         path = os.path.abspath(resource.source)
                     if path:
                         path_inside_dp = arcname(resource)

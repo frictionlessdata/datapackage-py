@@ -3,6 +3,8 @@ import pytest
 import httpretty
 import tests.test_helpers as test_helpers
 
+import io
+import requests
 import datapackage.exceptions
 from datapackage.profile import Profile
 
@@ -209,3 +211,27 @@ class TestProfile(object):
         errors = [error for error in schema.iter_errors(data_dict)]
 
         assert len(errors) == 0
+
+
+def test_profiles_registry_is_up_to_date():
+    local = io.open('datapackage/profiles/registry.json').read()
+    remote = requests.get('https://specs.frictionlessdata.io/schemas/registry.json').text
+    assert local == remote, 'run `make profiles` to update profiles'
+
+
+def test_profiles_data_package_is_up_to_date():
+    local = io.open('datapackage/profiles/data-package.json').read()
+    remote = requests.get('https://specs.frictionlessdata.io/schemas/data-package.json').text
+    assert local == remote, 'run `make profiles` to update profiles'
+
+
+def test_profiles_tabular_data_package_is_up_to_date():
+    local = io.open('datapackage/profiles/tabular-data-package.json').read()
+    remote = requests.get('https://specs.frictionlessdata.io/schemas/tabular-data-package.json').text
+    assert local == remote, 'run `make profiles` to update profiles'
+
+
+def test_profiles_fiscal_data_package_is_up_to_date():
+    local = io.open('datapackage/profiles/fiscal-data-package.json').read()
+    remote = requests.get('https://specs.frictionlessdata.io/schemas/fiscal-data-package.json').text
+    assert local == remote, 'run `make profiles` to update profiles'

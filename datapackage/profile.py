@@ -4,13 +4,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
-import copy
 import six
-import requests
+import copy
 import json
+import requests
 import jsonschema
 import datapackage.registry
-from .exceptions import SchemaError, ValidationError
+from . import exceptions
 
 
 # Module API
@@ -43,10 +43,20 @@ class Profile(object):
     def validate(self, data):
         """https://github.com/frictionlessdata/datapackage-py#schema
         """
-        try:
-            self._validator.validate(data)
-        except jsonschema.ValidationError as e:
-            six.raise_from(ValidationError.create_from(e), e)
+
+        # Collect errors
+        errors = []
+        for error in self._validator.iter_errors(data):
+            # TODO: review why we need create_from
+            # errors.append(exceptions.ValidationError.create_from(error))
+            errors.append(error)
+
+        # Raise error
+        if errors:
+            message = 'There are %s validation errors (see exception.errors)' % len(errors)
+            raise exceptions.ValidationError(message, errors=errors)
+
+        return True
 
     # Private
 
@@ -71,12 +81,12 @@ class Profile(object):
                     ValueError,
                     requests.exceptions.RequestException) as e:
                 msg = 'Unable to load schema at "{0}"'
-                six.raise_from(SchemaError(msg.format(schema)), e)
+                six.raise_from(exceptions.SchemaError(msg.format(schema)), e)
         elif isinstance(the_schema, dict):
             the_schema = copy.deepcopy(the_schema)
         else:
             msg = 'Schema must be a "dict", but was a "{0}"'
-            raise SchemaError(msg.format(type(the_schema).__name__))
+            raise exceptions.SchemaError(msg.format(type(the_schema).__name__))
 
         return the_schema
 
@@ -88,7 +98,9 @@ class Profile(object):
         try:
             self._validator.check_schema(self._schema)
         except jsonschema.exceptions.SchemaError as e:
-            six.raise_from(SchemaError.create_from(e), e)
+            # TODO: review why we need create_from
+            # six.raise_from(exceptions.SchemaError.create_from(e), e)
+            six.raise_from(e)
 
     def __getattr__(self, name):
         if name in self.__dict__.get('_schema', {}):
@@ -118,7 +130,9 @@ class Profile(object):
 
         """
         for error in self._validator.iter_errors(data):
-            yield ValidationError.create_from(error)
+            # TODO: review why we need create_from
+            # yield exceptions.ValidationError.create_from(error)
+            yield error
 
     def to_dict(self):
         """dict: Convert this :class:`.Schema` to dict.
