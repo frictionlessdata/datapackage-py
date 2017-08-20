@@ -296,11 +296,28 @@ Validate a data package `descriptor` against the profile.
 
 ### Validate
 
-A standalone function to validate a data package descriptor.
+A standalone function to validate a data package descriptor:
 
-> TODO: insert tutorial here
+```python
+from datapackage import validate, exceptions
 
-> TODO: insert reference here
+try:
+    valid = validate(descriptor)
+except exceptions.ValidationError as exception:
+   for error in exception.errors:
+       # handle individual error
+```
+
+#### `validate(descriptor)`
+
+Validate a data package descriptor.
+
+- `descriptor (str/dict)` - package descriptor (one of):
+  - local path
+  - remote url
+  - object
+- (exceptions.ValidationError) - raises on invalid
+- `(bool)` - returns true on valid
 
 ### Infer
 

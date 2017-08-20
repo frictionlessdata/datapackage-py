@@ -10,6 +10,7 @@ from __future__ import unicode_literals
 from .package import Package
 from .resource import Resource
 from .profile import Profile
+from .validate import validate
 
 
 # Deprecated
