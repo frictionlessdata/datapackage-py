@@ -11,6 +11,7 @@ from .package import Package
 from .resource import Resource
 from .profile import Profile
 from .validate import validate
+from .infer import infer
 
 
 # Deprecated

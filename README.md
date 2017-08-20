@@ -323,13 +323,51 @@ Validate a data package descriptor.
 
 A standalone function to infer a data package descriptor.
 
-> TODO: insert tutorial here
+```python
+descriptor = infer('**/*.csv', {basePath: '.'})
+#{ profile: 'tabular-data-resource',
+#  resources:
+#   [ { path: 'data/cities.csv',
+#       profile: 'tabular-data-resource',
+#       encoding: 'utf-8',
+#       name: 'cities',
+#       format: 'csv',
+#       mediatype: 'text/csv',
+#       schema: [Object] },
+#     { path: 'data/population.csv',
+#       profile: 'tabular-data-resource',
+#       encoding: 'utf-8',
+#       name: 'population',
+#       format: 'csv',
+#       mediatype: 'text/csv',
+#       schema: [Object] } ] }
+```
 
-> TODO: insert reference here
+#### `infer(pattern, basePath=None)`
+
+Infer a data package descriptor.
+
+- `pattern (str)` - glob file pattern
+- `(dict)` - returns data package descriptor
 
 ### Exceptions
 
-> TODO: insert reference here
+#### `exceptions.DataPackageException`
+
+Base class for all library exceptions. If there are multiple errors it could be read from an exceptions object:
+
+```python
+try:
+    # lib action
+except exceptions.DataPackageException as exception:
+    if exception.multiple:
+        for error in exception.errors:
+            # handle error
+```
+
+#### `exceptions.ValidationError`
+
+All validation errors.
 
 ### CLI
 

@@ -5,19 +5,21 @@ from __future__ import unicode_literals
 
 import os
 import io
+import six
 import json
 import copy
-import tempfile
+import glob
 import shutil
 import zipfile
-import six
 import requests
 import warnings
+import tempfile
 from copy import deepcopy
 from .resource import Resource
 from .profile import Profile
 from . import exceptions
 from . import helpers
+from . import config
 
 
 # Module API
@@ -151,11 +153,35 @@ class Package(object):
             self.commit()
         return resource
 
-    def infer(pattern=False):
+    def infer(self, pattern=False):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
-        # TODO: implement
-        pass
+
+        # Files
+        if pattern:
+
+            # No base path
+            if not self.__base_path:
+                message = 'Base path is required for pattern infer'
+                raise exceptions.DataPackageException(message)
+
+            # Add resources
+            for path in glob.glob(os.path.join(self.__base_path, pattern), recursive=True):
+                self.add_resource({'path': os.path.relpath(path, self.__base_path)})
+
+        # Resources
+        for index, resource in enumerate(self.resources):
+            descriptor = resource.infer()
+            self.__next_descriptor['resources'][index] = descriptor
+            self.commit()
+
+        # Profile
+        if self.__next_descriptor['profile'] == config.DEFAULT_DATA_PACKAGE_PROFILE:
+            if self.resources and all(map(lambda resource: resource.tabular, self.resources)):
+                self.__next_descriptor['profile'] = 'tabular-data-package'
+                self.commit()
+
+        return self.__current_descriptor
 
     def commit(self, strict=None):
         """https://github.com/frictionlessdata/datapackage-py#package

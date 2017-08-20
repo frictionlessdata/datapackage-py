@@ -50,6 +50,7 @@ class Resource(object):
         self.__next_descriptor = deepcopy(descriptor)
         self.__base_path = base_path
         self.__strict = strict
+        self.__table = None
         self.__errors = []
 
         # Build resource
@@ -129,19 +130,21 @@ class Resource(object):
     def table(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
+        if not self.__table:
 
-        # Resource -> Regular
-        if not self.tabular:
-            return None
+            # Resource -> Regular
+            if not self.tabular:
+                return None
 
-        # Resource -> Tabular
-        source = self.source
-        if self.multipart:
-            source = _MultipartSource(self.source, remote=self.remote)
-        schema = self.descriptor['schema']
-        options = _get_table_options(self.descriptor)
-        table = Table(source, schema, **options)
-        return table
+            # Resource -> Tabular
+            source = self.source
+            if self.multipart:
+                source = _MultipartSource(self.source, remote=self.remote)
+            schema = self.descriptor.get('schema')
+            options = _get_table_options(self.descriptor)
+            self.__table = Table(source, schema=schema, **options)
+
+        return self.__table
 
     def iter(self, filelike=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
@@ -164,7 +167,7 @@ class Resource(object):
     def infer(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        descriptor = deepcopy(self._current_descriptor)
+        descriptor = deepcopy(self.__current_descriptor)
 
         # Blank -> Stop
         if self.__source_inspection.get('blank'):
