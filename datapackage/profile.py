@@ -47,8 +47,6 @@ class Profile(object):
         # Collect errors
         errors = []
         for error in self._validator.iter_errors(data):
-            # TODO: review why we need create_from
-            # errors.append(exceptions.ValidationError.create_from(error))
             errors.append(error)
 
         # Raise error
@@ -80,13 +78,13 @@ class Profile(object):
             except (IOError,
                     ValueError,
                     requests.exceptions.RequestException) as e:
-                msg = 'Unable to load schema at "{0}"'
-                six.raise_from(exceptions.SchemaError(msg.format(schema)), e)
+                message = 'Unable to load profile at "{0}"'
+                raise exceptions.ValidationError(message)
         elif isinstance(the_schema, dict):
             the_schema = copy.deepcopy(the_schema)
         else:
-            msg = 'Schema must be a "dict", but was a "{0}"'
-            raise exceptions.SchemaError(msg.format(type(the_schema).__name__))
+            message = 'Schema must be a "dict", but was a "{0}"'
+            raise exceptions.ValidationError(message.format(type(the_schema).__name__))
 
         return the_schema
 
@@ -97,10 +95,8 @@ class Profile(object):
     def _check_schema(self):
         try:
             self._validator.check_schema(self._schema)
-        except jsonschema.exceptions.SchemaError as e:
-            # TODO: review why we need create_from
-            # six.raise_from(exceptions.SchemaError.create_from(e), e)
-            six.raise_from(e)
+        except jsonschema.exceptions.SchemaError as exception:
+            raise exceptions.ValidationError('Profile is invalid: %s' % exception)
 
     def __getattr__(self, name):
         if name in self.__dict__.get('_schema', {}):
@@ -130,8 +126,6 @@ class Profile(object):
 
         """
         for error in self._validator.iter_errors(data):
-            # TODO: review why we need create_from
-            # yield exceptions.ValidationError.create_from(error)
             yield error
 
     def to_dict(self):

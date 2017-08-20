@@ -44,7 +44,121 @@ A class for working with data packages. It provides various capabilities like lo
 
 > TODO: insert tutorial here
 
-> TODO: insert reference here
+#### `Package(descriptor, base_path=None, strict=False)`
+
+Constructor to instantiate `Package` class.
+
+- `descriptor (str/dict)` - data package descriptor as local path, url or object
+- `base_path (str)` - base path for all relative paths
+- `strict (bool)` - strict flag to alter validation behavior. Setting it to `True` leads to throwing errors on any operation with invalid descriptor
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(Package)` - returns data package class instance
+
+#### `package.valid`
+
+- `(bool)` - returns validation status. It always true in strict mode.
+
+#### `package.errors`
+
+- `(Exception[])` - returns validation errors. It always empty in strict mode.
+
+#### `package.profile`
+
+- `(Profile)` - returns an instance of `Profile` class (see below).
+
+#### `package.descriptor`
+
+- `(dict)` - returns data package descriptor
+
+#### `package.resources`
+
+- `(Resource[])` - returns an array of `Resource` instances (see below).
+
+#### `package.resource_names`
+
+- `(str[])` - returns an array of resource names.
+
+#### `package.get_resource(name)`
+
+Get data package resource by name.
+
+- `name (str)` - data resource name
+- `(Resource/None)` - returns `Resource` instances or null if not found
+
+#### `package.add_resource(descriptor)`
+
+Add new resource to data package. The data package descriptor will be validated  with newly added resource descriptor.
+
+- `descriptor (dict)` - data resource descriptor
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(Resource/None)` - returns added `Resource` instance or null if not added
+
+#### `package.remove_resource(name)`
+
+Remove data package resource by name. The data package descriptor will be validated after resource descriptor removal.
+
+- `name (str)` - data resource name
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(Resource/None)` - returns removed `Resource` instances or null if not found
+
+
+#### `package.infer(pattern=False)`
+
+Infer a data package metadata. If `pattern` is not provided only existent resources will be inferred (added metadata like encoding, profile etc). If `pattern` is provided new resoures with file names mathing the pattern will be added and inferred. It commits changes to data package instance.
+
+- `pattern (str)` - glob pattern for new resources
+- `(dict)` - returns data package descriptor
+
+#### `package.commit(strict=None)`
+
+Update data package instance if there are in-place changes in the descriptor.
+
+- `strict (bool)` - alter `strict` mode for further work
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(bool)` - returns true on success and false if not modified
+
+```python
+package = Package({
+    'name': 'package',
+    'resources': [{'name': 'resource', 'data': ['data']}]
+})
+
+package.name # package
+package.descriptor['name'] = 'renamed-package'
+package.name # package
+package.commit()
+package.name # renamed-package
+```
+
+#### `package.save(target)`
+
+Saves this Data Package contents into a zip file.
+
+- `target (string/filelike)` - the file path or a file-like object where the contents of this Data Package will be saved into.
+- `(exceptions.DataPackageException)` - raises if there was some error writing the package
+- `(bool)` - return true on success
+
+It creates a zip file into ``file_or_path`` with the contents of this Data Package and its resources. Every resource which content lives in the local filesystem will be copied to the zip file. Consider the following Data Package descriptor:
+
+```json
+{
+    "name": "gdp",
+    "resources": [
+        {"name": "local", "format": "CSV", "path": "data.csv"},
+        {"name": "inline", "data": [4, 8, 15, 16, 23, 42]},
+        {"name": "remote", "url": "http://someplace.com/data.csv"}
+    ]
+}
+```
+
+The final structure of the zip file will be:
+
+```
+./datapackage.json
+./data/local.csv
+```
+
+With the contents of `datapackage.json` being the same as returned `datapackage.descriptor`. The resources' file names are generated based on their `name` and `format` fields if they exist. If the resource has no `name`, it'll be used `resource-X`, where `X` is the index of the resource in the `resources` list (starting at zero). If the resource has `format`, it'll be lowercased and appended to the `name`, becoming "`name.format`".
 
 ### Resource
 
@@ -68,7 +182,7 @@ Constructor to instantiate `Resource` class.
 
 #### `resource.errors`
 
-- `(Error[])` - returns validation errors. It always empty in strict mode.
+- `(Exception[])` - returns validation errors. It always empty in strict mode.
 
 #### `resource.profile`
 

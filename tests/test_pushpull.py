@@ -13,7 +13,6 @@ from mock import patch, ANY
 from datapackage import DataPackage
 from datapackage import helpers
 from importlib import import_module
-from tests import test_helpers
 module = import_module('datapackage.pushpull')
 
 
@@ -22,7 +21,7 @@ module = import_module('datapackage.pushpull')
 def test_push_datapackage(storage):
 
     # Prepare and call
-    descriptor = test_helpers.fixture_path('datapackage', 'datapackage.json')
+    descriptor = 'data/datapackage/datapackage.json'
     storage.buckets = ['data___data']  # Without patch it's a reflection
     module.push_datapackage(descriptor=descriptor, backend='backend')
 
@@ -59,10 +58,10 @@ def test_pull_datapackage(storage, descriptor):
 
     # Assert pulled datapackage
     dp = DataPackage(descriptor)
-    assert dp.descriptor == helpers.expand_data_package_descriptor(
+    assert dp.descriptor == helpers.expand_package_descriptor(
         {'name': 'name',
         'resources': [
-            {'path': ['data.csv'],
+            {'path': 'data.csv',
              'name': 'data',
              'schema':
                 {'fields': [

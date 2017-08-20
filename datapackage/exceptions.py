@@ -3,8 +3,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import jsonschema.exceptions
-
 
 # Module API
 
@@ -25,14 +23,15 @@ class DataPackageException(Exception):
         return self.__errors
 
 
-class ValidationError(DataPackageException, jsonschema.exceptions.ValidationError):
+class ValidationError(DataPackageException):
     pass
 
 
 # Deprecated
 
-class SchemaError(DataPackageException, jsonschema.exceptions.SchemaError):
+class SchemaError(DataPackageException):
     pass
+
 
 class RegistryError(DataPackageException):
     pass

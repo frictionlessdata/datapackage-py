@@ -1,18 +1,16 @@
+ # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import os
 import shutil
 import tempfile
-from importlib import import_module
-module = import_module('datapackage.helpers')
+from datapackage.helpers import ensure_dir
 
 
-__FIXTURES_PATH = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)),
-    'fixtures'
-)
-
-def fixture_path(fixture, *paths):
-    return os.path.join(__FIXTURES_PATH, fixture, *paths)
-
+# Tests
 
 def test_ensure_dir():
     base_path = tempfile.mkdtemp()
@@ -20,7 +18,7 @@ def test_ensure_dir():
         dir_path = os.path.join(base_path, 'dir')
         file_path = os.path.join(dir_path, 'file')
         assert not os.path.isdir(dir_path)
-        module.ensure_dir(file_path)
+        ensure_dir(file_path)
         assert os.path.isdir(dir_path)
     finally:
         shutil.rmtree(base_path)

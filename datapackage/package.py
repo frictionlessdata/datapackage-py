@@ -13,62 +13,24 @@ import zipfile
 import six
 import requests
 import warnings
-import jsonpointer
+from copy import deepcopy
 from .resource import Resource
 from .profile import Profile
 from . import exceptions
 from . import helpers
-from . import config
 
+
+# Module API
 
 class Package(object):
-    """"Class for loading, validating and working with a Data Package.
-
-    Args:
-        descriptor (dict, str or file-like object, optional): The contents of the
-            `datapackage.json` file. It can be a ``dict`` with its contents,
-            a ``string`` with the local path for the file or its URL, or a
-            file-like object. It also can point to a `ZIP` file with one and
-            only one `datapackage.json` (it can be in a subfolder). If
-            you're passing a ``dict``, it's a good practice to also set the
-            ``default_base_path`` parameter to the absolute `datapackage.json`
-            path.
-        schema (dict or str, optional): The schema to be used to validate this
-            data package. It can be a ``dict`` with the schema's contents or a
-            ``str``. The string can contain the schema's ID if it's in the
-            registry, a local path, or an URL.
-        default_base_path (str, optional): The default path to be used to load
-            resources located on the local disk that don't define a base path
-            themselves. This will usually be the path for the
-            `datapackage.json` file. If the :data:`descriptor` parameter was the
-            path to the `datapackage.json`, this will automatically be set to
-            its base path.
-
-    Raises:
-        DataPackageException: If the :data:`descriptor` couldn't be loaded or was
-            invalid.
-        SchemaError: If the :data:`schema` couldn't be loaded or was invalid.
-        RegistryError: If there was some problem loading the :data:`schema`
-            from the registry.
-    """
 
     # Public
 
-    def __init__(self, descriptor=None, schema=None, default_base_path=None):
-
-        # Extract from zip
-        descriptor = self._extract_zip_if_possible(descriptor)
-
-        # Get base path
-        self._base_path = helpers.get_descriptor_base_path(descriptor) or default_base_path
-
-        # Process actions
-        self._descriptor = helpers.retrieve_descriptor(descriptor)
-        helpers.dereference_data_package_descriptor(self._descriptor, self._base_path)
-        helpers.expand_data_package_descriptor(self._descriptor)
-
-        # Get profile
-        profile = self._descriptor['profile']
+    def __init__(self, descriptor=None, base_path=None, strict=False,
+                 # Deprecated
+                 schema=None, default_base_path=None):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
 
         # Handle deprecated schema argument
         if schema is not None:
@@ -83,10 +45,29 @@ class Package(object):
                     schema = 'tabular-data-package'
                 elif schema == 'fiscal':
                     schema = 'fiscal-data-package'
-            profile = schema
+                descriptor['profile'] = schema
+
+        # Handle deprecated default_base_path argument
+        if default_base_path is not None:
+            warnings.warn(
+                'Argument "default_base_path" is deprecated. '
+                'Please use "base_path" argument.',
+                UserWarning)
+            base_path = default_base_path
+
+        # Extract from zip
+        descriptor = self.__extract_zip_if_possible(descriptor)
+
+        # Get base path
+        if base_path is None:
+            base_path = helpers.get_descriptor_base_path(descriptor)
+
+        # Process descriptor
+        descriptor = helpers.retrieve_descriptor(descriptor)
+        descriptor = helpers.dereference_package_descriptor(descriptor, base_path)
 
         # Handle deprecated resource.path/url
-        for resource in self._descriptor.get('resources', []):
+        for resource in descriptor.get('resources', []):
             url = resource.pop('url', None)
             if url is not None:
                 warnings.warn(
@@ -94,95 +75,104 @@ class Package(object):
                     'Please use "path: [url]" instead (as array).',
                     UserWarning)
                 resource['path'] = [url]
-            path = resource.get('path', None)
-            if isinstance(path, six.string_types):
-                warnings.warn(
-                    'Resource property "path: <path>" is deprecated. '
-                    'Please use "path: [path]" instead (as array).',
-                    UserWarning)
-                resource['path'] = [path]
 
         # Set attributes
-        self._profile = Profile(profile)
-        self._resources = self._update_resources((), self.descriptor, self.base_path)
+        self.__current_descriptor = deepcopy(descriptor)
+        self.__next_descriptor = deepcopy(descriptor)
+        self.__base_path = base_path
+        self.__strict = strict
+        self.__resources = []
+        self.__errors = []
 
-    def __del__(self):
-        if hasattr(self, '_tempdir') and os.path.exists(self._tempdir):
-            shutil.rmtree(self._tempdir, ignore_errors=True)
+        # Build package
+        self.__build()
 
     @property
-    def descriptor(self):
-        """"dict: The descriptor of this data package. Its attributes can be
-        changed.
+    def valid(self):
+        """https://github.com/frictionlessdata/tableschema-py#schema
         """
-        return self._descriptor
+        return not bool(self.__errors)
+
+    @property
+    def errors(self):
+        """https://github.com/frictionlessdata/tableschema-py#schema
+        """
+        return self.__errors
 
     @property
     def profile(self):
-        """"str: The profile of this data package.
+        """https://github.com/frictionlessdata/datapackage-py#package
         """
-        return self._profile
+        return self.__profile
+
+    @property
+    def descriptor(self):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+        # Never use self.descriptor inside this class (!!!)
+        return self.__next_descriptor
 
     @property
     def resources(self):
-        """"The resources defined in this data package (can be empty).
-
-        To add or remove resources, alter the `resources` attribute of the
-        :data:`descriptor`.
-
-        :returns: The resources.
-        :rtype: tuple of :class:`.Resource`
-
+        """https://github.com/frictionlessdata/datapackage-py#package
         """
-        self._resources = self._update_resources(self._resources,
-                                                 self.descriptor,
-                                                 self.base_path)
-        return self._resources
+        return self.__resources
 
-    def save(self, file_or_path):
-        """"Validates and saves this Data Package contents into a zip file.
-
-        It creates a zip file into ``file_or_path`` with the contents of this
-        Data Package and its resources. Every resource which content lives in
-        the local filesystem will be copied to the zip file. Consider the
-        following Data Package descriptor::
-
-            {
-                "name": "gdp",
-                "resources": [
-                    {"name": "local", "format": "CSV", "path": "data.csv"},
-                    {"name": "inline", "data": [4, 8, 15, 16, 23, 42]},
-                    {"name": "remote", "url": "http://someplace.com/data.csv"}
-                ]
-            }
-
-        The final structure of the zip file will be::
-
-            ./datapackage.json
-            ./data/local.csv
-
-        With the contents of `datapackage.json` being the same as returned by
-        :func:`to_json`.
-
-        The resources' file names are generated based on their `name` and
-        `format` fields if they exist. If the resource has no `name`, it'll be
-        used `resource-X`, where `X` is the index of the resource in the
-        `resources` list (starting at zero). If the resource has `format`,
-        it'll be lowercased and appended to the `name`, becoming
-        "`name.format`".
-
-        Args:
-            file_or_path (string or file-like object): The file path or a
-                file-like object where the contents of this Data Package will
-                be saved into.
-
-        Raises:
-            ValidationError: If the Data Package is invalid.
-            DataPackageException: If there was some error writing the package.
-
+    @property
+    def resource_names(self):
+        """https://github.com/frictionlessdata/datapackage-py#package
         """
-        self.validate()
+        return [resource.name for resource in self.resources]
 
+    def get_resource(self, name):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+        for resource in self.resources:
+            if resource.name == name:
+                return resource
+        return None
+
+    def add_resource(self, descriptor):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+        self.__next_descriptor.setdefault('resources', [])
+        self.__next_descriptor['resources'].append(descriptor)
+        self.commit()
+        return self.__resources[-1]
+
+    def remove_resource(self, name):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+        resource = self.get_resource(name)
+        if resource:
+            predicat = lambda resource: resource.get('name') != name
+            self.__next_descriptor['resources'] = filter(
+                predicat, self.__next_descriptor['resources'])
+            self.commit()
+        return resource
+
+    def infer(pattern=False):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+        # TODO: implement
+        pass
+
+    def commit(self, strict=None):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+        if strict is not None:
+            self.__strict = strict
+        elif self.__current_descriptor == self.__next_descriptor:
+            return False
+        self.__current_descriptor = deepcopy(self.__next_descriptor)
+        self.__build()
+        return True
+
+    def save(self, target):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+
+        # Produce resource name
         def arcname(resource):
             basename = resource.descriptor.get('name')
             resource_format = resource.descriptor.get('format')
@@ -193,8 +183,9 @@ class Package(object):
                 basename = '.'.join([basename, resource_format.lower()])
             return os.path.join('data', basename)
 
+        # Save data package
         try:
-            with zipfile.ZipFile(file_or_path, 'w') as z:
+            with zipfile.ZipFile(target, 'w') as z:
                 descriptor = json.loads(self.to_json())
                 for i, resource in enumerate(self.resources):
                     path = None
@@ -205,54 +196,50 @@ class Package(object):
                         z.write(path, path_inside_dp)
                         descriptor['resources'][i]['path'] = path_inside_dp
                 z.writestr('datapackage.json', json.dumps(descriptor))
+
+        # Saving error
         except (IOError,
                 zipfile.BadZipfile,
                 zipfile.LargeZipFile) as e:
             six.raise_from(exceptions.DataPackageException(e), e)
 
-    def validate(self):
-        """"Validate this Data Package.
-
-        Raises:
-            ValidationError: If the Data Package is invalid.
-
-        """
-        descriptor = self.to_dict()
-        self.profile.validate(descriptor)
-
-    def iter_errors(self):
-        """"Lazily yields each ValidationError for the received data dict.
-
-        Returns:
-            iter: ValidationError for each error in the data.
-
-        """
-        return self.profile.iter_errors(self.to_dict())
-
-    # Additional
-
-    @property
-    def base_path(self):
-        """"str: The base path of this Data Package (can be None).
-        """
-        return self._base_path
-
-    def to_dict(self):
-        """"dict: Convert this Data Package to dict.
-        """
-        return copy.deepcopy(self.descriptor)
-
-    def to_json(self):
-        """"str: Convert this Data Package to a JSON string.
-        """
-        return json.dumps(self.descriptor)
+        return True
 
     # Private
 
-    def _extract_zip_if_possible(self, descriptor):
-        """"str: Path to the extracted datapackage.json if descriptor points to
-        ZIP, or the unaltered descriptor otherwise.
-        """
+    def __build(self):
+
+        # Process descriptor
+        self.__current_descriptor = helpers.expand_package_descriptor(
+            self.__current_descriptor)
+        self.__next_descriptor = deepcopy(self.__current_descriptor)
+
+        # Instantiate profile
+        self.__profile = Profile(self.__current_descriptor.get('profile'))
+
+        # Validate descriptor
+        try:
+            self.__profile.validate(self.__current_descriptor)
+            self.__errors = []
+        except exceptions.ValidationError as exception:
+            self.__errors = exception.errors
+            if self.__strict:
+                raise exception
+
+        # Update resource
+        self.__resources = self.__resources[:len(
+            self.__current_descriptor.get('resources', [])) - 1]
+        for index, descriptor in enumerate(self.__current_descriptor.get('resources', [])):
+            resource = None
+            if index in self.__resources:
+                resource = self.__resources[index]
+            if not resource or resource.descriptor != descriptor:
+                if not resource:
+                    self.__resources.append(None)
+                self.__resources[index] = Resource(
+                    descriptor, strict=self.__strict, base_path=self.__base_path)
+
+    def __extract_zip_if_possible(self, descriptor):
         result = descriptor
         try:
             if isinstance(descriptor, six.string_types):
@@ -263,7 +250,6 @@ class Package(object):
                 ValueError,
                 requests.exceptions.RequestException):
             pass
-
         try:
             the_zip = result
             if isinstance(the_zip, bytes):
@@ -272,41 +258,34 @@ class Package(object):
                 except (TypeError, ValueError):
                     # the_zip contains the zip file contents
                     the_zip = io.BytesIO(the_zip)
-
             if zipfile.is_zipfile(the_zip):
                 with zipfile.ZipFile(the_zip, 'r') as z:
-                    self._validate_zip(z)
-
-                    descriptor_path = [f for f in z.namelist()
-                                       if f.endswith('datapackage.json')][0]
-
-                    self._tempdir = tempfile.mkdtemp('-datapackage')
-                    z.extractall(self._tempdir)
-                    result = os.path.join(self._tempdir, descriptor_path)
+                    self.__validate_zip(z)
+                    descriptor_path = [
+                        f for f in z.namelist() if f.endswith('datapackage.json')][0]
+                    self.__tempdir = tempfile.mkdtemp('-datapackage')
+                    z.extractall(self.__tempdir)
+                    result = os.path.join(self.__tempdir, descriptor_path)
             else:
                 result = descriptor
         except (TypeError,
                 zipfile.BadZipfile):
             pass
-
         if hasattr(descriptor, 'seek'):
             # Rewind descriptor if it's a file, as we read it for testing if it's
             # a zip file
             descriptor.seek(0)
-
         return result
 
-    def _validate_zip(self, the_zip):
-        datapackage_jsons = [f for f in the_zip.namelist()
-                             if f.endswith('datapackage.json')]
+    def __validate_zip(self, the_zip):
+        datapackage_jsons = [f for f in the_zip.namelist() if f.endswith('datapackage.json')]
         if len(datapackage_jsons) != 1:
             msg = 'DataPackage must have only one "datapackage.json" (had {n})'
             raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
 
-    def _update_resources(self, current_resources, descriptor, base_path):
+    def __update_resources(self, current_resources, descriptor, base_path):
         resources_dicts = descriptor.get('resources')
         new_resources = []
-
         if resources_dicts is not None:
             for resource_dict in resources_dicts:
                 resource = [res for res in current_resources
@@ -314,8 +293,11 @@ class Package(object):
                 if not resource:
                     resource = [Resource(resource_dict, base_path)]
                 new_resources.append(resource[0])
-
         return tuple(new_resources)
+
+    def __del__(self):
+        if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):
+            shutil.rmtree(self.__tempdir, ignore_errors=True)
 
     # Deprecated
 
@@ -340,9 +322,8 @@ class Package(object):
         warnings.warn(
             'DataPackage.schema is deprecated.',
             UserWarning)
-        required = ()
 
-        return self._profile
+        return self.__profile
 
     @property
     def attributes(self):
@@ -382,3 +363,38 @@ class Package(object):
             pass
 
         return required
+
+    def validate(self):
+        """"Validate this Data Package.
+
+        Raises:
+            ValidationError: If the Data Package is invalid.
+
+        """
+        descriptor = self.to_dict()
+        self.profile.validate(descriptor)
+
+    def iter_errors(self):
+        """"Lazily yields each ValidationError for the received data dict.
+
+        Returns:
+            iter: ValidationError for each error in the data.
+
+        """
+        return self.profile.iter_errors(self.to_dict())
+
+    @property
+    def base_path(self):
+        """"str: The base path of this Data Package (can be None).
+        """
+        return self.__base_path
+
+    def to_dict(self):
+        """"dict: Convert this Data Package to dict.
+        """
+        return copy.deepcopy(self.descriptor)
+
+    def to_json(self):
+        """"str: Convert this Data Package to a JSON string.
+        """
+        return json.dumps(self.descriptor)

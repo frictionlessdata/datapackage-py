@@ -1,18 +1,43 @@
-language: python
-os:
-  - linux
+sudo:
+  required
+
+dist:
+  trusty
+
+addons:
+  apt:
+    packages:
+      - pandoc
+
+language:
+  python
+
 python:
   - 2.7
   - 3.3
-  # TODO: activate (travis bug)
-  # - 3.4
+  - 3.4
   - 3.5
-sudo: false
+  - 3.6
+
 env:
-  - TOXENV="py${PYTHON_VERSION//./}"
+  global:
+    - TOXENV="py${PYTHON_VERSION//./}"
+
 install:
-  - pip install tox coveralls
-script: tox
+  - make install
+  - pip install coveralls
+
+script:
+  - make test
+
+after_success:
+  - coveralls
+
+before_deploy:
+  - pandoc --version
+  - pandoc -f markdown_github -t rst -o README.rst README.md
+  - mv README.rst README.md
+
 deploy:
   provider: pypi
   user: roll

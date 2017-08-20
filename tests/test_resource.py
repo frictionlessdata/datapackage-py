@@ -27,14 +27,14 @@ def test_descriptor_retrieve_dict():
 
 
 def test_descriptor_retrieve_path():
-    descriptor = 'tests/fixtures/data-resource.json'
+    descriptor = 'data/data-resource.json'
     actual = Resource(descriptor).descriptor
     expect = expand(json.load(io.open(descriptor, encoding='utf-8')))
     assert actual == expect
 
 
 def test_descriptor_retrieve_path_bad():
-    descriptor = 'tests/fixtures/bad-path.json'
+    descriptor = 'data/bad-path.json'
     with pytest.raises(exceptions.DataPackageException):
         Resource(descriptor).descriptor
 
@@ -65,7 +65,7 @@ def test_descriptor_retrieve_url_bad(patch_get):
 # Resource.descriptor (dereference)
 
 def test_descriptor_dereference():
-    descriptor = 'tests/fixtures/resource_with_dereferencing.json'
+    descriptor = 'data/resource_with_dereferencing.json'
     resource = Resource(descriptor)
     assert resource.descriptor == expand({
         'name': 'name',
@@ -138,7 +138,7 @@ def test_descriptor_dereference_local():
         'data': 'data',
         'schema': 'table_schema.json',
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.descriptor == expand({
         'name': 'name',
         'data': 'data',
@@ -153,7 +153,7 @@ def test_descriptor_dereference_local_bad():
         'schema': 'bad_path.json',
     }
     with pytest.raises(exceptions.DataPackageException):
-        resource = Resource(descriptor, base_path='tests/fixtures')
+        resource = Resource(descriptor, base_path='data')
 
 
 def test_descriptor_dereference_local_bad_not_safe():
@@ -163,7 +163,7 @@ def test_descriptor_dereference_local_bad_not_safe():
         'schema': '../fixtures/table_schema.json',
     }
     with pytest.raises(exceptions.DataPackageException):
-        resource = Resource(descriptor, base_path='tests/fixtures')
+        resource = Resource(descriptor, base_path='data')
 
 
 # Resource.descriptor (expand)
@@ -250,8 +250,8 @@ def test_source_local():
         'name': 'name',
         'path': ['table.csv'],
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
-    assert resource.source == 'tests/fixtures/table.csv'
+    resource = Resource(descriptor, base_path='data')
+    assert resource.source == 'data/table.csv'
     assert resource.local == True
 
 
@@ -270,7 +270,7 @@ def test_source_local_bad_not_safe_absolute():
         'path': ['/fixtures/table.csv'],
     }
     with pytest.raises(exceptions.DataPackageException):
-        resource = Resource(descriptor, base_path='tests/fixtures')
+        resource = Resource(descriptor, base_path='data')
 
 
 def test_source_local_bad_not_safe_traversing():
@@ -279,7 +279,7 @@ def test_source_local_bad_not_safe_traversing():
         'path': ['../fixtures/table.csv'],
     }
     with pytest.raises(exceptions.DataPackageException):
-        resource = Resource(descriptor, base_path='tests/fixtures')
+        resource = Resource(descriptor, base_path='data')
 
 
 def test_source_remote():
@@ -317,8 +317,8 @@ def test_source_multipart_local():
         'name': 'name',
         'path': ['chunk1.csv', 'chunk2.csv'],
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
-    assert resource.source == ['tests/fixtures/chunk1.csv', 'tests/fixtures/chunk2.csv']
+    resource = Resource(descriptor, base_path='data')
+    assert resource.source == ['data/chunk1.csv', 'data/chunk2.csv']
     assert resource.local == True
     assert resource.multipart == True
 
@@ -338,7 +338,7 @@ def test_source_multipart_local_bad_not_safe_absolute():
         'path': ['/fixtures/chunk1.csv', 'chunk2.csv'],
     }
     with pytest.raises(exceptions.DataPackageException):
-        resource = Resource(descriptor, base_path='tests/fixtures')
+        resource = Resource(descriptor, base_path='data')
 
 
 def test_source_multipart_local_bad_not_safe_traversing():
@@ -347,7 +347,7 @@ def test_source_multipart_local_bad_not_safe_traversing():
         'path': ['chunk1.csv', '../fixtures/chunk2.csv'],
     }
     with pytest.raises(exceptions.DataPackageException):
-        resource = Resource(descriptor, base_path='tests/fixtures')
+        resource = Resource(descriptor, base_path='data')
 
 
 def test_source_multipart_remote():
@@ -408,7 +408,7 @@ def test_descriptor_table_tabular_inline():
         ],
         'schema': 'resource_schema.json',
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 1, 'name': 'english'},
         {'id': 2, 'name': '中国人'},
@@ -422,7 +422,7 @@ def test_descriptor_table_tabular_local():
         'path': ['resource_data.csv'],
         'schema': 'resource_schema.json',
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 1, 'name': 'english'},
         {'id': 2, 'name': '中国人'},
@@ -439,7 +439,7 @@ def test_descriptor_table_tabular_remote(patch_get):
     # Mocks
     patch_get('http://example.com/resource_data.csv', body="id,name\n1,english\n2,中国人")
     # Tests
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 1, 'name': 'english'},
         {'id': 2, 'name': '中国人'},
@@ -453,7 +453,7 @@ def test_descriptor_table_tabular_multipart_local():
         'path': ['chunk1.csv', 'chunk2.csv'],
         'schema': 'resource_schema.json',
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 1, 'name': 'english'},
         {'id': 2, 'name': '中国人'},
@@ -476,7 +476,7 @@ def test_descriptor_table_tabular_multipart_remote(patch_get):
     patch_get('http://example.com/chunk2.csv', body="1,english")
     patch_get('http://example.com/chunk3.csv', body="2,中国人\n")
     # Tests
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 1, 'name': 'english'},
         {'id': 2, 'name': '中国人'},
@@ -491,7 +491,7 @@ def test_descriptor_table_tabular_skip_rows():
         'schema': 'resource_schema.json',
         'skipRows': [2],
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 2, 'name': '中国人'},
     ]
@@ -511,7 +511,7 @@ def test_descriptor_table_tabular_dialect_custom():
             'skipInitialSpace': False,
         },
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 1, 'name': 'english'},
         {'id': 2, 'name': ' |##'},
@@ -526,7 +526,7 @@ def test_descriptor_table_tabular_dialect_header_false():
         'schema': 'resource_schema.json',
         'dialect': {'header': False},
     }
-    resource = Resource(descriptor, base_path='tests/fixtures')
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 2, 'name': '中国人'},
     ]

@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 
 import io
 import os
+import six
+import json
 import warnings
 from copy import deepcopy
 from tableschema import Table
@@ -36,12 +38,12 @@ class Resource(object):
 
         # Handle deprecated resource.path.url
         if descriptor.get('url'):
-          warnings.warn(
-            'Resource property "url: <url>" is deprecated. '
-            'Please use "path: <url>" instead.',
-            UserWarning)
-          descriptor['path'] = descriptor['url']
-          del descriptor['url']
+            warnings.warn(
+                'Resource property "url: <url>" is deprecated. '
+                'Please use "path: <url>" instead.',
+                UserWarning)
+            descriptor['path'] = descriptor['url']
+            del descriptor['url']
 
         # Set attributes
         self.__current_descriptor = deepcopy(descriptor)
@@ -166,19 +168,19 @@ class Resource(object):
 
         # Blank -> Stop
         if self.__source_inspection.get('blank'):
-          return descriptor
+            return descriptor
 
         # Name
         if not descriptor.get('name'):
-          descriptor['name'] = self.__source_inspection['name']
+            descriptor['name'] = self.__source_inspection['name']
 
         # Format
         if not descriptor.get('format'):
-          descriptor['format'] = self.__source_inspection['format']
+            descriptor['format'] = self.__source_inspection['format']
 
         # Mediatype
         if not descriptor.get('mediatype'):
-          descriptor['mediatype'] = self.__source_inspection['mediatype']
+            descriptor['mediatype'] = self.__source_inspection['mediatype']
 
         # Encoding
         if descriptor.get('encoding') == config.DEFAULT_RESOURCE_ENCODING:
@@ -193,7 +195,7 @@ class Resource(object):
         # Profile
         if descriptor.get('profile') == config.DEFAULT_RESOURCE_PROFILE:
             if self.tabular:
-               descriptor['profile'] = 'tabular-data-resource'
+                descriptor['profile'] = 'tabular-data-resource'
 
         # Commit descriptor
         self.__next_descriptor = descriptor
@@ -344,7 +346,8 @@ def _get_table_options(descriptor):
     dialect = descriptor.get('dialect')
     if dialect:
         if not dialect['header']:
-            options['headers'] = None
+            fields = descriptor.get('schema', {}).get('fields', [])
+            options['headers'] = [field['name'] for field in fields] or None
         for key in _DIALECT_KEYS:
             options[key.lower()] = dialect[key]
 
@@ -375,6 +378,9 @@ class _MultipartSource(object):
 
     def writable(self):
         return False
+
+    def close(self):
+        pass
 
     def flush(self):
         pass
