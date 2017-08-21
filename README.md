@@ -222,13 +222,6 @@ Constructor to instantiate `Resource` class.
 
 Combination of `resource.source` and `resource.inline/local/remote/multipart` provides predictable interface to work with resource data.
 
-#### `resource.table`
-
-For tabular resources it returns `Table` instance to interact with data table. Read API documentation - [tableschema.Table](https://github.com/frictionlessdata/tableschema-py#table).
-
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(None/tableschema.Table)` - returns table instance if resource is tabular
-
 #### `resource.iter(filelike=False)`
 
 Iterate over data chunks as bytes. If `filelike` is true File-like object will be returned.
@@ -241,6 +234,43 @@ Iterate over data chunks as bytes. If `filelike` is true File-like object will b
 Returns resource data as bytes.
 
 - (bytes) - returns resource data in bytes
+
+#### `resource.table`
+
+> Only for tabular resources
+
+For tabular resources it returns `Table` instance to interact with data table. Read API documentation - [tableschema.Table](https://github.com/frictionlessdata/tableschema-py#table).
+
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(None/tableschema.Table)` - returns table instance if resource is tabular
+
+#### `resource.table.iter(keyed=Fase, extended=False, cast=True)`
+
+> Only for tabular resources
+
+Iter through the table data and emits rows cast based on table schema (async for loop). Data casting could be disabled.
+
+- `keyed (bool)` - iter keyed rows
+- `extended (bool)` - iter extended rows
+- `cast (bool)` - disable data casting if false
+- `(exceptions.TableSchemaException)` - raises any error occured in this process
+- `(any[]/any{})` - yields rows:
+  - `[value1, value2]` - base
+  - `{header1: value1, header2: value2}` - keyed
+  - `[rowNumber, [header1, header2], [value1, value2]]` - extended
+
+#### `resource.table.read(keyed=False, extended=False, cast=True, limit=None)`
+
+> Only for tabular resources
+
+Read the whole table and returns as array of rows. Count of rows could be limited.
+
+- `keyed (bool)` - flag to emit keyed rows
+- `extended (bool)` - flag to emit extended rows
+- `cast (bool)` - flag to disable data casting if false
+- `limit (int)` - integer limit of rows to return
+- `(exceptions.TableSchemaException)` - raises any error occured in this process
+- `(list[])` - returns array of rows (see `table.iter`)
 
 #### `resource.infer()`
 
