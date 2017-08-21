@@ -609,7 +609,7 @@ All validation errors.
 
 ### CLI
 
-> It's a provisional API. If you use it as a part of other program please pin concrete `goodtables` version to your requirements file.
+> It's a provisional API. If you use it as a part of other program please pin concrete `datapackage` version to your requirements file.
 
 The library ships with a simple CLI:
 
