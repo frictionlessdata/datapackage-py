@@ -4,37 +4,24 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
-import copy
 import six
-import requests
+import copy
 import json
+import requests
 import jsonschema
 import datapackage.registry
-from .exceptions import SchemaError, ValidationError
+from . import exceptions
 
 
 # Module API
 
 class Profile(object):
-    """Abstracts a JSON Schema and allows validation of data against it.
-
-    Args:
-        profile (str or dict): The JSON Schema itself as a dict, a local path
-            or URL to it.
-
-    Raises:
-        SchemaError: If unable to load schema or it was invalid.
-        RegistryError: If there was some error loading the schema registry.
-
-    Warning:
-        The schema objects created with this class are read-only. You should
-        change any of its attributes after creation.
-
-    """
 
     # Public
 
     def __init__(self, profile):
+        """https://github.com/frictionlessdata/datapackage-py#schema
+        """
         self._name = profile
         self._registry = self._load_registry()
         self._schema = self._load_schema(profile, self._registry)
@@ -43,50 +30,31 @@ class Profile(object):
 
     @property
     def name(self):
-        """str: profile name, path or URL.
+        """https://github.com/frictionlessdata/datapackage-py#schema
         """
         return self._name
 
     @property
     def jsonschema(self):
-        """dict: profile jsonschema.
+        """https://github.com/frictionlessdata/datapackage-py#schema
         """
         return self._schema
 
     def validate(self, data):
-        """Validates a data dict against this schema.
-
-        Args:
-            data (dict): The data to be validated.
-
-        Raises:
-            ValidationError: If the data is invalid.
-
+        """https://github.com/frictionlessdata/datapackage-py#schema
         """
-        try:
-            self._validator.validate(data)
-        except jsonschema.ValidationError as e:
-            six.raise_from(ValidationError.create_from(e), e)
 
-    def iter_errors(self, data):
-        """Lazily yields each ValidationError for the received data dict.
-
-        Args:
-            data (dict): The data to be validated.
-
-        Returns:
-            iter: ValidationError for each error in the data.
-
-        """
+        # Collect errors
+        errors = []
         for error in self._validator.iter_errors(data):
-            yield ValidationError.create_from(error)
+            errors.append(error)
 
-    # Additional
+        # Raise error
+        if errors:
+            message = 'There are %s validation errors (see exception.errors)' % len(errors)
+            raise exceptions.ValidationError(message, errors=errors)
 
-    def to_dict(self):
-        """dict: Convert this :class:`.Schema` to dict.
-        """
-        return copy.deepcopy(self._schema)
+        return True
 
     # Private
 
@@ -107,16 +75,14 @@ class Profile(object):
                         req = requests.get(schema)
                         req.raise_for_status()
                         the_schema = req.json()
-            except (IOError,
-                    ValueError,
-                    requests.exceptions.RequestException) as e:
-                msg = 'Unable to load schema at "{0}"'
-                six.raise_from(SchemaError(msg.format(schema)), e)
+            except (IOError, ValueError, requests.exceptions.RequestException):
+                message = 'Unable to load profile at "{0}"'
+                raise exceptions.ValidationError(message)
         elif isinstance(the_schema, dict):
             the_schema = copy.deepcopy(the_schema)
         else:
-            msg = 'Schema must be a "dict", but was a "{0}"'
-            raise SchemaError(msg.format(type(the_schema).__name__))
+            message = 'Schema must be a "dict", but was a "{0}"'
+            raise exceptions.ValidationError(message.format(type(the_schema).__name__))
 
         return the_schema
 
@@ -127,8 +93,8 @@ class Profile(object):
     def _check_schema(self):
         try:
             self._validator.check_schema(self._schema)
-        except jsonschema.exceptions.SchemaError as e:
-            six.raise_from(SchemaError.create_from(e), e)
+        except jsonschema.exceptions.SchemaError as exception:
+            raise exceptions.ValidationError('Profile is invalid: %s' % exception)
 
     def __getattr__(self, name):
         if name in self.__dict__.get('_schema', {}):
@@ -144,3 +110,23 @@ class Profile(object):
 
     def __dir__(self):
         return list(self.__dict__.keys()) + list(self._schema.keys())
+
+    # Deprecated
+
+    def iter_errors(self, data):
+        """Lazily yields each ValidationError for the received data dict.
+
+        Args:
+            data (dict): The data to be validated.
+
+        Returns:
+            iter: ValidationError for each error in the data.
+
+        """
+        for error in self._validator.iter_errors(data):
+            yield error
+
+    def to_dict(self):
+        """dict: Convert this :class:`.Schema` to dict.
+        """
+        return copy.deepcopy(self._schema)

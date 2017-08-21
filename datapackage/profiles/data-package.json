@@ -9,11 +9,11 @@
   "properties": {
     "profile": {
       "propertyOrder": 10,
+      "default": "data-package",
       "title": "Profile",
       "description": "The profile of this descriptor.",
-      "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `default`. The namespace for the profile is the type of descriptor, so, `default` for a Package descriptor is not the same as `default` for a Resource descriptor.",
+      "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `data-package` for Package and `data-resource` for Resource.",
       "type": "string",
-      "default": "default",
       "examples": [
         "{\n  \"profile\": \"tabular-data-package\"\n}\n",
         "{\n  \"profile\": \"http://example.com/my-profiles-json-schema.json\"\n}\n"
@@ -64,41 +64,10 @@
       "propertyOrder": 60,
       "title": "Home Page",
       "description": "The home on the web that is related to this data package.",
-      "type": "object",
-      "properties": {
-        "name": {
-          "title": "Name",
-          "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-          "type": "string",
-          "pattern": "^([-a-z0-9._/])+$",
-          "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-          "examples": [
-            "{\n  \"name\": \"my-nice-name\"\n}\n"
-          ]
-        },
-        "uri": {
-          "title": "URI",
-          "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
-          "type": "string",
-          "format": "uri",
-          "examples": [
-            "{\n  \"uri\": \"file.csv\"\n}\n",
-            "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-            "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
-          ],
-          "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
-        },
-        "title": {
-          "title": "Title",
-          "description": "A human-readable title.",
-          "type": "string",
-          "examples": [
-            "{\n  \"title\": \"My Package Title\"\n}\n"
-          ]
-        }
-      },
+      "type": "string",
+      "format": "uri",
       "examples": [
-        "{\n  \"homepage\": {\n    \"name\": \"My Web Page\",\n    \"uri\": \"http://example.com/\"\n  }\n}\n"
+        "{\n  \"homepage\": \"http://example.com/\"\n}\n"
       ]
     },
     "created": {
@@ -122,27 +91,23 @@
         "title": "Contributor",
         "description": "A contributor to this descriptor.",
         "properties": {
-          "name": {
-            "title": "Name",
-            "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+          "title": {
+            "title": "Title",
+            "description": "A human-readable title.",
             "type": "string",
-            "pattern": "^([-a-z0-9._/])+$",
-            "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
             "examples": [
-              "{\n  \"name\": \"my-nice-name\"\n}\n"
+              "{\n  \"title\": \"My Package Title\"\n}\n"
             ]
           },
-          "uri": {
-            "title": "URI",
-            "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+          "path": {
+            "title": "Path",
+            "description": "A fully qualified URL, or a POSIX file path..",
             "type": "string",
-            "format": "uri",
             "examples": [
-              "{\n  \"uri\": \"file.csv\"\n}\n",
-              "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-              "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+              "{\n  \"path\": \"file.csv\"\n}\n",
+              "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
             ],
-            "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+            "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
           },
           "email": {
             "title": "Email",
@@ -153,22 +118,30 @@
               "{\n  \"email\": \"example@example.com\"\n}\n"
             ]
           },
+          "organisation": {
+            "title": "Organisation",
+            "description": "An organizational affiliation for this contributor.",
+            "type": "string"
+          },
           "role": {
             "type": "string",
             "enum": [
+              "publisher",
               "author",
-              "maintainer"
+              "maintainer",
+              "wrangler",
+              "contributor"
             ]
           }
         },
         "required": [
-          "name"
+          "title"
         ],
         "context": "Use of this property does not imply that the person was the original creator of, or a contributor to, the data in the descriptor, but refers to the composition of the descriptor itself."
       },
       "examples": [
-        "{\n  \"contributors\": [\n    {\n      \"name\": \"Joe Bloggs\"\n    }\n  ]\n}\n",
-        "{\n  \"contributors\": [\n    {\n      \"name\": \"Joe Bloggs\",\n      \"email\": \"joe@example.com\",\n      \"role\": \"author\"\n    }\n  ]\n}\n"
+        "{\n  \"contributors\": [\n    {\n      \"title\": \"Joe Bloggs\"\n    }\n  ]\n}\n",
+        "{\n  \"contributors\": [\n    {\n      \"title\": \"Joe Bloggs\",\n      \"email\": \"joe@example.com\",\n      \"role\": \"author\"\n    }\n  ]\n}\n"
       ]
     },
     "keywords": {
@@ -194,31 +167,22 @@
         "title": "License",
         "description": "A license for this descriptor.",
         "type": "object",
-        "required": [
-          "uri"
-        ],
         "properties": {
           "name": {
-            "title": "Name",
-            "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+            "title": "Open Definition license identifier",
+            "description": "MUST be an Open Definition license identifier, see http://licenses.opendefinition.org/",
             "type": "string",
-            "pattern": "^([-a-z0-9._/])+$",
-            "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-            "examples": [
-              "{\n  \"name\": \"my-nice-name\"\n}\n"
-            ]
+            "pattern": "^([-a-zA-Z0-9._])+$"
           },
-          "uri": {
-            "title": "URI",
-            "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+          "path": {
+            "title": "Path",
+            "description": "A fully qualified URL, or a POSIX file path..",
             "type": "string",
-            "format": "uri",
             "examples": [
-              "{\n  \"uri\": \"file.csv\"\n}\n",
-              "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-              "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+              "{\n  \"path\": \"file.csv\"\n}\n",
+              "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
             ],
-            "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+            "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
           },
           "title": {
             "title": "Title",
@@ -246,18 +210,28 @@
         "title": "Data Resource",
         "description": "Data Resource.",
         "type": "object",
-        "required": [
-          "name",
-          "data"
+        "oneOf": [
+          {
+            "required": [
+              "name",
+              "data"
+            ]
+          },
+          {
+            "required": [
+              "name",
+              "path"
+            ]
+          }
         ],
         "properties": {
           "profile": {
             "propertyOrder": 10,
+            "default": "data-resource",
             "title": "Profile",
             "description": "The profile of this descriptor.",
-            "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `default`. The namespace for the profile is the type of descriptor, so, `default` for a Package descriptor is not the same as `default` for a Resource descriptor.",
+            "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `data-package` for Package and `data-resource` for Resource.",
             "type": "string",
-            "default": "default",
             "examples": [
               "{\n  \"profile\": \"tabular-data-package\"\n}\n",
               "{\n  \"profile\": \"http://example.com/my-profiles-json-schema.json\"\n}\n"
@@ -274,30 +248,51 @@
               "{\n  \"name\": \"my-nice-name\"\n}\n"
             ]
           },
-          "data": {
+          "path": {
             "propertyOrder": 30,
-            "title": "Data",
-            "description": "A reference to the data for this resource. `data` `MUST` be an array of valid URIs.",
-            "type": "array",
-            "minItems": 1,
-            "items": {
-              "examples": [
-                "[ \"file.csv\" ]\n",
-                "[ \"#/data/my-data\" ]\n",
-                "[ \"http://example.com/file.csv\" ]\n"
-              ],
-              "title": "URI",
-              "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
-              "type": "string",
-              "format": "uri",
-              "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
-            },
-            "context": "The dereferenced value of each referenced data source in the `data` `array` `MUST` be commensurate with a native, dereferenced representation of the data the resource describes. For example, in a *Tabular* Data Resource, this means that the dereferenced value of `data` `MUST` be an array.",
+            "title": "Path",
+            "description": "A reference to the data for this resource, as either a path as a string, or an array of paths as strings. of valid URIs.",
+            "oneOf": [
+              {
+                "title": "Path",
+                "description": "A fully qualified URL, or a POSIX file path..",
+                "type": "string",
+                "examples": [
+                  "{\n  \"path\": \"file.csv\"\n}\n",
+                  "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
+                ],
+                "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "title": "Path",
+                  "description": "A fully qualified URL, or a POSIX file path..",
+                  "type": "string",
+                  "examples": [
+                    "{\n  \"path\": \"file.csv\"\n}\n",
+                    "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
+                  ],
+                  "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
+                },
+                "examples": [
+                  "[ \"file.csv\" ]\n",
+                  "[ \"http://example.com/file.csv\" ]\n"
+                ]
+              }
+            ],
+            "context": "The dereferenced value of each referenced data source in `path` `MUST` be commensurate with a native, dereferenced representation of the data the resource describes. For example, in a *Tabular* Data Resource, this means that the dereferenced value of `path` `MUST` be an array.",
             "examples": [
-              "{\n  \"data\": [\n    \"file.csv\",\n    \"file2.csv\"\n  ]\n}\n",
-              "{\n  \"data\": [\n    \"http://example.com/file.csv\",\n    \"http://example.com/file2.csv\"\n  ]\n}\n",
-              "{\n  \"data\": [\n    \"#/data/my-data\",\n    \"#/data/my-data2\"\n  ]\n}\n"
+              "{\n  \"path\": [\n    \"file.csv\",\n    \"file2.csv\"\n  ]\n}\n",
+              "{\n  \"path\": [\n    \"http://example.com/file.csv\",\n    \"http://example.com/file2.csv\"\n  ]\n}\n",
+              "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
             ]
+          },
+          "data": {
+            "propertyOrder": 230,
+            "title": "Data",
+            "description": "Inline data for this resource."
           },
           "schema": {
             "propertyOrder": 40,
@@ -328,41 +323,10 @@
             "propertyOrder": 70,
             "title": "Home Page",
             "description": "The home on the web that is related to this data package.",
-            "type": "object",
-            "properties": {
-              "name": {
-                "title": "Name",
-                "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                "type": "string",
-                "pattern": "^([-a-z0-9._/])+$",
-                "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                "examples": [
-                  "{\n  \"name\": \"my-nice-name\"\n}\n"
-                ]
-              },
-              "uri": {
-                "title": "URI",
-                "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
-                "type": "string",
-                "format": "uri",
-                "examples": [
-                  "{\n  \"uri\": \"file.csv\"\n}\n",
-                  "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                  "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
-                ],
-                "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
-              },
-              "title": {
-                "title": "Title",
-                "description": "A human-readable title.",
-                "type": "string",
-                "examples": [
-                  "{\n  \"title\": \"My Package Title\"\n}\n"
-                ]
-              }
-            },
+            "type": "string",
+            "format": "uri",
             "examples": [
-              "{\n  \"homepage\": {\n    \"name\": \"My Web Page\",\n    \"uri\": \"http://example.com/\"\n  }\n}\n"
+              "{\n  \"homepage\": \"http://example.com/\"\n}\n"
             ]
           },
           "sources": {
@@ -379,30 +343,26 @@
               "description": "A source file.",
               "type": "object",
               "required": [
-                "uri"
+                "title"
               ],
               "properties": {
-                "name": {
-                  "title": "Name",
-                  "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+                "title": {
+                  "title": "Title",
+                  "description": "A human-readable title.",
                   "type": "string",
-                  "pattern": "^([-a-z0-9._/])+$",
-                  "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
                   "examples": [
-                    "{\n  \"name\": \"my-nice-name\"\n}\n"
+                    "{\n  \"title\": \"My Package Title\"\n}\n"
                   ]
                 },
-                "uri": {
-                  "title": "URI",
-                  "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+                "path": {
+                  "title": "Path",
+                  "description": "A fully qualified URL, or a POSIX file path..",
                   "type": "string",
-                  "format": "uri",
                   "examples": [
-                    "{\n  \"uri\": \"file.csv\"\n}\n",
-                    "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                    "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                    "{\n  \"path\": \"file.csv\"\n}\n",
+                    "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                   ],
-                  "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                  "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
                 },
                 "email": {
                   "title": "Email",
@@ -432,31 +392,22 @@
               "title": "License",
               "description": "A license for this descriptor.",
               "type": "object",
-              "required": [
-                "uri"
-              ],
               "properties": {
                 "name": {
-                  "title": "Name",
-                  "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+                  "title": "Open Definition license identifier",
+                  "description": "MUST be an Open Definition license identifier, see http://licenses.opendefinition.org/",
                   "type": "string",
-                  "pattern": "^([-a-z0-9._/])+$",
-                  "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                  "examples": [
-                    "{\n  \"name\": \"my-nice-name\"\n}\n"
-                  ]
+                  "pattern": "^([-a-zA-Z0-9._])+$"
                 },
-                "uri": {
-                  "title": "URI",
-                  "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+                "path": {
+                  "title": "Path",
+                  "description": "A fully qualified URL, or a POSIX file path..",
                   "type": "string",
-                  "format": "uri",
                   "examples": [
-                    "{\n  \"uri\": \"file.csv\"\n}\n",
-                    "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                    "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                    "{\n  \"path\": \"file.csv\"\n}\n",
+                    "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                   ],
-                  "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                  "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
                 },
                 "title": {
                   "title": "Title",
@@ -550,30 +501,26 @@
         "description": "A source file.",
         "type": "object",
         "required": [
-          "uri"
+          "title"
         ],
         "properties": {
-          "name": {
-            "title": "Name",
-            "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+          "title": {
+            "title": "Title",
+            "description": "A human-readable title.",
             "type": "string",
-            "pattern": "^([-a-z0-9._/])+$",
-            "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
             "examples": [
-              "{\n  \"name\": \"my-nice-name\"\n}\n"
+              "{\n  \"title\": \"My Package Title\"\n}\n"
             ]
           },
-          "uri": {
-            "title": "URI",
-            "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+          "path": {
+            "title": "Path",
+            "description": "A fully qualified URL, or a POSIX file path..",
             "type": "string",
-            "format": "uri",
             "examples": [
-              "{\n  \"uri\": \"file.csv\"\n}\n",
-              "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-              "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+              "{\n  \"path\": \"file.csv\"\n}\n",
+              "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
             ],
-            "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+            "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
           },
           "email": {
             "title": "Email",

@@ -71,7 +71,7 @@ def retrieve_descriptor(descriptor):
 
 # Dereference descriptor
 
-def dereference_data_package_descriptor(descriptor, base_path):
+def dereference_package_descriptor(descriptor, base_path):
     """Dereference data package descriptor (IN-PLACE FOR NOW).
     """
     for resource in descriptor.get('resources', []):
@@ -97,7 +97,7 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
             try:
                 pointer = jsonpointer.JsonPointer(value[1:])
                 descriptor[property] = pointer.resolve(base_descriptor)
-            except Exception as exception:
+            except Exception:
                 raise exceptions.DataPackageException(
                     'Not resolved Pointer URI "%s" '
                     'for resource.%s' % (value, property))
@@ -108,7 +108,7 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
                 response = requests.get(value)
                 response.raise_for_status()
                 descriptor[property] = response.json()
-            except Exception as exception:
+            except Exception:
                 raise exceptions.DataPackageException(
                     'Not resolved Remote URI "%s" '
                     'for resource.%s' % (value, property))
@@ -127,7 +127,7 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
             try:
                 with io.open(fullpath, encoding='utf-8') as file:
                     descriptor[property] = json.load(file)
-            except Exception as exception:
+            except Exception:
                 raise exceptions.DataPackageException(
                     'Not resolved Local URI "%s" '
                     'for resource.%s' % (value, property))
@@ -137,7 +137,7 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
 
 # Expand descriptor
 
-def expand_data_package_descriptor(descriptor):
+def expand_package_descriptor(descriptor):
     """Apply defaults to data package descriptor (IN-PLACE FOR NOW).
     """
     descriptor.setdefault('profile', config.DEFAULT_DATA_PACKAGE_PROFILE)

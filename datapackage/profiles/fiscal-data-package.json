@@ -17,9 +17,8 @@
           "propertyOrder": 10,
           "title": "Profile",
           "description": "The profile of this descriptor.",
-          "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `default`. The namespace for the profile is the type of descriptor, so, `default` for a Package descriptor is not the same as `default` for a Resource descriptor.",
+          "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `data-package` for Package and `data-resource` for Resource.",
           "type": "string",
-          "default": "default",
           "examples": [
             "{\n  \"profile\": \"tabular-data-package\"\n}\n",
             "{\n  \"profile\": \"http://example.com/my-profiles-json-schema.json\"\n}\n"
@@ -70,41 +69,10 @@
           "propertyOrder": 60,
           "title": "Home Page",
           "description": "The home on the web that is related to this data package.",
-          "type": "object",
-          "properties": {
-            "name": {
-              "title": "Name",
-              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-              "type": "string",
-              "pattern": "^([-a-z0-9._/])+$",
-              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-              "examples": [
-                "{\n  \"name\": \"my-nice-name\"\n}\n"
-              ]
-            },
-            "uri": {
-              "title": "URI",
-              "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
-              "type": "string",
-              "format": "uri",
-              "examples": [
-                "{\n  \"uri\": \"file.csv\"\n}\n",
-                "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
-              ],
-              "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
-            },
-            "title": {
-              "title": "Title",
-              "description": "A human-readable title.",
-              "type": "string",
-              "examples": [
-                "{\n  \"title\": \"My Package Title\"\n}\n"
-              ]
-            }
-          },
+          "type": "string",
+          "format": "uri",
           "examples": [
-            "{\n  \"homepage\": {\n    \"name\": \"My Web Page\",\n    \"uri\": \"http://example.com/\"\n  }\n}\n"
+            "{\n  \"homepage\": \"http://example.com/\"\n}\n"
           ]
         },
         "created": {
@@ -128,27 +96,23 @@
             "title": "Contributor",
             "description": "A contributor to this descriptor.",
             "properties": {
-              "name": {
-                "title": "Name",
-                "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+              "title": {
+                "title": "Title",
+                "description": "A human-readable title.",
                 "type": "string",
-                "pattern": "^([-a-z0-9._/])+$",
-                "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
                 "examples": [
-                  "{\n  \"name\": \"my-nice-name\"\n}\n"
+                  "{\n  \"title\": \"My Package Title\"\n}\n"
                 ]
               },
-              "uri": {
-                "title": "URI",
-                "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+              "path": {
+                "title": "Path",
+                "description": "A fully qualified URL, or a POSIX file path..",
                 "type": "string",
-                "format": "uri",
                 "examples": [
-                  "{\n  \"uri\": \"file.csv\"\n}\n",
-                  "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                  "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                  "{\n  \"path\": \"file.csv\"\n}\n",
+                  "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                 ],
-                "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
               },
               "email": {
                 "title": "Email",
@@ -159,22 +123,30 @@
                   "{\n  \"email\": \"example@example.com\"\n}\n"
                 ]
               },
+              "organisation": {
+                "title": "Organisation",
+                "description": "An organizational affiliation for this contributor.",
+                "type": "string"
+              },
               "role": {
                 "type": "string",
                 "enum": [
+                  "publisher",
                   "author",
-                  "maintainer"
+                  "maintainer",
+                  "wrangler",
+                  "contributor"
                 ]
               }
             },
             "required": [
-              "name"
+              "title"
             ],
             "context": "Use of this property does not imply that the person was the original creator of, or a contributor to, the data in the descriptor, but refers to the composition of the descriptor itself."
           },
           "examples": [
-            "{\n  \"contributors\": [\n    {\n      \"name\": \"Joe Bloggs\"\n    }\n  ]\n}\n",
-            "{\n  \"contributors\": [\n    {\n      \"name\": \"Joe Bloggs\",\n      \"email\": \"joe@example.com\",\n      \"role\": \"author\"\n    }\n  ]\n}\n"
+            "{\n  \"contributors\": [\n    {\n      \"title\": \"Joe Bloggs\"\n    }\n  ]\n}\n",
+            "{\n  \"contributors\": [\n    {\n      \"title\": \"Joe Bloggs\",\n      \"email\": \"joe@example.com\",\n      \"role\": \"author\"\n    }\n  ]\n}\n"
           ]
         },
         "keywords": {
@@ -200,31 +172,22 @@
             "title": "License",
             "description": "A license for this descriptor.",
             "type": "object",
-            "required": [
-              "uri"
-            ],
             "properties": {
               "name": {
-                "title": "Name",
-                "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+                "title": "Open Definition license identifier",
+                "description": "MUST be an Open Definition license identifier, see http://licenses.opendefinition.org/",
                 "type": "string",
-                "pattern": "^([-a-z0-9._/])+$",
-                "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                "examples": [
-                  "{\n  \"name\": \"my-nice-name\"\n}\n"
-                ]
+                "pattern": "^([-a-zA-Z0-9._])+$"
               },
-              "uri": {
-                "title": "URI",
-                "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+              "path": {
+                "title": "Path",
+                "description": "A fully qualified URL, or a POSIX file path..",
                 "type": "string",
-                "format": "uri",
                 "examples": [
-                  "{\n  \"uri\": \"file.csv\"\n}\n",
-                  "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                  "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                  "{\n  \"path\": \"file.csv\"\n}\n",
+                  "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                 ],
-                "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
               },
               "title": {
                 "title": "Title",
@@ -252,20 +215,31 @@
             "title": "Tabular Data Resource",
             "description": "A Tabular Data Resource.",
             "type": "object",
-            "required": [
-              "name",
-              "data",
-              "schema",
-              "profile"
+            "oneOf": [
+              {
+                "required": [
+                  "name",
+                  "data",
+                  "schema",
+                  "profile"
+                ]
+              },
+              {
+                "required": [
+                  "name",
+                  "path",
+                  "schema",
+                  "profile"
+                ]
+              }
             ],
             "properties": {
               "profile": {
                 "propertyOrder": 10,
                 "title": "Profile",
                 "description": "The profile of this descriptor.",
-                "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `default`. The namespace for the profile is the type of descriptor, so, `default` for a Package descriptor is not the same as `default` for a Resource descriptor.",
+                "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `data-package` for Package and `data-resource` for Resource.",
                 "type": "string",
-                "default": "default",
                 "examples": [
                   "{\n  \"profile\": \"tabular-data-package\"\n}\n",
                   "{\n  \"profile\": \"http://example.com/my-profiles-json-schema.json\"\n}\n"
@@ -282,30 +256,51 @@
                   "{\n  \"name\": \"my-nice-name\"\n}\n"
                 ]
               },
-              "data": {
+              "path": {
                 "propertyOrder": 30,
-                "title": "Data",
-                "description": "A reference to the data for this resource. `data` `MUST` be an array of valid URIs.",
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "examples": [
-                    "[ \"file.csv\" ]\n",
-                    "[ \"#/data/my-data\" ]\n",
-                    "[ \"http://example.com/file.csv\" ]\n"
-                  ],
-                  "title": "URI",
-                  "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
-                  "type": "string",
-                  "format": "uri",
-                  "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
-                },
-                "context": "The dereferenced value of each referenced data source in the `data` `array` `MUST` be commensurate with a native, dereferenced representation of the data the resource describes. For example, in a *Tabular* Data Resource, this means that the dereferenced value of `data` `MUST` be an array.",
+                "title": "Path",
+                "description": "A reference to the data for this resource, as either a path as a string, or an array of paths as strings. of valid URIs.",
+                "oneOf": [
+                  {
+                    "title": "Path",
+                    "description": "A fully qualified URL, or a POSIX file path..",
+                    "type": "string",
+                    "examples": [
+                      "{\n  \"path\": \"file.csv\"\n}\n",
+                      "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
+                    ],
+                    "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "title": "Path",
+                      "description": "A fully qualified URL, or a POSIX file path..",
+                      "type": "string",
+                      "examples": [
+                        "{\n  \"path\": \"file.csv\"\n}\n",
+                        "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
+                      ],
+                      "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
+                    },
+                    "examples": [
+                      "[ \"file.csv\" ]\n",
+                      "[ \"http://example.com/file.csv\" ]\n"
+                    ]
+                  }
+                ],
+                "context": "The dereferenced value of each referenced data source in `path` `MUST` be commensurate with a native, dereferenced representation of the data the resource describes. For example, in a *Tabular* Data Resource, this means that the dereferenced value of `path` `MUST` be an array.",
                 "examples": [
-                  "{\n  \"data\": [\n    \"file.csv\",\n    \"file2.csv\"\n  ]\n}\n",
-                  "{\n  \"data\": [\n    \"http://example.com/file.csv\",\n    \"http://example.com/file2.csv\"\n  ]\n}\n",
-                  "{\n  \"data\": [\n    \"#/data/my-data\",\n    \"#/data/my-data2\"\n  ]\n}\n"
+                  "{\n  \"path\": [\n    \"file.csv\",\n    \"file2.csv\"\n  ]\n}\n",
+                  "{\n  \"path\": [\n    \"http://example.com/file.csv\",\n    \"http://example.com/file2.csv\"\n  ]\n}\n",
+                  "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                 ]
+              },
+              "data": {
+                "propertyOrder": 230,
+                "title": "Data",
+                "description": "Inline data for this resource."
               },
               "schema": {
                 "propertyOrder": 40,
@@ -333,13 +328,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -398,7 +388,9 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minLength": {
                                   "type": "integer",
@@ -432,13 +424,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -469,6 +456,12 @@
                               ],
                               "default": "default"
                             },
+                            "bareNumber": {
+                              "type": "boolean",
+                              "title": "bareNumber",
+                              "description": "a boolean field with a default of `true`. If `true` the physical contents of this field must follow the formatting constraints already set out. If `false` the contents of this field may contain leading and/or trailing non-numeric characters (which implementors MUST therefore strip). The purpose of `bareNumber` is to allow publishers to publish numeric data that contains trailing characters such as percentages e.g. `95%` or leading characters such as currencies e.g. `€95` or `EUR 95`. Note that it is entirely up to implementors what, if anything, they do with stripped text.",
+                              "default": true
+                            },
                             "decimalChar": {
                               "type": "string",
                               "description": "A string whose value is used to represent a decimal point within the number. The default value is `.`."
@@ -476,10 +469,6 @@
                             "groupChar": {
                               "type": "string",
                               "description": "A string whose value is used to group digits within the number. The default value is `null`. A common value is `,` e.g. '100,000'."
-                            },
-                            "currency": {
-                              "type": "string",
-                              "description": "A number that may include additional currency symbols."
                             },
                             "constraints": {
                               "title": "Constraints",
@@ -501,20 +490,44 @@
                                   "context": "Regular expressions `SHOULD` conform to the [XML Schema regular expression syntax](http://www.w3.org/TR/xmlschema-2/#regexs)."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -540,13 +553,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -577,6 +585,12 @@
                               ],
                               "default": "default"
                             },
+                            "bareNumber": {
+                              "type": "boolean",
+                              "title": "bareNumber",
+                              "description": "a boolean field with a default of `true`. If `true` the physical contents of this field must follow the formatting constraints already set out. If `false` the contents of this field may contain leading and/or trailing non-numeric characters (which implementors MUST therefore strip). The purpose of `bareNumber` is to allow publishers to publish numeric data that contains trailing characters such as percentages e.g. `95%` or leading characters such as currencies e.g. `€95` or `EUR 95`. Note that it is entirely up to implementors what, if anything, they do with stripped text.",
+                              "default": true
+                            },
                             "constraints": {
                               "title": "Constraints",
                               "description": "The following constraints are supported for `integer` fields.",
@@ -597,20 +611,44 @@
                                   "context": "Regular expressions `SHOULD` conform to the [XML Schema regular expression syntax](http://www.w3.org/TR/xmlschema-2/#regexs)."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -634,13 +672,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -667,10 +700,6 @@
                             "format": {
                               "description": "The format keyword options for `date` are `default`, `any`, and `{PATTERN}`.",
                               "context": "The following `format` options are supported:\n  * **default**: An ISO8601 format string of YYYY-MM-DD.\n  * **any**: Any parsable representation of a date. The implementing library can attempt to parse the datetime via a range of strategies.\n  * **{PATTERN}**: The value can be parsed according to `{PATTERN}`, which `MUST` follow the date formatting syntax of C / Python [strftime](http://strftime.org/).",
-                              "enum": [
-                                "default",
-                                "any"
-                              ],
                               "default": "default"
                             },
                             "constraints": {
@@ -691,17 +720,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -727,13 +754,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -760,10 +782,6 @@
                             "format": {
                               "description": "The format keyword options for `time` are `default`, `any`, and `{PATTERN}`.",
                               "context": "The following `format` options are supported:\n  * **default**: An ISO8601 format string for time.\n  * **any**: Any parsable representation of a date. The implementing library can attempt to parse the datetime via a range of strategies.\n  * **{PATTERN}**: The value can be parsed according to `{PATTERN}`, which `MUST` follow the date formatting syntax of C / Python [strftime](http://strftime.org/).",
-                              "enum": [
-                                "default",
-                                "any"
-                              ],
                               "default": "default"
                             },
                             "constraints": {
@@ -784,17 +802,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -819,13 +835,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -852,10 +863,6 @@
                             "format": {
                               "description": "The format keyword options for `datetime` are `default`, `any`, and `{PATTERN}`.",
                               "context": "The following `format` options are supported:\n  * **default**: An ISO8601 format string for datetime.\n  * **any**: Any parsable representation of a date. The implementing library can attempt to parse the datetime via a range of strategies.\n  * **{PATTERN}**: The value can be parsed according to `{PATTERN}`, which `MUST` follow the date formatting syntax of C / Python [strftime](http://strftime.org/).",
-                              "enum": [
-                                "default",
-                                "any"
-                              ],
                               "default": "default"
                             },
                             "constraints": {
@@ -876,17 +883,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -911,13 +916,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -963,20 +963,44 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -1001,13 +1025,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -1061,17 +1080,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -1089,7 +1106,6 @@
                           "type": "object",
                           "title": "Boolean Field",
                           "description": "The field contains boolean (true/false) data.",
-                          "context": "Boolean values can be indicated with the following strings (case-insensitive, so, for example, 'Y' and 'y' are both acceptable):\n* **true**: 'yes', 'y', 'true', 't', '1'\n* **false**: 'no', 'n', 'false', 'f', '0'",
                           "required": [
                             "name",
                             "type"
@@ -1097,13 +1113,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -1127,6 +1138,32 @@
                                 "boolean"
                               ]
                             },
+                            "trueValues": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [
+                                "true",
+                                "True",
+                                "TRUE",
+                                "1"
+                              ]
+                            },
+                            "falseValues": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [
+                                "false",
+                                "False",
+                                "FALSE",
+                                "0"
+                              ]
+                            },
                             "constraints": {
                               "title": "Constraints",
                               "description": "The following constraints are supported for `boolean` fields.",
@@ -1141,7 +1178,9 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "boolean"
+                                  }
                                 }
                               }
                             },
@@ -1165,13 +1204,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -1217,10 +1251,24 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "object"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minLength": {
                                   "type": "integer",
@@ -1252,13 +1300,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -1310,10 +1353,32 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "array"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "object"
+                                      }
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -1338,13 +1403,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -1392,10 +1452,24 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "object"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minLength": {
                                   "type": "integer",
@@ -1428,13 +1502,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -1480,10 +1549,24 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "array"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minLength": {
                                   "type": "integer",
@@ -1516,13 +1599,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -1571,17 +1649,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -1605,13 +1681,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -1652,8 +1723,7 @@
                                 "enum": {
                                   "type": "array",
                                   "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "uniqueItems": true
                                 }
                               }
                             },
@@ -1675,13 +1745,21 @@
                     ]
                   },
                   "primaryKey": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": "A primary key is an array of field names, whose values `MUST` uniquely identify each row in the table.",
-                    "context": "Each string in the `primaryKey` array `MUST` be unique, and `MUST` match a field name in the associated table. It is acceptable to have an array with a single value, indicating that the value of a single field is the primary key.",
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "description": "A primary key is a field name or an array of field names, whose values `MUST` uniquely identify each row in the table.",
+                    "context": "Field name in the `primaryKey` `MUST` be unique, and `MUST` match a field name in the associated table. It is acceptable to have an array with a single value, indicating that the value of a single field is the primary key.",
                     "examples": [
                       "{\n  \"primaryKey\": [\n    \"name\"\n  ]\n}\n",
                       "{\n  \"primaryKey\": [\n    \"first_name\",\n    \"last_name\"\n  ]\n}\n"
@@ -1698,38 +1776,66 @@
                         "fields",
                         "reference"
                       ],
-                      "properties": {
-                        "fields": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          },
-                          "minItems": 1,
-                          "uniqueItems": true,
-                          "description": "Fields that make up the primary key."
-                        },
-                        "reference": {
-                          "type": "object",
-                          "required": [
-                            "resource",
-                            "fields"
-                          ],
+                      "oneOf": [
+                        {
                           "properties": {
-                            "resource": {
-                              "type": "string",
-                              "format": "uri"
-                            },
                             "fields": {
                               "type": "array",
                               "items": {
-                                "type": "string"
-                              },
-                              "minItems": 1,
-                              "uniqueItems": true
+                                "type": "string",
+                                "minItems": 1,
+                                "uniqueItems": true,
+                                "description": "Fields that make up the primary key."
+                              }
+                            },
+                            "reference": {
+                              "type": "object",
+                              "required": [
+                                "resource",
+                                "fields"
+                              ],
+                              "properties": {
+                                "resource": {
+                                  "type": "string",
+                                  "default": ""
+                                },
+                                "fields": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1,
+                                  "uniqueItems": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "properties": {
+                            "fields": {
+                              "type": "string",
+                              "description": "Fields that make up the primary key."
+                            },
+                            "reference": {
+                              "type": "object",
+                              "required": [
+                                "resource",
+                                "fields"
+                              ],
+                              "properties": {
+                                "resource": {
+                                  "type": "string",
+                                  "default": ""
+                                },
+                                "fields": {
+                                  "type": "string"
+                                }
+                              }
                             }
                           }
                         }
-                      }
+                      ]
                     },
                     "examples": [
                       "{\n  \"foreignKeys\": [\n    {\n      \"fields\": \"state\",\n      \"reference\": {\n        \"resource\": \"the-resource\",\n        \"fields\": \"state_id\"\n      }\n    }\n  ]\n}\n",
@@ -1779,41 +1885,10 @@
                 "propertyOrder": 70,
                 "title": "Home Page",
                 "description": "The home on the web that is related to this data package.",
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "title": "Name",
-                    "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                    "type": "string",
-                    "pattern": "^([-a-z0-9._/])+$",
-                    "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                    "examples": [
-                      "{\n  \"name\": \"my-nice-name\"\n}\n"
-                    ]
-                  },
-                  "uri": {
-                    "title": "URI",
-                    "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
-                    "type": "string",
-                    "format": "uri",
-                    "examples": [
-                      "{\n  \"uri\": \"file.csv\"\n}\n",
-                      "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                      "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
-                    ],
-                    "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
-                  },
-                  "title": {
-                    "title": "Title",
-                    "description": "A human-readable title.",
-                    "type": "string",
-                    "examples": [
-                      "{\n  \"title\": \"My Package Title\"\n}\n"
-                    ]
-                  }
-                },
+                "type": "string",
+                "format": "uri",
                 "examples": [
-                  "{\n  \"homepage\": {\n    \"name\": \"My Web Page\",\n    \"uri\": \"http://example.com/\"\n  }\n}\n"
+                  "{\n  \"homepage\": \"http://example.com/\"\n}\n"
                 ]
               },
               "sources": {
@@ -1830,30 +1905,26 @@
                   "description": "A source file.",
                   "type": "object",
                   "required": [
-                    "uri"
+                    "title"
                   ],
                   "properties": {
-                    "name": {
-                      "title": "Name",
-                      "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+                    "title": {
+                      "title": "Title",
+                      "description": "A human-readable title.",
                       "type": "string",
-                      "pattern": "^([-a-z0-9._/])+$",
-                      "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
                       "examples": [
-                        "{\n  \"name\": \"my-nice-name\"\n}\n"
+                        "{\n  \"title\": \"My Package Title\"\n}\n"
                       ]
                     },
-                    "uri": {
-                      "title": "URI",
-                      "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+                    "path": {
+                      "title": "Path",
+                      "description": "A fully qualified URL, or a POSIX file path..",
                       "type": "string",
-                      "format": "uri",
                       "examples": [
-                        "{\n  \"uri\": \"file.csv\"\n}\n",
-                        "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                        "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                        "{\n  \"path\": \"file.csv\"\n}\n",
+                        "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                       ],
-                      "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                      "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
                     },
                     "email": {
                       "title": "Email",
@@ -1883,31 +1954,22 @@
                   "title": "License",
                   "description": "A license for this descriptor.",
                   "type": "object",
-                  "required": [
-                    "uri"
-                  ],
                   "properties": {
                     "name": {
-                      "title": "Name",
-                      "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+                      "title": "Open Definition license identifier",
+                      "description": "MUST be an Open Definition license identifier, see http://licenses.opendefinition.org/",
                       "type": "string",
-                      "pattern": "^([-a-z0-9._/])+$",
-                      "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                      "examples": [
-                        "{\n  \"name\": \"my-nice-name\"\n}\n"
-                      ]
+                      "pattern": "^([-a-zA-Z0-9._])+$"
                     },
-                    "uri": {
-                      "title": "URI",
-                      "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+                    "path": {
+                      "title": "Path",
+                      "description": "A fully qualified URL, or a POSIX file path..",
                       "type": "string",
-                      "format": "uri",
                       "examples": [
-                        "{\n  \"uri\": \"file.csv\"\n}\n",
-                        "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                        "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                        "{\n  \"path\": \"file.csv\"\n}\n",
+                        "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                       ],
-                      "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                      "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
                     },
                     "title": {
                       "title": "Title",
@@ -2102,30 +2164,26 @@
             "description": "A source file.",
             "type": "object",
             "required": [
-              "uri"
+              "title"
             ],
             "properties": {
-              "name": {
-                "title": "Name",
-                "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+              "title": {
+                "title": "Title",
+                "description": "A human-readable title.",
                 "type": "string",
-                "pattern": "^([-a-z0-9._/])+$",
-                "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
                 "examples": [
-                  "{\n  \"name\": \"my-nice-name\"\n}\n"
+                  "{\n  \"title\": \"My Package Title\"\n}\n"
                 ]
               },
-              "uri": {
-                "title": "URI",
-                "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+              "path": {
+                "title": "Path",
+                "description": "A fully qualified URL, or a POSIX file path..",
                 "type": "string",
-                "format": "uri",
                 "examples": [
-                  "{\n  \"uri\": \"file.csv\"\n}\n",
-                  "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                  "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                  "{\n  \"path\": \"file.csv\"\n}\n",
+                  "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                 ],
-                "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
               },
               "email": {
                 "title": "Email",
@@ -2160,20 +2218,31 @@
             "title": "Tabular Data Resource",
             "description": "A Tabular Data Resource.",
             "type": "object",
-            "required": [
-              "name",
-              "data",
-              "schema",
-              "profile"
+            "oneOf": [
+              {
+                "required": [
+                  "name",
+                  "data",
+                  "schema",
+                  "profile"
+                ]
+              },
+              {
+                "required": [
+                  "name",
+                  "path",
+                  "schema",
+                  "profile"
+                ]
+              }
             ],
             "properties": {
               "profile": {
                 "propertyOrder": 10,
                 "title": "Profile",
                 "description": "The profile of this descriptor.",
-                "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `default`. The namespace for the profile is the type of descriptor, so, `default` for a Package descriptor is not the same as `default` for a Resource descriptor.",
+                "context": "Every Package and Resource descriptor has a profile. The default profile, if none is declared, is `data-package` for Package and `data-resource` for Resource.",
                 "type": "string",
-                "default": "default",
                 "examples": [
                   "{\n  \"profile\": \"tabular-data-package\"\n}\n",
                   "{\n  \"profile\": \"http://example.com/my-profiles-json-schema.json\"\n}\n"
@@ -2190,30 +2259,51 @@
                   "{\n  \"name\": \"my-nice-name\"\n}\n"
                 ]
               },
-              "data": {
+              "path": {
                 "propertyOrder": 30,
-                "title": "Data",
-                "description": "A reference to the data for this resource. `data` `MUST` be an array of valid URIs.",
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "examples": [
-                    "[ \"file.csv\" ]\n",
-                    "[ \"#/data/my-data\" ]\n",
-                    "[ \"http://example.com/file.csv\" ]\n"
-                  ],
-                  "title": "URI",
-                  "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
-                  "type": "string",
-                  "format": "uri",
-                  "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
-                },
-                "context": "The dereferenced value of each referenced data source in the `data` `array` `MUST` be commensurate with a native, dereferenced representation of the data the resource describes. For example, in a *Tabular* Data Resource, this means that the dereferenced value of `data` `MUST` be an array.",
+                "title": "Path",
+                "description": "A reference to the data for this resource, as either a path as a string, or an array of paths as strings. of valid URIs.",
+                "oneOf": [
+                  {
+                    "title": "Path",
+                    "description": "A fully qualified URL, or a POSIX file path..",
+                    "type": "string",
+                    "examples": [
+                      "{\n  \"path\": \"file.csv\"\n}\n",
+                      "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
+                    ],
+                    "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "title": "Path",
+                      "description": "A fully qualified URL, or a POSIX file path..",
+                      "type": "string",
+                      "examples": [
+                        "{\n  \"path\": \"file.csv\"\n}\n",
+                        "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
+                      ],
+                      "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
+                    },
+                    "examples": [
+                      "[ \"file.csv\" ]\n",
+                      "[ \"http://example.com/file.csv\" ]\n"
+                    ]
+                  }
+                ],
+                "context": "The dereferenced value of each referenced data source in `path` `MUST` be commensurate with a native, dereferenced representation of the data the resource describes. For example, in a *Tabular* Data Resource, this means that the dereferenced value of `path` `MUST` be an array.",
                 "examples": [
-                  "{\n  \"data\": [\n    \"file.csv\",\n    \"file2.csv\"\n  ]\n}\n",
-                  "{\n  \"data\": [\n    \"http://example.com/file.csv\",\n    \"http://example.com/file2.csv\"\n  ]\n}\n",
-                  "{\n  \"data\": [\n    \"#/data/my-data\",\n    \"#/data/my-data2\"\n  ]\n}\n"
+                  "{\n  \"path\": [\n    \"file.csv\",\n    \"file2.csv\"\n  ]\n}\n",
+                  "{\n  \"path\": [\n    \"http://example.com/file.csv\",\n    \"http://example.com/file2.csv\"\n  ]\n}\n",
+                  "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                 ]
+              },
+              "data": {
+                "propertyOrder": 230,
+                "title": "Data",
+                "description": "Inline data for this resource."
               },
               "schema": {
                 "propertyOrder": 40,
@@ -2241,13 +2331,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -2306,7 +2391,9 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minLength": {
                                   "type": "integer",
@@ -2340,13 +2427,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -2377,6 +2459,12 @@
                               ],
                               "default": "default"
                             },
+                            "bareNumber": {
+                              "type": "boolean",
+                              "title": "bareNumber",
+                              "description": "a boolean field with a default of `true`. If `true` the physical contents of this field must follow the formatting constraints already set out. If `false` the contents of this field may contain leading and/or trailing non-numeric characters (which implementors MUST therefore strip). The purpose of `bareNumber` is to allow publishers to publish numeric data that contains trailing characters such as percentages e.g. `95%` or leading characters such as currencies e.g. `€95` or `EUR 95`. Note that it is entirely up to implementors what, if anything, they do with stripped text.",
+                              "default": true
+                            },
                             "decimalChar": {
                               "type": "string",
                               "description": "A string whose value is used to represent a decimal point within the number. The default value is `.`."
@@ -2384,10 +2472,6 @@
                             "groupChar": {
                               "type": "string",
                               "description": "A string whose value is used to group digits within the number. The default value is `null`. A common value is `,` e.g. '100,000'."
-                            },
-                            "currency": {
-                              "type": "string",
-                              "description": "A number that may include additional currency symbols."
                             },
                             "constraints": {
                               "title": "Constraints",
@@ -2409,20 +2493,44 @@
                                   "context": "Regular expressions `SHOULD` conform to the [XML Schema regular expression syntax](http://www.w3.org/TR/xmlschema-2/#regexs)."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "number"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "number"
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -2448,13 +2556,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -2485,6 +2588,12 @@
                               ],
                               "default": "default"
                             },
+                            "bareNumber": {
+                              "type": "boolean",
+                              "title": "bareNumber",
+                              "description": "a boolean field with a default of `true`. If `true` the physical contents of this field must follow the formatting constraints already set out. If `false` the contents of this field may contain leading and/or trailing non-numeric characters (which implementors MUST therefore strip). The purpose of `bareNumber` is to allow publishers to publish numeric data that contains trailing characters such as percentages e.g. `95%` or leading characters such as currencies e.g. `€95` or `EUR 95`. Note that it is entirely up to implementors what, if anything, they do with stripped text.",
+                              "default": true
+                            },
                             "constraints": {
                               "title": "Constraints",
                               "description": "The following constraints are supported for `integer` fields.",
@@ -2505,20 +2614,44 @@
                                   "context": "Regular expressions `SHOULD` conform to the [XML Schema regular expression syntax](http://www.w3.org/TR/xmlschema-2/#regexs)."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -2542,13 +2675,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -2575,10 +2703,6 @@
                             "format": {
                               "description": "The format keyword options for `date` are `default`, `any`, and `{PATTERN}`.",
                               "context": "The following `format` options are supported:\n  * **default**: An ISO8601 format string of YYYY-MM-DD.\n  * **any**: Any parsable representation of a date. The implementing library can attempt to parse the datetime via a range of strategies.\n  * **{PATTERN}**: The value can be parsed according to `{PATTERN}`, which `MUST` follow the date formatting syntax of C / Python [strftime](http://strftime.org/).",
-                              "enum": [
-                                "default",
-                                "any"
-                              ],
                               "default": "default"
                             },
                             "constraints": {
@@ -2599,17 +2723,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -2635,13 +2757,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -2668,10 +2785,6 @@
                             "format": {
                               "description": "The format keyword options for `time` are `default`, `any`, and `{PATTERN}`.",
                               "context": "The following `format` options are supported:\n  * **default**: An ISO8601 format string for time.\n  * **any**: Any parsable representation of a date. The implementing library can attempt to parse the datetime via a range of strategies.\n  * **{PATTERN}**: The value can be parsed according to `{PATTERN}`, which `MUST` follow the date formatting syntax of C / Python [strftime](http://strftime.org/).",
-                              "enum": [
-                                "default",
-                                "any"
-                              ],
                               "default": "default"
                             },
                             "constraints": {
@@ -2692,17 +2805,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -2727,13 +2838,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -2760,10 +2866,6 @@
                             "format": {
                               "description": "The format keyword options for `datetime` are `default`, `any`, and `{PATTERN}`.",
                               "context": "The following `format` options are supported:\n  * **default**: An ISO8601 format string for datetime.\n  * **any**: Any parsable representation of a date. The implementing library can attempt to parse the datetime via a range of strategies.\n  * **{PATTERN}**: The value can be parsed according to `{PATTERN}`, which `MUST` follow the date formatting syntax of C / Python [strftime](http://strftime.org/).",
-                              "enum": [
-                                "default",
-                                "any"
-                              ],
                               "default": "default"
                             },
                             "constraints": {
@@ -2784,17 +2886,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -2819,13 +2919,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -2871,20 +2966,44 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "integer"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "integer"
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -2909,13 +3028,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -2969,17 +3083,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -2997,7 +3109,6 @@
                           "type": "object",
                           "title": "Boolean Field",
                           "description": "The field contains boolean (true/false) data.",
-                          "context": "Boolean values can be indicated with the following strings (case-insensitive, so, for example, 'Y' and 'y' are both acceptable):\n* **true**: 'yes', 'y', 'true', 't', '1'\n* **false**: 'no', 'n', 'false', 'f', '0'",
                           "required": [
                             "name",
                             "type"
@@ -3005,13 +3116,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -3035,6 +3141,32 @@
                                 "boolean"
                               ]
                             },
+                            "trueValues": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [
+                                "true",
+                                "True",
+                                "TRUE",
+                                "1"
+                              ]
+                            },
+                            "falseValues": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "type": "string"
+                              },
+                              "default": [
+                                "false",
+                                "False",
+                                "FALSE",
+                                "0"
+                              ]
+                            },
                             "constraints": {
                               "title": "Constraints",
                               "description": "The following constraints are supported for `boolean` fields.",
@@ -3049,7 +3181,9 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "boolean"
+                                  }
                                 }
                               }
                             },
@@ -3073,13 +3207,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -3125,10 +3254,24 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "object"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minLength": {
                                   "type": "integer",
@@ -3160,13 +3303,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -3218,10 +3356,32 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "array"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "object"
+                                      }
+                                    }
+                                  ]
                                 }
                               }
                             },
@@ -3246,13 +3406,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -3300,10 +3455,24 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "object"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minLength": {
                                   "type": "integer",
@@ -3336,13 +3505,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -3388,10 +3552,24 @@
                                   "description": "When `true`, each value for the property `MUST` be unique."
                                 },
                                 "enum": {
-                                  "type": "array",
-                                  "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "oneOf": [
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    {
+                                      "type": "array",
+                                      "minItems": 1,
+                                      "uniqueItems": true,
+                                      "items": {
+                                        "type": "array"
+                                      }
+                                    }
+                                  ]
                                 },
                                 "minLength": {
                                   "type": "integer",
@@ -3424,13 +3602,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -3479,17 +3652,15 @@
                                   "type": "array",
                                   "minItems": 1,
                                   "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "items": {
+                                    "type": "string"
+                                  }
                                 },
                                 "minimum": {
-                                  "type": "string",
-                                  "description": "A minimum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `minLength`, which checks the number of items in the value. A `minimum` value constraint checks whether a field value is greater than or equal to the specified value."
+                                  "type": "string"
                                 },
                                 "maximum": {
-                                  "type": "string",
-                                  "description": "A maximum value for the property, context specific for the property type, and conforming with the format for the property.",
-                                  "context": "This is different to `maxLength`, which checks the number of items in the value. A `maximum` value constraint checks whether a field value is smaller than or equal to the specified value."
+                                  "type": "string"
                                 }
                               }
                             },
@@ -3513,13 +3684,8 @@
                           "properties": {
                             "name": {
                               "title": "Name",
-                              "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                              "type": "string",
-                              "pattern": "^([-a-z0-9._/])+$",
-                              "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                              "examples": [
-                                "{\n  \"name\": \"my-nice-name\"\n}\n"
-                              ]
+                              "description": "A name for this field.",
+                              "type": "string"
                             },
                             "title": {
                               "title": "Title",
@@ -3560,8 +3726,7 @@
                                 "enum": {
                                   "type": "array",
                                   "minItems": 1,
-                                  "uniqueItems": true,
-                                  "description": "An array of values, where the property value `MUST` match any. Each enum item `MUST` comply with the type and format of the property."
+                                  "uniqueItems": true
                                 }
                               }
                             },
@@ -3583,13 +3748,21 @@
                     ]
                   },
                   "primaryKey": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": "A primary key is an array of field names, whose values `MUST` uniquely identify each row in the table.",
-                    "context": "Each string in the `primaryKey` array `MUST` be unique, and `MUST` match a field name in the associated table. It is acceptable to have an array with a single value, indicating that the value of a single field is the primary key.",
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "description": "A primary key is a field name or an array of field names, whose values `MUST` uniquely identify each row in the table.",
+                    "context": "Field name in the `primaryKey` `MUST` be unique, and `MUST` match a field name in the associated table. It is acceptable to have an array with a single value, indicating that the value of a single field is the primary key.",
                     "examples": [
                       "{\n  \"primaryKey\": [\n    \"name\"\n  ]\n}\n",
                       "{\n  \"primaryKey\": [\n    \"first_name\",\n    \"last_name\"\n  ]\n}\n"
@@ -3606,38 +3779,66 @@
                         "fields",
                         "reference"
                       ],
-                      "properties": {
-                        "fields": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          },
-                          "minItems": 1,
-                          "uniqueItems": true,
-                          "description": "Fields that make up the primary key."
-                        },
-                        "reference": {
-                          "type": "object",
-                          "required": [
-                            "resource",
-                            "fields"
-                          ],
+                      "oneOf": [
+                        {
                           "properties": {
-                            "resource": {
-                              "type": "string",
-                              "format": "uri"
-                            },
                             "fields": {
                               "type": "array",
                               "items": {
-                                "type": "string"
-                              },
-                              "minItems": 1,
-                              "uniqueItems": true
+                                "type": "string",
+                                "minItems": 1,
+                                "uniqueItems": true,
+                                "description": "Fields that make up the primary key."
+                              }
+                            },
+                            "reference": {
+                              "type": "object",
+                              "required": [
+                                "resource",
+                                "fields"
+                              ],
+                              "properties": {
+                                "resource": {
+                                  "type": "string",
+                                  "default": ""
+                                },
+                                "fields": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "minItems": 1,
+                                  "uniqueItems": true
+                                }
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "properties": {
+                            "fields": {
+                              "type": "string",
+                              "description": "Fields that make up the primary key."
+                            },
+                            "reference": {
+                              "type": "object",
+                              "required": [
+                                "resource",
+                                "fields"
+                              ],
+                              "properties": {
+                                "resource": {
+                                  "type": "string",
+                                  "default": ""
+                                },
+                                "fields": {
+                                  "type": "string"
+                                }
+                              }
                             }
                           }
                         }
-                      }
+                      ]
                     },
                     "examples": [
                       "{\n  \"foreignKeys\": [\n    {\n      \"fields\": \"state\",\n      \"reference\": {\n        \"resource\": \"the-resource\",\n        \"fields\": \"state_id\"\n      }\n    }\n  ]\n}\n",
@@ -3687,41 +3888,10 @@
                 "propertyOrder": 70,
                 "title": "Home Page",
                 "description": "The home on the web that is related to this data package.",
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "title": "Name",
-                    "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
-                    "type": "string",
-                    "pattern": "^([-a-z0-9._/])+$",
-                    "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                    "examples": [
-                      "{\n  \"name\": \"my-nice-name\"\n}\n"
-                    ]
-                  },
-                  "uri": {
-                    "title": "URI",
-                    "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
-                    "type": "string",
-                    "format": "uri",
-                    "examples": [
-                      "{\n  \"uri\": \"file.csv\"\n}\n",
-                      "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                      "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
-                    ],
-                    "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
-                  },
-                  "title": {
-                    "title": "Title",
-                    "description": "A human-readable title.",
-                    "type": "string",
-                    "examples": [
-                      "{\n  \"title\": \"My Package Title\"\n}\n"
-                    ]
-                  }
-                },
+                "type": "string",
+                "format": "uri",
                 "examples": [
-                  "{\n  \"homepage\": {\n    \"name\": \"My Web Page\",\n    \"uri\": \"http://example.com/\"\n  }\n}\n"
+                  "{\n  \"homepage\": \"http://example.com/\"\n}\n"
                 ]
               },
               "sources": {
@@ -3738,30 +3908,26 @@
                   "description": "A source file.",
                   "type": "object",
                   "required": [
-                    "uri"
+                    "title"
                   ],
                   "properties": {
-                    "name": {
-                      "title": "Name",
-                      "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+                    "title": {
+                      "title": "Title",
+                      "description": "A human-readable title.",
                       "type": "string",
-                      "pattern": "^([-a-z0-9._/])+$",
-                      "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
                       "examples": [
-                        "{\n  \"name\": \"my-nice-name\"\n}\n"
+                        "{\n  \"title\": \"My Package Title\"\n}\n"
                       ]
                     },
-                    "uri": {
-                      "title": "URI",
-                      "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+                    "path": {
+                      "title": "Path",
+                      "description": "A fully qualified URL, or a POSIX file path..",
                       "type": "string",
-                      "format": "uri",
                       "examples": [
-                        "{\n  \"uri\": \"file.csv\"\n}\n",
-                        "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                        "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                        "{\n  \"path\": \"file.csv\"\n}\n",
+                        "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                       ],
-                      "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                      "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
                     },
                     "email": {
                       "title": "Email",
@@ -3791,31 +3957,22 @@
                   "title": "License",
                   "description": "A license for this descriptor.",
                   "type": "object",
-                  "required": [
-                    "uri"
-                  ],
                   "properties": {
                     "name": {
-                      "title": "Name",
-                      "description": "An identifier string. Lower case characters with `.`, `_`, `-` and `/` are allowed.",
+                      "title": "Open Definition license identifier",
+                      "description": "MUST be an Open Definition license identifier, see http://licenses.opendefinition.org/",
                       "type": "string",
-                      "pattern": "^([-a-z0-9._/])+$",
-                      "context": "This is ideally a url-usable and human-readable name. Name `SHOULD` be invariant, meaning it `SHOULD NOT` change when its parent descriptor is updated.",
-                      "examples": [
-                        "{\n  \"name\": \"my-nice-name\"\n}\n"
-                      ]
+                      "pattern": "^([-a-zA-Z0-9._])+$"
                     },
-                    "uri": {
-                      "title": "URI",
-                      "description": "A URI (with some restrictions), being a fully qualified HTTP address, a relative POSIX path, or a JSON Pointer.",
+                    "path": {
+                      "title": "Path",
+                      "description": "A fully qualified URL, or a POSIX file path..",
                       "type": "string",
-                      "format": "uri",
                       "examples": [
-                        "{\n  \"uri\": \"file.csv\"\n}\n",
-                        "{\n  \"uri\": \"#/data/my-data\"\n}\n",
-                        "{\n  \"uri\": \"http://example.com/file.csv\"\n}\n"
+                        "{\n  \"path\": \"file.csv\"\n}\n",
+                        "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
                       ],
-                      "context": "Implementations need to negotiate the type of URI provided, and dereference the data accordingly. There are restrictions imposed on URIs that are POSIX paths: see [the notes on descriptors](#descriptor) for more information."
+                      "context": "Implementations need to negotiate the type of path provided, and dereference the data accordingly."
                     },
                     "title": {
                       "title": "Title",
