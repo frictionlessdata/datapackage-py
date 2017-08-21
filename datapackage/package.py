@@ -254,17 +254,17 @@ class Package(object):
                 raise exception
 
         # Update resource
-        self.__resources = self.__resources[:len(
-            self.__current_descriptor.get('resources', [])) - 1]
-        for index, descriptor in enumerate(self.__current_descriptor.get('resources', [])):
-            resource = None
-            if index in self.__resources:
-                resource = self.__resources[index]
+        descriptors = self.__current_descriptor.get('resources', [])
+        self.__resources = self.__resources[:len(descriptors)]
+        iterator = enumerate(six.moves.zip_longest(list(self.__resources), descriptors))
+        for index, (resource, descriptor) in iterator:
             if not resource or resource.descriptor != descriptor:
-                if not resource:
-                    self.__resources.append(None)
-                self.__resources[index] = Resource(
+                updated_resource = Resource(
                     descriptor, strict=self.__strict, base_path=self.__base_path)
+                if not resource:
+                    self.__resources.append(updated_resource)
+                else:
+                    self.__resources[index] = updated_resource
 
     def __extract_zip_if_possible(self, descriptor):
         result = descriptor
