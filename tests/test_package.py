@@ -308,9 +308,6 @@ def test_descriptor_apply_defaults_resource_tabular_dialect():
 
 # Resources
 
-def test_base_path_defaults_to_none():
-    assert Package().base_path is None
-
 
 def test_base_path_cant_be_set_directly():
     package = Package()
@@ -743,6 +740,11 @@ def test_zip_with_resources_outside_base_path_isnt_safe(tmpfile):
         z.writestr('datapackage.json', json.dumps(descriptor))
     with pytest.raises(exceptions.DataPackageException):
         Package(tmpfile.name, {})
+
+
+@pytest.mark.skip('deprecated')
+def test_base_path_defaults_to_none():
+    assert Package().base_path is None
 
 
 @pytest.mark.skip('deprecated')

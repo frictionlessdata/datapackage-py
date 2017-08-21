@@ -10,6 +10,8 @@ import requests
 from .exceptions import RegistryError
 
 
+# Module API
+
 class Registry(object):
     '''Allow loading Data Package profiles from a registry.
 

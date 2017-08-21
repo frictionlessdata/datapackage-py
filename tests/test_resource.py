@@ -261,7 +261,7 @@ def test_source_local_bad_no_base_path():
         'path': ['table.csv'],
     }
     with pytest.raises(exceptions.DataPackageException):
-        resource = Resource(descriptor)
+        resource = Resource(descriptor, base_path='')
 
 
 def test_source_local_bad_not_safe_absolute():
@@ -329,7 +329,7 @@ def test_source_multipart_local_bad_no_base_path():
         'path': ['chunk1.csv', 'chunk2.csv'],
     }
     with pytest.raises(exceptions.DataPackageException):
-        resource = Resource(descriptor)
+        resource = Resource(descriptor, base_path='')
 
 
 def test_source_multipart_local_bad_not_safe_absolute():

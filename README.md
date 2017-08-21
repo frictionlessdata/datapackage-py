@@ -62,10 +62,10 @@ paris,2017,2240000
 rome,2017,2860000
 ```
 
-First we create a blank data package. We need to provide a base path because we're going to work with local files:
+First we create a blank data package:
 
 ```python
-package = Package({}, base_path='.')
+package = Package()
 ```
 
 Now we're ready to infer a data package descriptor based on data files we have. Because we have two csv files we use glob pattern `**/*.csv`:
@@ -361,7 +361,7 @@ resource = Resource('dataresource.json')
 
 It was onle basic introduction to the `Resource` class. To learn more let's take a look on `Resource` class API reference.
 
-#### `Resource(descriptor, basePath=None, strict=False)`
+#### `Resource(descriptor, base_path=None, strict=False)`
 
 Constructor to instantiate `Resource` class.
 
@@ -562,7 +562,7 @@ Validate a data package descriptor.
 A standalone function to infer a data package descriptor.
 
 ```python
-descriptor = infer('**/*.csv', {basePath: '.'})
+descriptor = infer('**/*.csv')
 #{ profile: 'tabular-data-resource',
 #  resources:
 #   [ { path: 'data/cities.csv',
@@ -581,7 +581,7 @@ descriptor = infer('**/*.csv', {basePath: '.'})
 #       schema: [Object] } ] }
 ```
 
-#### `infer(pattern, basePath=None)`
+#### `infer(pattern, base_path=None)`
 
 Infer a data package descriptor.
 
@@ -609,7 +609,7 @@ All validation errors.
 
 ### CLI
 
-> It's a provisional API. If you use it as a part of other program please pin concrete `datapackage` version to your requirements file.
+> It's a provisional API. If you use it as a part of other program please pin concrete `goodtables` version to your requirements file.
 
 The library ships with a simple CLI:
 
