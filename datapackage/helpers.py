@@ -108,7 +108,7 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
                 response = requests.get(value)
                 response.raise_for_status()
                 descriptor[property] = response.json()
-            except Exception as exception:
+            except Exception:
                 raise exceptions.DataPackageException(
                     'Not resolved Remote URI "%s" '
                     'for resource.%s' % (value, property))
