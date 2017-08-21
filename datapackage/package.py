@@ -148,8 +148,8 @@ class Package(object):
         resource = self.get_resource(name)
         if resource:
             predicat = lambda resource: resource.get('name') != name
-            self.__next_descriptor['resources'] = filter(
-                predicat, self.__next_descriptor['resources'])
+            self.__next_descriptor['resources'] = list(filter(
+                predicat, self.__next_descriptor['resources']))
             self.commit()
         return resource
 

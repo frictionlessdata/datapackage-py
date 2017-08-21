@@ -306,8 +306,22 @@ def test_descriptor_apply_defaults_resource_tabular_dialect():
     }
 
 
-# Resources
+def test_package_add_resource():
+    package = Package({})
+    resource = package.add_resource({'name': 'name', 'data': []})
+    assert len(package.resources) == 1
+    assert package.resources[0].name == 'name'
+    assert resource.name == 'name'
 
+
+def test_package_remove_resource():
+    package = Package({'resources': [{'name': 'name', 'data': []}]})
+    resource = package.remove_resource('name')
+    assert len(package.resources) == 0
+    assert resource.name == 'name'
+
+
+# Resources
 
 def test_base_path_cant_be_set_directly():
     package = Package()

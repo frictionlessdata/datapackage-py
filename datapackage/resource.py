@@ -8,6 +8,7 @@ import os
 import six
 import json
 import warnings
+import cchardet
 from copy import deepcopy
 from tableschema import Table
 from six.moves.urllib.parse import urljoin
@@ -126,7 +127,7 @@ class Resource(object):
         """
         return self.__source_inspection.get('source')
 
-    def iter(self, filelike=False):
+    def iter(self, stream=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
@@ -135,14 +136,23 @@ class Resource(object):
             message = 'Methods iter/read are not supported for inline data'
             raise exceptions.DataPackageError(message)
 
-        # TODO: implement
-        raise NotImplementedError()
+        # Get filelike
+        if self.multipart:
+            filelike = _MultipartSource(self.source, remote=self.remote)
+        elif self.remote:
+            filelike = urlopen(self.source)
+        else:
+            filelike = io.open(self.source, 'rb')
+
+        return filelike
 
     def read(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        # TODO: implement
-        raise NotImplementedError()
+        contents = b''
+        for chunk in self.iter():
+            contents += chunk
+        return contents
 
     @property
     def table(self):
@@ -187,8 +197,12 @@ class Resource(object):
 
         # Encoding
         if descriptor.get('encoding') == config.DEFAULT_RESOURCE_ENCODING:
-            # TODO: implement
-            pass
+            contents = b''
+            for chunk in self.iter():
+                contents += chunk
+                if len(contents) > 1000: break
+            encoding = cchardet.detect(contents)['encoding'].lower()
+            descriptor['encoding'] = 'utf-8' if encoding == 'ascii' else encoding
 
         # Schema
         if not descriptor.get('schema'):

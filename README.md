@@ -417,12 +417,12 @@ Constructor to instantiate `Resource` class.
 
 Combination of `resource.source` and `resource.inline/local/remote/multipart` provides predictable interface to work with resource data.
 
-#### `resource.iter(filelike=False)`
+#### `resource.iter(stream=False)`
 
-Iterate over data chunks as bytes. If `filelike` is true File-like object will be returned.
+Iterate over data chunks as bytes. If `stream` is true File-like object will be returned.
 
-- `filelike (bool)` - File-like object will be returned
-- `(bytes[]/filelike)` - returns byte[]/filelike
+- `stream (bool)` - File-like object will be returned
+- `(bytes[]/filelike)` - returns bytes[]/filelike
 
 #### `resource.read()`
 
