@@ -164,7 +164,123 @@ With the contents of `datapackage.json` being the same as returned `datapackage.
 
 A class for working with data resources. You can read or iterate tabular resources using the `table` property.
 
-> TODO: insert tutorial here
+Consider we have some local csv file. It could be inline data or remote link - all supported by `Resource` class (except local files for in-brower usage of course). But say it's `data.csv` for now:
+
+```csv
+city,location
+london,"51.50,-0.11"
+paris,"48.85,2.30"
+rome,N/A
+```
+
+Let's create and read a resource. Because resource is tabular we could use `resource.table.read` method with a `keyed` option to get an array of keyed rows:
+
+```python
+resource = Resource({path: 'data.csv'})
+resource.tabular # true
+resource.table.headers # ['city', 'location']
+resource.table.read(keyed=True)
+# [
+#   {city: 'london', location: '51.50,-0.11'},
+#   {city: 'paris', location: '48.85,2.30'},
+#   {city: 'rome', location: 'N/A'},
+# ]
+```
+
+As we could see our locations are just a strings. But it should be geopoints. Also Rome's location is not available but it's also just a `N/A` string instead of Python `None`. First we have to infer resource metadata:
+
+```python
+resource.infer()
+resource.descriptor
+#{ path: 'data.csv',
+#  profile: 'tabular-data-resource',
+#  encoding: 'utf-8',
+#  name: 'data',
+#  format: 'csv',
+#  mediatype: 'text/csv',
+# schema: { fields: [ [Object], [Object] ], missingValues: [ '' ] } }
+resource.table.read(keyed=True)
+# Fails with a data validation error
+```
+
+Let's fix not available location. There is a `missingValues` property in Table Schema specification. As a first try we set `missingValues` to `N/A` in `resource.descriptor.schema`. Resource descriptor could be changed in-place but all changes should be commited by `resource.commit()`:
+
+```python
+resource.descriptor['schema']['missingValues'] = 'N/A'
+resource.commit()
+resource.valid # False
+resource.errors
+# [<ValidationError: "'N/A' is not of type 'array'">]
+```
+
+As a good citiziens we've decided to check out recource descriptor validity. And it's not valid! We should use an array for `missingValues` property. Also don't forget to have an empty string as a missing value:
+
+```python
+resource.descriptor['schema']['missingValues'] = ['', 'N/A']
+resource.commit()
+resource.valid # true
+```
+
+All good. It looks like we're ready to read our data again:
+
+```python
+resource.table.read(keyed=True)
+# [
+#   {city: 'london', location: [51.50,-0.11]},
+#   {city: 'paris', location: [48.85,2.30]},
+#   {city: 'rome', location: null},
+# ]
+```
+
+Now we see that:
+- locations are arrays with numeric lattide and longitude
+- Rome's location is a native JavaScript `null`
+
+And because there are no errors on data reading we could be sure that our data is valid againt our schema. Let's save our resource descriptor:
+
+```python
+resource.save('dataresource.json')
+```
+
+Let's check newly-crated `dataresource.json`. It contains path to our data file, inferred metadata and our `missingValues` tweak:
+
+```json
+{
+    "path": "data.csv",
+    "profile": "tabular-data-resource",
+    "encoding": "utf-8",
+    "name": "data",
+    "format": "csv",
+    "mediatype": "text/csv",
+    "schema": {
+        "fields": [
+            {
+                "name": "city",
+                "type": "string",
+                "format": "default"
+            },
+            {
+                "name": "location",
+                "type": "geopoint",
+                "format": "default"
+            }
+        ],
+        "missingValues": [
+            "",
+            "N/A"
+        ]
+    }
+}
+```
+
+If we decide to improve it even more we could update the `dataresource.json` file and then open it again using local file name:
+
+```python
+resource = Resource('dataresource.json')
+# Continue the work
+```
+
+It was onle basic introduction to the `Resource` class. To learn more let's take a look on `Resource` class API reference.
 
 #### `Resource(descriptor, basePath=None, strict=False)`
 
