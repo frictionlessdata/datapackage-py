@@ -127,7 +127,7 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
             try:
                 with io.open(fullpath, encoding='utf-8') as file:
                     descriptor[property] = json.load(file)
-            except Exception as exception:
+            except Exception:
                 raise exceptions.DataPackageException(
                     'Not resolved Local URI "%s" '
                     'for resource.%s' % (value, property))

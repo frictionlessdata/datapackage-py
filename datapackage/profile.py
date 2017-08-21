@@ -75,9 +75,7 @@ class Profile(object):
                         req = requests.get(schema)
                         req.raise_for_status()
                         the_schema = req.json()
-            except (IOError,
-                    ValueError,
-                    requests.exceptions.RequestException) as e:
+            except (IOError, ValueError, requests.exceptions.RequestException):
                 message = 'Unable to load profile at "{0}"'
                 raise exceptions.ValidationError(message)
         elif isinstance(the_schema, dict):
