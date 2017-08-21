@@ -298,7 +298,20 @@ Save resource to target destination.
 
 ### Profile
 
-A component to represent JSON Schema profile from [Profiles Registry]( https://specs.frictionlessdata.io/schemas/registry.json).
+A component to represent JSON Schema profile from [Profiles Registry]( https://specs.frictionlessdata.io/schemas/registry.json):
+
+```python
+profile = Profile('data-package')
+
+profile.name # data-package
+profile.jsonschema # JSON Schema contents
+
+try:
+   valid = profile.validate(descriptor)
+except exceptions.ValidationError as exception:
+   for error in exception.errors:
+       # handle individual error
+```
 
 #### `Profile(profile)`
 
