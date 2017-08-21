@@ -5,13 +5,13 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import six
 import sys
 import glob
 import json
 import mock
 import tempfile
 import zipfile
-import six
 import pytest
 import httpretty
 from datapackage import Package, helpers, exceptions
@@ -156,6 +156,7 @@ def test_descriptor_dereferencing_uri_pointer_bad():
         package = Package(descriptor)
 
 
+@pytest.mark.skipif(six.PY2, reason='httpretty problem with https in Python 2')
 @httpretty.activate
 def test_descriptor_dereferencing_uri_remote():
     # Mocks

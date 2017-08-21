@@ -11,7 +11,7 @@ from datapackage import infer
 # Tests
 
 def test_infer():
-    descriptor = infer('datapackage/**/*.csv', base_path='data')
+    descriptor = infer('datapackage/*.csv', base_path='data')
     assert descriptor == {
         'profile': 'tabular-data-package',
         'resources': [{'encoding': 'utf-8',

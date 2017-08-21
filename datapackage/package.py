@@ -166,7 +166,8 @@ class Package(object):
                 raise exceptions.DataPackageException(message)
 
             # Add resources
-            for path in glob.glob(os.path.join(self.__base_path, pattern), recursive=True):
+            options = {'recursive': True} if '**' in pattern else {}
+            for path in glob.glob(os.path.join(self.__base_path, pattern), **options):
                 self.add_resource({'path': os.path.relpath(path, self.__base_path)})
 
         # Resources
