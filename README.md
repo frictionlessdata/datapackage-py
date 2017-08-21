@@ -403,9 +403,34 @@ All validation errors.
 
 > It's a provisional API. If you use it as a part of other program please pin concrete `goodtables` version to your requirements file.
 
-The library ships with a simple CLI.
+The library ships with a simple CLI:
 
-> TODO: insert reference here
+```bash
+$ datapackage infer '**/*.csv'
+Data package descriptor:
+{'profile': 'tabular-data-package',
+ 'resources': [{'encoding': 'utf-8',
+                'format': 'csv',
+                'mediatype': 'text/csv',
+                'name': 'data',
+                'path': 'data/datapackage/data.csv',
+                'profile': 'tabular-data-resource',
+                'schema': ...}}]}
+```
+
+#### `$ datapackage`
+
+```bash
+Usage: cli.py [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  infer
+  validate
+```
 
 ## Contributing
 
