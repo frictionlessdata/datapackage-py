@@ -126,6 +126,24 @@ class Resource(object):
         """
         return self.__source_inspection.get('source')
 
+    def iter(self, filelike=False):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+
+        # Error for inline
+        if self.inline:
+            message = 'Methods iter/read are not supported for inline data'
+            raise exceptions.DataPackageError(message)
+
+        # TODO: implement
+        raise NotImplementedError()
+
+    def read(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        # TODO: implement
+        raise NotImplementedError()
+
     @property
     def table(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
@@ -145,24 +163,6 @@ class Resource(object):
             self.__table = Table(source, schema=schema, **options)
 
         return self.__table
-
-    def iter(self, filelike=False):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
-
-        # Error for inline
-        if self.inline:
-            message = 'Methods iter/read are not supported for inline data'
-            raise exceptions.DataPackageError(message)
-
-        # TODO: implement
-        pass
-
-    def read(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
-        # TODO: implement
-        pass
 
     def infer(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
