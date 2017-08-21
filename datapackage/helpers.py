@@ -97,7 +97,7 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
             try:
                 pointer = jsonpointer.JsonPointer(value[1:])
                 descriptor[property] = pointer.resolve(base_descriptor)
-            except Exception as exception:
+            except Exception:
                 raise exceptions.DataPackageException(
                     'Not resolved Pointer URI "%s" '
                     'for resource.%s' % (value, property))
