@@ -259,8 +259,8 @@ class Package(object):
         iterator = enumerate(six.moves.zip_longest(list(self.__resources), descriptors))
         for index, (resource, descriptor) in iterator:
             if not resource or resource.descriptor != descriptor:
-                updated_resource = Resource(
-                    descriptor, strict=self.__strict, base_path=self.__base_path)
+                updated_resource = Resource(descriptor,
+                    strict=self.__strict, base_path=self.__base_path, package=self)
                 if not resource:
                     self.__resources.append(updated_resource)
                 else:

@@ -10,10 +10,11 @@ import sys
 import glob
 import json
 import mock
-import tempfile
 import zipfile
 import pytest
+import tempfile
 import httpretty
+from copy import deepcopy
 from datapackage import Package, helpers, exceptions
 
 
@@ -889,6 +890,108 @@ def test_required_attributes_return_empty_tuple_if_nothings_required():
     schema = {}
     package = Package(schema=schema)
     assert package.required_attributes == ()
+
+
+# Foreign keys
+
+FK_DESCRIPTOR = {
+  'resources': [
+    {
+      'name': 'main',
+      'data': [
+        ['id', 'name', 'surname', 'parent_id'],
+        ['1', 'Alex', 'Martin', ''],
+        ['2', 'John', 'Dockins', '1'],
+        ['3', 'Walter', 'White', '2'],
+      ],
+      'schema': {
+        'fields': [
+          {'name': 'id'},
+          {'name': 'name'},
+          {'name': 'surname'},
+          {'name': 'parent_id'},
+        ],
+        'foreignKeys': [
+          {
+            'fields': 'name',
+            'reference': {'resource': 'people', 'fields': 'firstname'},
+          },
+        ],
+      },
+    }, {
+      'name': 'people',
+      'data': [
+        ['firstname', 'surname'],
+        ['Alex', 'Martin'],
+        ['John', 'Dockins'],
+        ['Walter', 'White'],
+      ],
+    },
+  ],
+}
+
+
+def test_single_field_foreign_key():
+    package = Package(FK_DESCRIPTOR)
+    table = package.get_resource('main').table
+    rows = table.read()
+    assert len(rows) == 3
+
+
+def test_single_field_foreign_key_invalid():
+    descriptor = deepcopy(FK_DESCRIPTOR)
+    descriptor['resources'][1]['data'][2][0] = 'Max'
+    package = Package(descriptor)
+    table = package.get_resource('main').table
+    with pytest.raises(exceptions.CheckError) as excinfo:
+        table.read()
+    assert 'Foreign key' in str(excinfo.value)
+
+
+def test_single_self_field_foreign_key():
+    descriptor = deepcopy(FK_DESCRIPTOR)
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['fields'] = 'parent_id'
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['resource'] = ''
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['fields'] = 'id'
+    package = Package(descriptor)
+    table = package.get_resource('main').table
+    rows = table.read()
+    assert len(rows) == 3
+
+
+def test_single_self_field_foreign_key_invalid():
+    descriptor = deepcopy(FK_DESCRIPTOR)
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['fields'] = 'parent_id'
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['resource'] = ''
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['fields'] = 'id'
+    descriptor['resources'][0]['data'][2][0] = '0'
+    package = Package(descriptor)
+    table = package.get_resource('main').table
+    with pytest.raises(exceptions.CheckError) as excinfo:
+        table.read()
+    assert 'Foreign key' in str(excinfo.value)
+
+
+def test_multi_field_foreign_key():
+    descriptor = deepcopy(FK_DESCRIPTOR)
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['fields'] = ['name', 'surname']
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['fields'] = ['firstname', 'surname']
+    package = Package(descriptor)
+    table = package.get_resource('main').table
+    rows = table.read()
+    assert len(rows) == 3
+
+
+def test_multi_field_foreign_key_invalid():
+    descriptor = deepcopy(FK_DESCRIPTOR)
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['fields'] = ['name', 'surname']
+    descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['fields'] = ['firstname', 'surname']
+    descriptor['resources'][1]['data'][2][0] = 'Max'
+    package = Package(descriptor)
+    table = package.get_resource('main').table
+    with pytest.raises(exceptions.CheckError) as excinfo:
+        table.read()
+    assert 'Foreign key' in str(excinfo.value)
 
 
 # Fixtures
