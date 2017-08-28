@@ -310,18 +310,6 @@ class Package(object):
             msg = 'DataPackage must have only one "datapackage.json" (had {n})'
             raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
 
-    def __update_resources(self, current_resources, descriptor, base_path):
-        resources_dicts = descriptor.get('resources')
-        new_resources = []
-        if resources_dicts is not None:
-            for resource_dict in resources_dicts:
-                resource = [res for res in current_resources
-                            if res.descriptor == resource_dict]
-                if not resource:
-                    resource = [Resource(resource_dict, base_path)]
-                new_resources.append(resource[0])
-        return tuple(new_resources)
-
     def __del__(self):
         if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):
             shutil.rmtree(self.__tempdir, ignore_errors=True)
