@@ -4,8 +4,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from .profile import Profile
-from . import helpers
+from .package import Package
 
 
 # Module API
@@ -14,13 +13,5 @@ from . import helpers
 def validate(descriptor):
     """https://github.com/frictionlessdata/datapackage-py#validate
     """
-
-    # Process descriptor
-    descriptor = helpers.retrieve_descriptor(descriptor)
-    descriptor = helpers.expand_package_descriptor(descriptor)
-
-    # Get descriptor profile
-    profile = Profile(descriptor.get('profile'))
-
-    # Validate descriptor
-    return profile.validate(descriptor)
+    Package(descriptor, strict=True)
+    return True
