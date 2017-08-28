@@ -3,28 +3,18 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import tableschema
+
 
 # Module API
 
-class DataPackageException(Exception):
-
-    # Public
-
-    def __init__(self, message, errors=[]):
-        self.__errors = errors
-        super(Exception, self).__init__(message)
-
-    @property
-    def multiple(self):
-        return bool(self.__errors)
-
-    @property
-    def errors(self):
-        return self.__errors
-
-
-class ValidationError(DataPackageException):
-    pass
+DataPackageException = tableschema.exceptions.DataPackageException
+TableSchemaException = tableschema.exceptions.TableSchemaException
+LoadError = tableschema.exceptions.LoadError
+ValidationError = tableschema.exceptions.ValidationError
+CastError = tableschema.exceptions.CastError
+CheckError = tableschema.exceptions.CheckError
+StorageError = tableschema.exceptions.StorageError
 
 
 # Deprecated
