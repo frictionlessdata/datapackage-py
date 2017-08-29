@@ -417,6 +417,29 @@ Constructor to instantiate `Resource` class.
 
 Combination of `resource.source` and `resource.inline/local/remote/multipart` provides predictable interface to work with resource data.
 
+#### `resource.table`
+
+> Only for tabular resources
+
+For tabular resources it returns `Table` instance to interact with data table. Read API documentation - [tableschema.Table](https://github.com/frictionlessdata/tableschema-py#table).
+
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(None/tableschema.Table)` - returns table instance if resource is tabular
+
+#### `resource.table.headers`
+
+> Only for tabular resources
+
+- `(str[])` - returns data source headers
+
+#### `resource.table.schema`
+
+> Only for tabular resources
+
+For tabular resources it returns `Schema` instance to interact with data schema. Read API documentation - [tableschema.Schema](https://github.com/frictionlessdata/tableschema-py#schema).
+
+- `(tableschema.Schema)` - returns schema class instance
+
 #### `resource.iter(stream=False)`
 
 Iterate over data chunks as bytes. If `stream` is true File-like object will be returned.
@@ -429,15 +452,6 @@ Iterate over data chunks as bytes. If `stream` is true File-like object will be 
 Returns resource data as bytes.
 
 - (bytes) - returns resource data in bytes
-
-#### `resource.table`
-
-> Only for tabular resources
-
-For tabular resources it returns `Table` instance to interact with data table. Read API documentation - [tableschema.Table](https://github.com/frictionlessdata/tableschema-py#table).
-
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(None/tableschema.Table)` - returns table instance if resource is tabular
 
 #### `resource.table.iter(keyed=Fase, extended=False, cast=True)`
 

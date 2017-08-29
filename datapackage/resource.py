@@ -128,6 +128,27 @@ class Resource(object):
         """
         return self.__source_inspection.get('source')
 
+    @property
+    def table(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        if not self.__table:
+
+            # Resource -> Regular
+            if not self.tabular:
+                return None
+
+            # Resource -> Tabular
+            source = self.source
+            if self.multipart:
+                source = _MultipartSource(self.source, remote=self.remote)
+            schema = self.descriptor.get('schema')
+            options = _get_table_options(self.descriptor)
+            references = self.__get_references if schema else {}
+            self.__table = Table(source, schema=schema, references=references, **options)
+
+        return self.__table
+
     def iter(self, stream=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
@@ -154,27 +175,6 @@ class Resource(object):
         for chunk in self.iter():
             contents += chunk
         return contents
-
-    @property
-    def table(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
-        if not self.__table:
-
-            # Resource -> Regular
-            if not self.tabular:
-                return None
-
-            # Resource -> Tabular
-            source = self.source
-            if self.multipart:
-                source = _MultipartSource(self.source, remote=self.remote)
-            schema = self.descriptor.get('schema')
-            options = _get_table_options(self.descriptor)
-            references = self.__get_references if schema else {}
-            self.__table = Table(source, schema=schema, references=references, **options)
-
-        return self.__table
 
     def infer(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
