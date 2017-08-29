@@ -25,7 +25,7 @@ class Resource(object):
 
     # Public
 
-    def __init__(self, descriptor, base_path=None, strict=False):
+    def __init__(self, descriptor, base_path=None, strict=False, package=None):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
@@ -50,6 +50,7 @@ class Resource(object):
         self.__current_descriptor = deepcopy(descriptor)
         self.__next_descriptor = deepcopy(descriptor)
         self.__base_path = base_path
+        self.__package = package
         self.__strict = strict
         self.__table = None
         self.__errors = []
@@ -170,7 +171,8 @@ class Resource(object):
                 source = _MultipartSource(self.source, remote=self.remote)
             schema = self.descriptor.get('schema')
             options = _get_table_options(self.descriptor)
-            self.__table = Table(source, schema=schema, **options)
+            references = self.__get_references if schema else {}
+            self.__table = Table(source, schema=schema, references=references, **options)
 
         return self.__table
 
@@ -272,6 +274,30 @@ class Resource(object):
 
         # Clear table
         self.__table = None
+
+    def __get_references(self):
+        references = {}
+
+        # Prepare resources
+        resources = {}
+        if self.table and self.table.schema:
+            for fk in self.table.schema.foreign_keys:
+                resources.setdefault(fk['reference']['resource'], [])
+                for field in fk['reference']['fields']:
+                    resources[fk['reference']['resource']].append(field)
+
+        # Fill references
+        for resource, fields in resources.items():
+            if resource and not self.__package:
+                continue
+            references.setdefault(resource, [])
+            table = self.__package.get_resource(resource).table if resource else self.table
+            if table:
+                rows = table.read(keyed=True, check=False)
+                for row in rows:
+                    references[resource].append({field: row[field] for field in fields})
+
+        return references
 
 
 # Internal

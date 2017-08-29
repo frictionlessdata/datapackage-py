@@ -259,8 +259,8 @@ class Package(object):
         iterator = enumerate(six.moves.zip_longest(list(self.__resources), descriptors))
         for index, (resource, descriptor) in iterator:
             if not resource or resource.descriptor != descriptor:
-                updated_resource = Resource(
-                    descriptor, strict=self.__strict, base_path=self.__base_path)
+                updated_resource = Resource(descriptor,
+                    strict=self.__strict, base_path=self.__base_path, package=self)
                 if not resource:
                     self.__resources.append(updated_resource)
                 else:
@@ -309,18 +309,6 @@ class Package(object):
         if len(datapackage_jsons) != 1:
             msg = 'DataPackage must have only one "datapackage.json" (had {n})'
             raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
-
-    def __update_resources(self, current_resources, descriptor, base_path):
-        resources_dicts = descriptor.get('resources')
-        new_resources = []
-        if resources_dicts is not None:
-            for resource_dict in resources_dicts:
-                resource = [res for res in current_resources
-                            if res.descriptor == resource_dict]
-                if not resource:
-                    resource = [Resource(resource_dict, base_path)]
-                new_resources.append(resource[0])
-        return tuple(new_resources)
 
     def __del__(self):
         if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):

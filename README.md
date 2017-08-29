@@ -448,7 +448,7 @@ Iter through the table data and emits rows cast based on table schema (async for
 - `keyed (bool)` - iter keyed rows
 - `extended (bool)` - iter extended rows
 - `cast (bool)` - disable data casting if false
-- `(exceptions.TableSchemaException)` - raises any error occured in this process
+- `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(any[]/any{})` - yields rows:
   - `[value1, value2]` - base
   - `{header1: value1, header2: value2}` - keyed
@@ -464,7 +464,7 @@ Read the whole table and returns as array of rows. Count of rows could be limite
 - `extended (bool)` - flag to emit extended rows
 - `cast (bool)` - flag to disable data casting if false
 - `limit (int)` - integer limit of rows to return
-- `(exceptions.TableSchemaException)` - raises any error occured in this process
+- `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(list[])` - returns array of rows (see `table.iter`)
 
 #### `resource.infer()`
@@ -603,9 +603,25 @@ except exceptions.DataPackageException as exception:
             # handle error
 ```
 
+#### `exceptions.LoadError`
+
+All loading errors.
+
 #### `exceptions.ValidationError`
 
 All validation errors.
+
+#### `exceptions.CastError`
+
+All value cast errors.
+
+#### `exceptions.CheckError`
+
+All check errors like headers mismath check etc.
+
+#### `exceptions.StorageError`
+
+All storage errors.
 
 ### CLI
 
