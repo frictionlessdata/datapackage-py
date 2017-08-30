@@ -258,7 +258,8 @@ class Package(object):
         self.__resources = self.__resources[:len(descriptors)]
         iterator = enumerate(six.moves.zip_longest(list(self.__resources), descriptors))
         for index, (resource, descriptor) in iterator:
-            if not resource or resource.descriptor != descriptor:
+            if (not resource or resource.descriptor != descriptor or
+                    (resource.schema and resource.schema.foreign_keys)):
                 updated_resource = Resource(descriptor,
                     strict=self.__strict, base_path=self.__base_path, package=self)
                 if not resource:

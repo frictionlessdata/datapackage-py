@@ -431,7 +431,7 @@ For tabular resources it returns `Schema` instance to interact with data schema.
 
 - `(tableschema.Schema)` - returns schema class instance
 
-#### `resource.iter(keyed=Fase, extended=False, cast=True)`
+#### `resource.iter(keyed=Fase, extended=False, cast=True, relations=False)`
 
 > Only for tabular resources
 
@@ -440,13 +440,14 @@ Iter through the table data and emits rows cast based on table schema (async for
 - `keyed (bool)` - iter keyed rows
 - `extended (bool)` - iter extended rows
 - `cast (bool)` - disable data casting if false
+- `relations (bool)` - if true foreign key fields will be checked and resolved to its references
 - `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(any[]/any{})` - yields rows:
   - `[value1, value2]` - base
   - `{header1: value1, header2: value2}` - keyed
   - `[rowNumber, [header1, header2], [value1, value2]]` - extended
 
-#### `resource.read(keyed=False, extended=False, cast=True, limit=None)`
+#### `resource.read(keyed=False, extended=False, cast=True, relations=False, limit=None)`
 
 > Only for tabular resources
 
@@ -455,6 +456,7 @@ Read the whole table and returns as array of rows. Count of rows could be limite
 - `keyed (bool)` - flag to emit keyed rows
 - `extended (bool)` - flag to emit extended rows
 - `cast (bool)` - flag to disable data casting if false
+- `relations (bool)` - if true foreign key fields will be checked and resolved to its references
 - `limit (int)` - integer limit of rows to return
 - `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(list[])` - returns array of rows (see `table.iter`)
