@@ -129,33 +129,50 @@ class Resource(object):
         return self.__source_inspection.get('source')
 
     @property
-    def table(self):
+    def headers(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        if not self.__table:
+        if not self.tabular:
+            return None
+        return self.__get_table().headers
 
-            # Resource -> Regular
-            if not self.tabular:
-                return None
+    @property
+    def schema(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        if not self.tabular:
+            return None
+        return self.__get_table().schema
 
-            # Resource -> Tabular
-            source = self.source
-            if self.multipart:
-                source = _MultipartSource(self.source, remote=self.remote)
-            schema = self.descriptor.get('schema')
-            options = _get_table_options(self.descriptor)
-            references = self.__get_references if schema else {}
-            self.__table = Table(source, schema=schema, references=references, **options)
+    def iter(self, *args, **kwargs):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
 
-        return self.__table
+        # Error for non tabular
+        if not self.tabular:
+            message = 'Methods iter/read are not supported for non tabular data'
+            raise exceptions.DataPackageError(message)
 
-    def iter(self, stream=False):
+        return self.__get_table().iter(*args, **kwargs)
+
+    def read(self, *args, **kwargs):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+
+        # Error for non tabular
+        if not self.tabular:
+            message = 'Methods iter/read are not supported for non tabular data'
+            raise exceptions.DataPackageError(message)
+
+        return self.__get_table().read(*args, **kwargs)
+
+    def raw_iter(self, stream=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
         # Error for inline
         if self.inline:
-            message = 'Methods iter/read are not supported for inline data'
+            message = 'Methods raw_iter/raw_read are not supported for inline data'
             raise exceptions.DataPackageError(message)
 
         # Get filelike
@@ -168,7 +185,7 @@ class Resource(object):
 
         return filelike
 
-    def read(self):
+    def raw_read(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
         contents = b''
@@ -200,7 +217,7 @@ class Resource(object):
         # Encoding
         if descriptor.get('encoding') == config.DEFAULT_RESOURCE_ENCODING:
             contents = b''
-            for chunk in self.iter():
+            for chunk in self.raw_iter():
                 contents += chunk
                 if len(contents) > 1000: break
             encoding = cchardet.detect(contents)['encoding'].lower()
@@ -209,7 +226,7 @@ class Resource(object):
         # Schema
         if not descriptor.get('schema'):
             if self.tabular:
-                descriptor['schema'] = self.table.infer()
+                descriptor['schema'] = self.__get_table().infer()
 
         # Profile
         if descriptor.get('profile') == config.DEFAULT_RESOURCE_PROFILE:
@@ -275,13 +292,31 @@ class Resource(object):
         # Clear table
         self.__table = None
 
+    def __get_table(self):
+        if not self.__table:
+
+            # Resource -> Regular
+            if not self.tabular:
+                return None
+
+            # Resource -> Tabular
+            source = self.source
+            if self.multipart:
+                source = _MultipartSource(self.source, remote=self.remote)
+            schema = self.descriptor.get('schema')
+            options = _get_table_options(self.descriptor)
+            references = self.__get_references if schema else {}
+            self.__table = Table(source, schema=schema, references=references, **options)
+
+        return self.__table
+
     def __get_references(self):
         references = {}
 
         # Prepare resources
         resources = {}
-        if self.table and self.table.schema:
-            for fk in self.table.schema.foreign_keys:
+        if self.__get_table() and self.__get_table().schema:
+            for fk in self.__get_table().schema.foreign_keys:
                 resources.setdefault(fk['reference']['resource'], [])
                 for field in fk['reference']['fields']:
                     resources[fk['reference']['resource']].append(field)
@@ -291,13 +326,19 @@ class Resource(object):
             if resource and not self.__package:
                 continue
             references.setdefault(resource, [])
-            table = self.__package.get_resource(resource).table if resource else self.table
-            if table:
-                rows = table.read(keyed=True, check=False)
+            data = self.__package.get_resource(resource) if resource else self
+            if data.tabular:
+                rows = data.read(keyed=True, check=False)
                 for row in rows:
                     references[resource].append({field: row[field] for field in fields})
 
         return references
+
+    # Deprecated
+
+    @property
+    def table(self):
+        return self.__get_table()
 
 
 # Internal

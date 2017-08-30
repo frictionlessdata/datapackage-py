@@ -33,7 +33,7 @@ Code examples in this readme requires Python 3.3+ interpreter. You could see eve
 from datapackage import Package
 
 package = Package('descriptor.json')
-package.getResource('resource').table.read()
+package.getResource('resource').read()
 ```
 
 ## Documentation
@@ -102,7 +102,7 @@ package.valid # true
 Because our resources are tabular we could read it as a tabular data:
 
 ```python
-package.get_resource('population').table.read(keyed=True)
+package.get_resource('population').read(keyed=True)
 #[ { city: 'london', year: 2017, population: 8780000 },
 #  { city: 'paris', year: 2017, population: 2240000 },
 #  { city: 'rome', year: 2017, population: 2860000 } ]
@@ -241,7 +241,7 @@ With the contents of `datapackage.json` being the same as returned `datapackage.
 
 ### Resource
 
-A class for working with data resources. You can read or iterate tabular resources using the `table` property.
+A class for working with data resources. You can read or iterate tabular resources using the `iter/read` methods and all resource as bytes using `row_iter/row_read` methods.
 
 Consider we have some local csv file. It could be inline data or remote link - all supported by `Resource` class (except local files for in-brower usage of course). But say it's `data.csv` for now:
 
@@ -252,13 +252,13 @@ paris,"48.85,2.30"
 rome,N/A
 ```
 
-Let's create and read a resource. Because resource is tabular we could use `resource.table.read` method with a `keyed` option to get an array of keyed rows:
+Let's create and read a resource. Because resource is tabular we could use `resource.read` method with a `keyed` option to get an array of keyed rows:
 
 ```python
 resource = Resource({path: 'data.csv'})
 resource.tabular # true
-resource.table.headers # ['city', 'location']
-resource.table.read(keyed=True)
+resource.headers # ['city', 'location']
+resource.read(keyed=True)
 # [
 #   {city: 'london', location: '51.50,-0.11'},
 #   {city: 'paris', location: '48.85,2.30'},
@@ -278,7 +278,7 @@ resource.descriptor
 #  format: 'csv',
 #  mediatype: 'text/csv',
 # schema: { fields: [ [Object], [Object] ], missingValues: [ '' ] } }
-resource.table.read(keyed=True)
+resource.read(keyed=True)
 # Fails with a data validation error
 ```
 
@@ -303,7 +303,7 @@ resource.valid # true
 All good. It looks like we're ready to read our data again:
 
 ```python
-resource.table.read(keyed=True)
+resource.read(keyed=True)
 # [
 #   {city: 'london', location: [51.50,-0.11]},
 #   {city: 'paris', location: [48.85,2.30]},
@@ -417,22 +417,13 @@ Constructor to instantiate `Resource` class.
 
 Combination of `resource.source` and `resource.inline/local/remote/multipart` provides predictable interface to work with resource data.
 
-#### `resource.table`
-
-> Only for tabular resources
-
-For tabular resources it returns `Table` instance to interact with data table. Read API documentation - [tableschema.Table](https://github.com/frictionlessdata/tableschema-py#table).
-
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(None/tableschema.Table)` - returns table instance if resource is tabular
-
-#### `resource.table.headers`
+#### `resource.headers`
 
 > Only for tabular resources
 
 - `(str[])` - returns data source headers
 
-#### `resource.table.schema`
+#### `resource.schema`
 
 > Only for tabular resources
 
@@ -440,20 +431,7 @@ For tabular resources it returns `Schema` instance to interact with data schema.
 
 - `(tableschema.Schema)` - returns schema class instance
 
-#### `resource.iter(stream=False)`
-
-Iterate over data chunks as bytes. If `stream` is true File-like object will be returned.
-
-- `stream (bool)` - File-like object will be returned
-- `(bytes[]/filelike)` - returns bytes[]/filelike
-
-#### `resource.read()`
-
-Returns resource data as bytes.
-
-- (bytes) - returns resource data in bytes
-
-#### `resource.table.iter(keyed=Fase, extended=False, cast=True)`
+#### `resource.iter(keyed=Fase, extended=False, cast=True)`
 
 > Only for tabular resources
 
@@ -468,7 +446,7 @@ Iter through the table data and emits rows cast based on table schema (async for
   - `{header1: value1, header2: value2}` - keyed
   - `[rowNumber, [header1, header2], [value1, value2]]` - extended
 
-#### `resource.table.read(keyed=False, extended=False, cast=True, limit=None)`
+#### `resource.read(keyed=False, extended=False, cast=True, limit=None)`
 
 > Only for tabular resources
 
@@ -480,6 +458,19 @@ Read the whole table and returns as array of rows. Count of rows could be limite
 - `limit (int)` - integer limit of rows to return
 - `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(list[])` - returns array of rows (see `table.iter`)
+
+#### `resource.raw_iter(stream=False)`
+
+Iterate over data chunks as bytes. If `stream` is true File-like object will be returned.
+
+- `stream (bool)` - File-like object will be returned
+- `(bytes[]/filelike)` - returns bytes[]/filelike
+
+#### `resource.raw_read()`
+
+Returns resource data as bytes.
+
+- (bytes) - returns resource data in bytes
 
 #### `resource.infer()`
 
