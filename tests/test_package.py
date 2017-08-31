@@ -932,20 +932,25 @@ FK_DESCRIPTOR = {
 
 
 def test_single_field_foreign_key():
-    package = Package(FK_DESCRIPTOR)
-    table = package.get_resource('main').table
-    rows = table.read()
-    assert len(rows) == 3
+    resource = Package(FK_DESCRIPTOR).get_resource('main')
+    rows = resource.read(relations=True)
+    assert rows == [
+      ['1', {'firstname': 'Alex', 'surname': 'Martin'}, 'Martin', None],
+      ['2', {'firstname': 'John', 'surname': 'Dockins'}, 'Dockins', '1'],
+      ['3', {'firstname': 'Walter', 'surname': 'White'}, 'White', '2'],
+    ]
 
 
 def test_single_field_foreign_key_invalid():
     descriptor = deepcopy(FK_DESCRIPTOR)
     descriptor['resources'][1]['data'][2][0] = 'Max'
-    package = Package(descriptor)
-    table = package.get_resource('main').table
-    with pytest.raises(exceptions.CheckError) as excinfo:
-        table.read()
-    assert 'Foreign key' in str(excinfo.value)
+    resource = Package(descriptor).get_resource('main')
+    with pytest.raises(exceptions.RelationError) as excinfo1:
+        resource.read(relations=True)
+    with pytest.raises(exceptions.RelationError) as excinfo2:
+        resource.check_relations()
+    assert 'Foreign key' in str(excinfo1.value)
+    assert 'Foreign key' in str(excinfo2.value)
 
 
 def test_single_self_field_foreign_key():
@@ -953,10 +958,28 @@ def test_single_self_field_foreign_key():
     descriptor['resources'][0]['schema']['foreignKeys'][0]['fields'] = 'parent_id'
     descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['resource'] = ''
     descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['fields'] = 'id'
-    package = Package(descriptor)
-    table = package.get_resource('main').table
-    rows = table.read()
-    assert len(rows) == 3
+    resource = Package(descriptor).get_resource('main')
+    keyed_rows = resource.read(keyed=True, relations=True)
+    assert keyed_rows == [
+      {
+          'id': '1',
+          'name': 'Alex',
+          'surname': 'Martin',
+          'parent_id': None,
+      },
+      {
+          'id': '2',
+          'name': 'John',
+          'surname': 'Dockins',
+          'parent_id': {'id': '1', 'name': 'Alex', 'surname': 'Martin', 'parent_id': None},
+      },
+      {
+          'id': '3',
+          'name': 'Walter',
+          'surname': 'White',
+          'parent_id': {'id': '2', 'name': 'John', 'surname': 'Dockins', 'parent_id': '1'},
+      },
+    ]
 
 
 def test_single_self_field_foreign_key_invalid():
@@ -965,21 +988,41 @@ def test_single_self_field_foreign_key_invalid():
     descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['resource'] = ''
     descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['fields'] = 'id'
     descriptor['resources'][0]['data'][2][0] = '0'
-    package = Package(descriptor)
-    table = package.get_resource('main').table
-    with pytest.raises(exceptions.CheckError) as excinfo:
-        table.read()
-    assert 'Foreign key' in str(excinfo.value)
+    resource = Package(descriptor).get_resource('main')
+    with pytest.raises(exceptions.RelationError) as excinfo1:
+        resource.read(relations=True)
+    with pytest.raises(exceptions.RelationError) as excinfo2:
+        resource.check_relations()
+    assert 'Foreign key' in str(excinfo1.value)
+    assert 'Foreign key' in str(excinfo2.value)
 
 
 def test_multi_field_foreign_key():
     descriptor = deepcopy(FK_DESCRIPTOR)
     descriptor['resources'][0]['schema']['foreignKeys'][0]['fields'] = ['name', 'surname']
     descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['fields'] = ['firstname', 'surname']
-    package = Package(descriptor)
-    table = package.get_resource('main').table
-    rows = table.read()
-    assert len(rows) == 3
+    resource = Package(descriptor).get_resource('main')
+    keyed_rows = resource.read(keyed=True, relations=True)
+    assert keyed_rows == [
+      {
+          'id': '1',
+          'name': {'firstname': 'Alex', 'surname': 'Martin'},
+          'surname': {'firstname': 'Alex', 'surname': 'Martin'},
+          'parent_id': None,
+      },
+      {
+          'id': '2',
+          'name': {'firstname': 'John', 'surname': 'Dockins'},
+          'surname': {'firstname': 'John', 'surname': 'Dockins'},
+          'parent_id': '1',
+      },
+      {
+          'id': '3',
+          'name': {'firstname': 'Walter', 'surname': 'White'},
+          'surname': {'firstname': 'Walter', 'surname': 'White'},
+          'parent_id': '2',
+      },
+    ]
 
 
 def test_multi_field_foreign_key_invalid():
@@ -987,11 +1030,13 @@ def test_multi_field_foreign_key_invalid():
     descriptor['resources'][0]['schema']['foreignKeys'][0]['fields'] = ['name', 'surname']
     descriptor['resources'][0]['schema']['foreignKeys'][0]['reference']['fields'] = ['firstname', 'surname']
     descriptor['resources'][1]['data'][2][0] = 'Max'
-    package = Package(descriptor)
-    table = package.get_resource('main').table
-    with pytest.raises(exceptions.CheckError) as excinfo:
-        table.read()
-    assert 'Foreign key' in str(excinfo.value)
+    resource = Package(descriptor).get_resource('main')
+    with pytest.raises(exceptions.RelationError) as excinfo1:
+        resource.read(relations=True)
+    with pytest.raises(exceptions.RelationError) as excinfo2:
+        resource.check_relations()
+    assert 'Foreign key' in str(excinfo1.value)
+    assert 'Foreign key' in str(excinfo2.value)
 
 
 # Fixtures

@@ -23,6 +23,9 @@
   ],
   "properties": {
     "profile": {
+      "enum": [
+        "tabular-data-resource"
+      ],
       "propertyOrder": 10,
       "title": "Profile",
       "description": "The profile of this descriptor.",

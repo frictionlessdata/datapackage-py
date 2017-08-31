@@ -17,6 +17,8 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
  - `validate` function for validating data package descriptors
  - `infer` function for inferring data package descriptors
 
+## Getting Started
+
 ### Installation
 
 The package use semantic versioning. It means that major versions  could include breaking changes. It's highly recommended to specify `datapackage` version range in your `setup/requirements` file e.g. `datapackage>=1.0,<2.0`.
@@ -431,7 +433,7 @@ For tabular resources it returns `Schema` instance to interact with data schema.
 
 - `(tableschema.Schema)` - returns schema class instance
 
-#### `resource.iter(keyed=Fase, extended=False, cast=True)`
+#### `resource.iter(keyed=Fase, extended=False, cast=True, relations=False)`
 
 > Only for tabular resources
 
@@ -440,13 +442,14 @@ Iter through the table data and emits rows cast based on table schema (async for
 - `keyed (bool)` - iter keyed rows
 - `extended (bool)` - iter extended rows
 - `cast (bool)` - disable data casting if false
+- `relations (bool)` - if true foreign key fields will be checked and resolved to its references
 - `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(any[]/any{})` - yields rows:
   - `[value1, value2]` - base
   - `{header1: value1, header2: value2}` - keyed
   - `[rowNumber, [header1, header2], [value1, value2]]` - extended
 
-#### `resource.read(keyed=False, extended=False, cast=True, limit=None)`
+#### `resource.read(keyed=False, extended=False, cast=True, relations=False, limit=None)`
 
 > Only for tabular resources
 
@@ -455,9 +458,19 @@ Read the whole table and returns as array of rows. Count of rows could be limite
 - `keyed (bool)` - flag to emit keyed rows
 - `extended (bool)` - flag to emit extended rows
 - `cast (bool)` - flag to disable data casting if false
+- `relations (bool)` - if true foreign key fields will be checked and resolved to its references
 - `limit (int)` - integer limit of rows to return
 - `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(list[])` - returns array of rows (see `table.iter`)
+
+#### `resource.check_relations()`
+
+> Only for tabular resources
+
+It checks foreign keys and raises an exception if there are integrity issues.
+
+- `(exceptions.RelationError)` - raises if there are integrity issues
+- `(bool)` - returns True if no issues
 
 #### `resource.raw_iter(stream=False)`
 
@@ -593,6 +606,81 @@ Infer a data package descriptor.
 - `pattern (str)` - glob file pattern
 - `(dict)` - returns data package descriptor
 
+
+### Foreign Keys
+
+The library supports foreign keys described in the [Table Schema](http://specs.frictionlessdata.io/table-schema/#foreign-keys) specification. It means if your data package descriptor use `resources[].schema.foreignKeys` property for some resources a data integrity will be checked on reading operations.
+
+Consider we have a data package:
+
+```python
+DESCRIPTOR = {
+  'resources': [
+    {
+      'name': 'teams',
+      'data': [
+        ['id', 'name', 'city'],
+        ['1', 'Arsenal', 'London'],
+        ['2', 'Real', 'Madrid'],
+        ['3', 'Bayern', 'Munich'],
+      ],
+      'schema': {
+        'fields': [
+          {'name': 'id', 'type': 'integer'},
+          {'name': 'name', 'type': 'string'},
+          {'name': 'city', 'type': 'string'},
+        ],
+        'foreignKeys': [
+          {
+            'fields': 'city',
+            'reference': {'resource': 'cities', 'fields': 'name'},
+          },
+        ],
+      },
+    }, {
+      'name': 'cities',
+      'data': [
+        ['name', 'country'],
+        ['London', 'England'],
+        ['Madrid', 'Spain'],
+      ],
+    },
+  ],
+}
+```
+
+Let's check relations for a `teams` resource:
+
+```python
+from datapackage import Package
+
+package = Package(DESCRIPTOR)
+teams = package.get_resource('teams')
+teams.check_relations()
+# tableschema.exceptions.RelationError: Foreign key "['city']" violation in row "4"
+```
+
+As we could see there is a foreign key violation. That's because our lookup table `cities` doesn't have a city of `Munich` but we have a team from there. We need to fix it in `cities` resource:
+
+```python
+package.descriptor['resources'][1]['data'].append(['Munich', 'Germany'])
+package.commit()
+teams = package.get_resource('teams')
+teams.check_relations()
+# True
+```
+
+Fixed! But not only a check operation is available. We could use `relations` argument for `resource.iter/read` methods to dereference a resource relations:
+
+```python
+teams.read(keyed=True, relations=True)
+#[{'id': 1, 'name': 'Arsenal', 'city': {'name': 'London', 'country': 'England}},
+# {'id': 2, 'name': 'Real', 'city': {'name': 'Madrid', 'country': 'Spain}},
+# {'id': 3, 'name': 'Bayern', 'city': {'name': 'Munich', 'country': 'Germany}}]
+```
+
+Instead of plain city name we've got a dictionary containing a city data. These `resource.iter/read` methods will fail with the same as `resource.check_relations` error if there is an integrity issue. But only if `relations=True` flag is passed.
+
 ### Exceptions
 
 #### `exceptions.DataPackageException`
@@ -620,9 +708,9 @@ All validation errors.
 
 All value cast errors.
 
-#### `exceptions.CheckError`
+#### `exceptions.RelationError`
 
-All check errors like headers mismath check etc.
+All integrity errors.
 
 #### `exceptions.StorageError`
 

@@ -28,7 +28,7 @@ INSTALL_REQUIRES = [
     'jsonschema>=2.5,<3.0',
     'unicodecsv>=0.14,<2.0',
     'jsonpointer>=1.10,<2.0',
-    'tableschema>=1.0.0a13,<2.0',
+    'tableschema>=1.0.0a14,<2.0',
     'tabulator>=1.3,<2.0',
     # TODO: remove after this issue will be resolved
     # https://github.com/frictionlessdata/implementations/issues/11

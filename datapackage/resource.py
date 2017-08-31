@@ -51,6 +51,7 @@ class Resource(object):
         self.__next_descriptor = deepcopy(descriptor)
         self.__base_path = base_path
         self.__package = package
+        self.__relations = None
         self.__strict = strict
         self.__table = None
         self.__errors = []
@@ -144,7 +145,7 @@ class Resource(object):
             return None
         return self.__get_table().schema
 
-    def iter(self, *args, **kwargs):
+    def iter(self, relations=False, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
@@ -153,9 +154,13 @@ class Resource(object):
             message = 'Methods iter/read are not supported for non tabular data'
             raise exceptions.DataPackageError(message)
 
-        return self.__get_table().iter(*args, **kwargs)
+        # Get relations
+        if relations:
+            relations = self.__get_relations()
 
-    def read(self, *args, **kwargs):
+        return self.__get_table().iter(relations=relations, **options)
+
+    def read(self, relations=False, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
@@ -164,7 +169,17 @@ class Resource(object):
             message = 'Methods iter/read are not supported for non tabular data'
             raise exceptions.DataPackageError(message)
 
-        return self.__get_table().read(*args, **kwargs)
+        # Get relations
+        if relations:
+            relations = self.__get_relations()
+
+        return self.__get_table().read(relations=relations, **options)
+
+    def check_relations(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        self.read(relations=True)
+        return True
 
     def raw_iter(self, stream=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
@@ -305,34 +320,32 @@ class Resource(object):
                 source = _MultipartSource(self.source, remote=self.remote)
             schema = self.descriptor.get('schema')
             options = _get_table_options(self.descriptor)
-            references = self.__get_references if schema else {}
-            self.__table = Table(source, schema=schema, references=references, **options)
+            self.__table = Table(source, schema=schema, **options)
 
         return self.__table
 
-    def __get_references(self):
-        references = {}
+    def __get_relations(self):
+        if not self.__relations:
 
-        # Prepare resources
-        resources = {}
-        if self.__get_table() and self.__get_table().schema:
-            for fk in self.__get_table().schema.foreign_keys:
-                resources.setdefault(fk['reference']['resource'], [])
-                for field in fk['reference']['fields']:
-                    resources[fk['reference']['resource']].append(field)
+            # Prepare resources
+            resources = {}
+            if self.__get_table() and self.__get_table().schema:
+                for fk in self.__get_table().schema.foreign_keys:
+                    resources.setdefault(fk['reference']['resource'], [])
+                    for field in fk['reference']['fields']:
+                        resources[fk['reference']['resource']].append(field)
 
-        # Fill references
-        for resource, fields in resources.items():
-            if resource and not self.__package:
-                continue
-            references.setdefault(resource, [])
-            data = self.__package.get_resource(resource) if resource else self
-            if data.tabular:
-                rows = data.read(keyed=True, check=False)
-                for row in rows:
-                    references[resource].append({field: row[field] for field in fields})
+            # Fill relations
+            self.__relations = {}
+            for resource, fields in resources.items():
+                if resource and not self.__package:
+                    continue
+                self.__relations.setdefault(resource, [])
+                data = self.__package.get_resource(resource) if resource else self
+                if data.tabular:
+                    self.__relations[resource] = data.read(keyed=True)
 
-        return references
+        return self.__relations
 
     # Deprecated
 
