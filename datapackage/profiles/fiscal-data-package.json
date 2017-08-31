@@ -14,6 +14,9 @@
       ],
       "properties": {
         "profile": {
+          "enum": [
+            "tabular-data-package"
+          ],
           "propertyOrder": 10,
           "title": "Profile",
           "description": "The profile of this descriptor.",
@@ -124,7 +127,7 @@
                 ]
               },
               "organisation": {
-                "title": "Organisation",
+                "title": "Organization",
                 "description": "An organizational affiliation for this contributor.",
                 "type": "string"
               },
@@ -136,7 +139,8 @@
                   "maintainer",
                   "wrangler",
                   "contributor"
-                ]
+                ],
+                "default": "contributor"
               }
             },
             "required": [
@@ -162,8 +166,18 @@
             "{\n  \"keywords\": [\n    \"data\",\n    \"fiscal\",\n    \"transparency\"\n  ]\n}\n"
           ]
         },
-        "licenses": {
+        "image": {
           "propertyOrder": 100,
+          "title": "Image",
+          "description": "A image to represent this package.",
+          "type": "string",
+          "examples": [
+            "{\n  \"image\": \"http://example.com/image.jpg\"\n}\n",
+            "{\n  \"image\": \"relative/to/image.jpg\"\n}\n"
+          ]
+        },
+        "licenses": {
+          "propertyOrder": 110,
           "title": "Licenses",
           "description": "The license(s) under which this package is published.",
           "type": "array",
@@ -206,7 +220,7 @@
           ]
         },
         "resources": {
-          "propertyOrder": 110,
+          "propertyOrder": 120,
           "title": "Tabular Data Resources",
           "description": "An `array` of Tabular Data Resource objects, each compliant with the [Tabular Data Resource](/tabular-data-resource/) specification.",
           "type": "array",
@@ -235,6 +249,9 @@
             ],
             "properties": {
               "profile": {
+                "enum": [
+                  "tabular-data-resource"
+                ],
                 "propertyOrder": 10,
                 "title": "Profile",
                 "description": "The profile of this descriptor.",
@@ -2238,6 +2255,9 @@
             ],
             "properties": {
               "profile": {
+                "enum": [
+                  "tabular-data-resource"
+                ],
                 "propertyOrder": 10,
                 "title": "Profile",
                 "description": "The profile of this descriptor.",
