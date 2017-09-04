@@ -532,6 +532,17 @@ def test_descriptor_table_tabular_dialect_header_false():
     ]
 
 
+# Deprecated
+
+def test_data():
+    resource = Resource({'path': 'data/cities.tsv'})
+    assert resource.data[0:3] == [
+        {'Area': '1807.92', 'Name': 'Acrelândia', 'Population': '12538', 'State': 'AC'},
+        {'Area': '186.53', 'Name': 'Boca da Mata', 'Population': '25776', 'State': 'AL'},
+        {'Area': '242.62', 'Name': 'Capela', 'Population': '17077', 'State': 'AL'},
+    ]
+
+
 # Helpers
 
 @pytest.fixture
