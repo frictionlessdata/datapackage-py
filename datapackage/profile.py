@@ -7,6 +7,7 @@ import os
 import six
 import copy
 import json
+import warnings
 import requests
 import jsonschema
 import datapackage.registry
@@ -115,18 +116,23 @@ class Profile(object):
 
     def iter_errors(self, data):
         """Lazily yields each ValidationError for the received data dict.
-
-        Args:
-            data (dict): The data to be validated.
-
-        Returns:
-            iter: ValidationError for each error in the data.
-
         """
+
+        # Deprecate
+        warnings.warn(
+            'Property "profile.iter_errors" is deprecated.',
+            UserWarning)
+
         for error in self._validator.iter_errors(data):
             yield error
 
     def to_dict(self):
         """dict: Convert this :class:`.Schema` to dict.
         """
+
+        # Deprecate
+        warnings.warn(
+            'Property "profile.to_dict" is deprecated.',
+            UserWarning)
+
         return copy.deepcopy(self._schema)

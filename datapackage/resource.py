@@ -152,7 +152,7 @@ class Resource(object):
         # Error for non tabular
         if not self.tabular:
             message = 'Methods iter/read are not supported for non tabular data'
-            raise exceptions.DataPackageError(message)
+            raise exceptions.DataPackageException(message)
 
         # Get relations
         if relations:
@@ -167,7 +167,7 @@ class Resource(object):
         # Error for non tabular
         if not self.tabular:
             message = 'Methods iter/read are not supported for non tabular data'
-            raise exceptions.DataPackageError(message)
+            raise exceptions.DataPackageException(message)
 
         # Get relations
         if relations:
@@ -188,7 +188,7 @@ class Resource(object):
         # Error for inline
         if self.inline:
             message = 'Methods raw_iter/raw_read are not supported for inline data'
-            raise exceptions.DataPackageError(message)
+            raise exceptions.DataPackageException(message)
 
         # Get filelike
         if self.multipart:
@@ -351,7 +351,25 @@ class Resource(object):
 
     @property
     def table(self):
+
+        # Deprecate
+        warnings.warn(
+            'Property "resource.table" is deprecated. '
+            'Please use "resource.iter/read" directly.',
+            UserWarning)
+
         return self.__get_table()
+
+    @property
+    def data(self):
+
+        # Deprecate
+        warnings.warn(
+            'Property "resource.data" is deprecated. '
+            'Please use "resource.read(keyed=True)" instead.',
+            UserWarning)
+
+        return self.read(keyed=True)
 
 
 # Internal
@@ -417,7 +435,7 @@ def _inspect_source(data, path, base_path):
         inspection['format'] = os.path.splitext(filename)[1][1:]
         inspection['name'] = os.path.splitext(filename)[0]
         inspection['mediatype'] = 'text/%s' % inspection['format']
-        inspection['tabular'] = inspection['format'] == 'csv'
+        inspection['tabular'] = inspection['format'] in ['csv', 'tsv', 'xls', 'xlsx']
 
     # Multipart Local/Remote
     elif len(path) > 1:

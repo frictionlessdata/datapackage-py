@@ -323,7 +323,7 @@ class Package(object):
 
         # Deprecate
         warnings.warn(
-            'DataPackage.safe is deprecated. '
+            'Property "package.safe" is deprecated. '
             'Now it\'s always safe.',
             UserWarning)
 
@@ -336,7 +336,7 @@ class Package(object):
 
         # Deprecate
         warnings.warn(
-            'DataPackage.schema is deprecated.',
+            'Property "package.schema" is deprecated.',
             UserWarning)
 
         return self.__profile
@@ -348,7 +348,7 @@ class Package(object):
 
         # Deprecate
         warnings.warn(
-            'DataPackage.attributes is deprecated.',
+            'Property "package.attributes" is deprecated.',
             UserWarning)
 
         # Get attributes
@@ -367,7 +367,7 @@ class Package(object):
 
         # Deprecate
         warnings.warn(
-            'DataPackage.attributes_attributes is deprecated.',
+            'Property "package.required_attributes" is deprecated.',
             UserWarning)
         required = ()
 
@@ -382,35 +382,57 @@ class Package(object):
 
     def validate(self):
         """"Validate this Data Package.
-
-        Raises:
-            ValidationError: If the Data Package is invalid.
-
         """
+
+        # Deprecate
+        warnings.warn(
+            'Property "package.validate" is deprecated.',
+            UserWarning)
+
         descriptor = self.to_dict()
         self.profile.validate(descriptor)
 
     def iter_errors(self):
         """"Lazily yields each ValidationError for the received data dict.
-
-        Returns:
-            iter: ValidationError for each error in the data.
-
         """
+
+        # Deprecate
+        warnings.warn(
+            'Property "package.iter_errors" is deprecated.',
+            UserWarning)
+
         return self.profile.iter_errors(self.to_dict())
 
     @property
     def base_path(self):
         """"str: The base path of this Data Package (can be None).
         """
+
+        # Deprecate
+        warnings.warn(
+            'Property "package.base_path" is deprecated.',
+            UserWarning)
+
         return self.__base_path
 
     def to_dict(self):
         """"dict: Convert this Data Package to dict.
         """
+
+        # Deprecate
+        warnings.warn(
+            'Property "package.to_dict" is deprecated.',
+            UserWarning)
+
         return copy.deepcopy(self.descriptor)
 
     def to_json(self):
         """"str: Convert this Data Package to a JSON string.
         """
+
+        # Deprecate
+        warnings.warn(
+            'Property "package.to_json" is deprecated.',
+            UserWarning)
+
         return json.dumps(self.descriptor)
