@@ -185,6 +185,8 @@ Remove data package resource by name. The data package descriptor will be valida
 
 #### `package.infer(pattern=False)`
 
+> Argument `pattern` works only for local files
+
 Infer a data package metadata. If `pattern` is not provided only existent resources will be inferred (added metadata like encoding, profile etc). If `pattern` is provided new resoures with file names mathing the pattern will be added and inferred. It commits changes to data package instance.
 
 - `pattern (str)` - glob pattern for new resources
@@ -600,6 +602,8 @@ descriptor = infer('**/*.csv')
 ```
 
 #### `infer(pattern, base_path=None)`
+
+> Argument `pattern` works only for local files
 
 Infer a data package descriptor.
 
