@@ -460,11 +460,12 @@ def _get_table_options(descriptor):
     # Dialect
     dialect = descriptor.get('dialect')
     if dialect:
-        if not dialect['header']:
+        if not dialect.get('header'):
             fields = descriptor.get('schema', {}).get('fields', [])
             options['headers'] = [field['name'] for field in fields] or None
         for key in _DIALECT_KEYS:
-            options[key.lower()] = dialect[key]
+            if key in dialect:
+                options[key.lower()] = dialect[key]
 
     return options
 

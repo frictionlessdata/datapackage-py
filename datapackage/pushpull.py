@@ -46,6 +46,8 @@ def push_datapackage(descriptor, backend, **backend_options):
 
     # Collect tables/schemas/data
     for resource in model.resources:
+        if not resource.tabular:
+            continue
         name = resource.descriptor.get('name', None)
         table = _convert_path(resource.descriptor['path'], name)
         schema = resource.descriptor['schema']
