@@ -30,9 +30,6 @@ INSTALL_REQUIRES = [
     'jsonpointer>=1.10,<2.0',
     'tableschema>=1.0,<2.0',
     'tabulator>=1.3,<2.0',
-    # TODO: remove after this issue will be resolved
-    # https://github.com/frictionlessdata/implementations/issues/11
-    'jsontableschema>=0.8,<1.0',
 ]
 TESTS_REQUIRE = [
     'pylama',
