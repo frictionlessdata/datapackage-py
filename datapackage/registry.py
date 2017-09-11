@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import io
 import os
 import json
 import six
@@ -134,7 +135,7 @@ class Registry(object):
             pass
 
     def _load_json_file(self, path):
-        with open(path, 'r') as f:
+        with io.open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
 
     def _load_json_url(self, url):
