@@ -460,7 +460,7 @@ def _get_table_options(descriptor):
     # Dialect
     dialect = descriptor.get('dialect')
     if dialect:
-        if not dialect.get('header'):
+        if not dialect.get('header', config.DEFAULT_DIALECT['header']):
             fields = descriptor.get('schema', {}).get('fields', [])
             options['headers'] = [field['name'] for field in fields] or None
         for key in _DIALECT_KEYS:
