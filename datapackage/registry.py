@@ -134,7 +134,7 @@ class Registry(object):
             pass
 
     def _load_json_file(self, path):
-        with open(path, 'r', encoding='utf-8') as f:
+        with io.open(path, 'r', encoding='utf-8') as f:
             return json.load(f)
 
     def _load_json_url(self, url):
