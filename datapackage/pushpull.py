@@ -12,7 +12,7 @@ import json
 import unicodecsv as csv
 from copy import deepcopy
 from importlib import import_module
-from jsontableschema import Schema
+from tableschema import Schema
 from .package import Package
 from . import helpers
 
