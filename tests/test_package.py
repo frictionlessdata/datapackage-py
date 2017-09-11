@@ -1039,6 +1039,15 @@ def test_multi_field_foreign_key_invalid():
     assert 'Foreign key' in str(excinfo2.value)
 
 
+# Issues
+
+def test_package_dialect_no_header_issue_167():
+    package = Package('data/package_dialect_no_header.json')
+    keyed_rows = package.get_resource('people').read(keyed=True)
+    assert keyed_rows[0]['score'] == 1
+    assert keyed_rows[1]['score'] == 1
+
+
 # Fixtures
 
 @pytest.fixture
