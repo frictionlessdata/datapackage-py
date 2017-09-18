@@ -213,7 +213,7 @@ class Package(object):
         # Save data package
         try:
             with zipfile.ZipFile(target, 'w') as z:
-                descriptor = json.loads(self.to_json())
+                descriptor = json.loads(json.dumps(self.__current_descriptor))
                 for i, resource in enumerate(self.resources):
                     path = None
                     if resource.local:
