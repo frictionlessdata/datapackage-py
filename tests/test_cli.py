@@ -21,7 +21,7 @@ def test_cli_validate_invalid():
     runner = CliRunner()
     result = runner.invoke(cli, ['validate', 'data/data-package.json'])
     assert result.exit_code == 1
-    assert 'Validation errors' in result.output
+    assert 'Data package descriptor is invalid' in result.output
 
 
 def test_cli_infer():
