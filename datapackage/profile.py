@@ -48,6 +48,14 @@ class Profile(object):
         # Collect errors
         errors = []
         for error in self._validator.iter_errors(data):
+            if isinstance(error, jsonschema.exceptions.ValidationError):
+                path = '/'.join(map(str, error.path))
+                schema_path = '/'.join(map(str, error.schema_path))
+                error = exceptions.ValidationError(
+                    'Descriptor validation error: %s '
+                    'at "%s" in descriptor and '
+                    'at "%s" in profile'
+                    % (error.message, path, schema_path))
             errors.append(error)
 
         # Raise error

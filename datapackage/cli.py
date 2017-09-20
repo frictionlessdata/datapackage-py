@@ -25,9 +25,9 @@ def validate(descriptor):
         datapackage.validate(descriptor)
         click.echo('Data package descriptor is valid')
     except datapackage.exceptions.ValidationError as exception:
-        click.echo('Validation errors:')
+        click.echo('Data package descriptor is invalid')
         for error in exception.errors:
-            click.echo(error.message)
+            click.echo(error)
         exit(1)
 
 
