@@ -29,7 +29,7 @@ $ pip install datapackage
 
 ### Examples
 
-Code examples in this readme requires Python 3.3+ interpreter. You could see even more example in [examples](https://github.com/frictionlessdata/datapacakge-py/tree/master/examples) directory.
+Code examples in this readme requires Python 3.3+ interpreter. You could see even more example in [examples](https://github.com/frictionlessdata/datapackage-py/tree/master/examples) directory.
 
 ```python
 from datapackage import Package
