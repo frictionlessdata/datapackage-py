@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import io
 import os
+import re
 import six
 import json
 import requests
@@ -189,8 +190,16 @@ def ensure_dir(path):
 def is_safe_path(path):
     """Check if path is safe and allowed.
     """
-    if os.path.isabs(path):
-        return False
-    if '..%s' % os.path.sep in path:
-        return False
-    return True
+    contains_windows_var = lambda val: re.match('%.+%', val)
+    contains_posix_var = lambda val: re.match('\$.+', val)
+
+    unsafeness_conditions = [
+        os.path.isabs(path),
+        ('..%s' % os.path.sep) in path,
+        path.startswith('~'),
+        os.path.expandvars(path) != path,
+        contains_windows_var(path),
+        contains_posix_var(path),
+    ]
+
+    return not any(unsafeness_conditions)
