@@ -499,7 +499,7 @@ def test_adds_resources_inside_data_subfolder(tmpfile):
     descriptor = {
         'name': 'proverbs',
         'resources': [
-            {'path': 'unicode.txt'}
+            {'name': 'name', 'path': 'unicode.txt'}
         ]
     }
     schema = {}

@@ -282,8 +282,8 @@ class Resource(object):
     def __build(self):
 
         # Process descriptor
-        self.__current_descriptor = helpers.expand_resource_descriptor(
-            self.__current_descriptor)
+        expand = helpers.expand_resource_descriptor
+        self.__current_descriptor = expand(self.__current_descriptor)
         self.__next_descriptor = deepcopy(self.__current_descriptor)
 
         # Inspect source

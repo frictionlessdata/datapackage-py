@@ -58,7 +58,9 @@ class Package(object):
             base_path = default_base_path
 
         # Extract from zip
-        descriptor = self.__extract_zip_if_possible(descriptor)
+        tempdir, descriptor = _extract_zip_if_possible(descriptor)
+        if tempdir:
+            self.__tempdir = tempdir
 
         # Get base path
         if base_path is None:
@@ -88,6 +90,12 @@ class Package(object):
 
         # Build package
         self.__build()
+
+    def __del__(self):
+        """https://github.com/frictionlessdata/tableschema-py#schema
+        """
+        if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):
+            shutil.rmtree(self.__tempdir, ignore_errors=True)
 
     @property
     def valid(self):
@@ -199,36 +207,38 @@ class Package(object):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
-        # Produce resource name
-        def arcname(resource):
-            basename = resource.descriptor.get('name')
-            resource_format = resource.descriptor.get('format')
-            if not basename:
-                index = self.resources.index(resource)
-                basename = 'resource-{index}'.format(index=index)
-            if resource_format:
-                basename = '.'.join([basename, resource_format.lower()])
-            return os.path.join('data', basename)
+        # Save descriptor to json
+        if str(target).endswith('.json'):
+            mode = 'w'
+            encoding = 'utf-8'
+            if six.PY2:
+                mode = 'wb'
+                encoding = None
+            helpers.ensure_dir(target)
+            with io.open(target, mode=mode, encoding=encoding) as file:
+                json.dump(self.__current_descriptor, file, indent=4)
 
-        # Save data package
-        try:
-            with zipfile.ZipFile(target, 'w') as z:
-                descriptor = json.loads(json.dumps(self.__current_descriptor))
-                for i, resource in enumerate(self.resources):
-                    path = None
-                    if resource.local:
+        # Save package to zip
+        else:
+            try:
+                with zipfile.ZipFile(target, 'w') as z:
+                    descriptor = json.loads(json.dumps(self.__current_descriptor))
+                    for i, resource in enumerate(self.resources):
+                        if not resource.name:
+                            continue
+                        if not resource.local:
+                            continue
                         path = os.path.abspath(resource.source)
-                    if path:
-                        path_inside_dp = arcname(resource)
+                        basename = resource.descriptor.get('name')
+                        resource_format = resource.descriptor.get('format')
+                        if resource_format:
+                            basename = '.'.join([basename, resource_format.lower()])
+                        path_inside_dp = os.path.join('data', basename)
                         z.write(path, path_inside_dp)
                         descriptor['resources'][i]['path'] = path_inside_dp
-                z.writestr('datapackage.json', json.dumps(descriptor))
-
-        # Saving error
-        except (IOError,
-                zipfile.BadZipfile,
-                zipfile.LargeZipFile) as e:
-            six.raise_from(exceptions.DataPackageException(e), e)
+                    z.writestr('datapackage.json', json.dumps(descriptor))
+            except (IOError, zipfile.BadZipfile, zipfile.LargeZipFile) as exception:
+                six.raise_from(exceptions.DataPackageException(exception), exception)
 
         return True
 
@@ -237,8 +247,8 @@ class Package(object):
     def __build(self):
 
         # Process descriptor
-        self.__current_descriptor = helpers.expand_package_descriptor(
-            self.__current_descriptor)
+        expand = helpers.expand_package_descriptor
+        self.__current_descriptor = expand(self.__current_descriptor)
         self.__next_descriptor = deepcopy(self.__current_descriptor)
 
         # Instantiate profile
@@ -266,54 +276,6 @@ class Package(object):
                     self.__resources.append(updated_resource)
                 else:
                     self.__resources[index] = updated_resource
-
-    def __extract_zip_if_possible(self, descriptor):
-        result = descriptor
-        try:
-            if isinstance(descriptor, six.string_types):
-                res = requests.get(descriptor)
-                res.raise_for_status()
-                result = res.content
-        except (IOError,
-                ValueError,
-                requests.exceptions.RequestException):
-            pass
-        try:
-            the_zip = result
-            if isinstance(the_zip, bytes):
-                try:
-                    os.path.isfile(the_zip)
-                except (TypeError, ValueError):
-                    # the_zip contains the zip file contents
-                    the_zip = io.BytesIO(the_zip)
-            if zipfile.is_zipfile(the_zip):
-                with zipfile.ZipFile(the_zip, 'r') as z:
-                    self.__validate_zip(z)
-                    descriptor_path = [
-                        f for f in z.namelist() if f.endswith('datapackage.json')][0]
-                    self.__tempdir = tempfile.mkdtemp('-datapackage')
-                    z.extractall(self.__tempdir)
-                    result = os.path.join(self.__tempdir, descriptor_path)
-            else:
-                result = descriptor
-        except (TypeError,
-                zipfile.BadZipfile):
-            pass
-        if hasattr(descriptor, 'seek'):
-            # Rewind descriptor if it's a file, as we read it for testing if it's
-            # a zip file
-            descriptor.seek(0)
-        return result
-
-    def __validate_zip(self, the_zip):
-        datapackage_jsons = [f for f in the_zip.namelist() if f.endswith('datapackage.json')]
-        if len(datapackage_jsons) != 1:
-            msg = 'DataPackage must have only one "datapackage.json" (had {n})'
-            raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
-
-    def __del__(self):
-        if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):
-            shutil.rmtree(self.__tempdir, ignore_errors=True)
 
     # Deprecated
 
@@ -436,3 +398,56 @@ class Package(object):
             UserWarning)
 
         return json.dumps(self.descriptor)
+
+
+# Internal
+
+def _extract_zip_if_possible(descriptor):
+    """If descriptor is a path to zip file extract and return (tempdir, descriptor)
+    """
+    tempdir = None
+    result = descriptor
+    try:
+        if isinstance(descriptor, six.string_types):
+            res = requests.get(descriptor)
+            res.raise_for_status()
+            result = res.content
+    except (IOError,
+            ValueError,
+            requests.exceptions.RequestException):
+        pass
+    try:
+        the_zip = result
+        if isinstance(the_zip, bytes):
+            try:
+                os.path.isfile(the_zip)
+            except (TypeError, ValueError):
+                # the_zip contains the zip file contents
+                the_zip = io.BytesIO(the_zip)
+        if zipfile.is_zipfile(the_zip):
+            with zipfile.ZipFile(the_zip, 'r') as z:
+                _validate_zip(z)
+                descriptor_path = [
+                    f for f in z.namelist() if f.endswith('datapackage.json')][0]
+                tempdir = tempfile.mkdtemp('-datapackage')
+                z.extractall(tempdir)
+                result = os.path.join(tempdir, descriptor_path)
+        else:
+            result = descriptor
+    except (TypeError,
+            zipfile.BadZipfile):
+        pass
+    if hasattr(descriptor, 'seek'):
+        # Rewind descriptor if it's a file, as we read it for testing if it's
+        # a zip file
+        descriptor.seek(0)
+    return (tempdir, result)
+
+
+def _validate_zip(the_zip):
+    """Validate zipped data package
+    """
+    datapackage_jsons = [f for f in the_zip.namelist() if f.endswith('datapackage.json')]
+    if len(datapackage_jsons) != 1:
+        msg = 'DataPackage must have only one "datapackage.json" (had {n})'
+        raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
