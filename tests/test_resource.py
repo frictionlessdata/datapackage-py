@@ -8,7 +8,9 @@ import io
 import json
 import pytest
 import httpretty
+from mock import Mock, ANY
 from functools import partial
+from tableschema import Storage
 from datapackage.resource import Resource
 from datapackage.helpers import expand_resource_descriptor as expand
 from datapackage import exceptions
@@ -530,6 +532,42 @@ def test_descriptor_table_tabular_dialect_header_false():
     assert resource.table.read(keyed=True) == [
         {'id': 2, 'name': '中国人'},
     ]
+
+
+# Storage
+
+def test_load_data_from_storage():
+    SCHEMA = {
+        'fields': [{'format': 'default', 'name': 'id', 'type': 'integer'}],
+        'missingValues': ['']
+    }
+    storage = Mock(
+        buckets=['data'],
+        describe=lambda bucket: {'fields': [{'name': 'id', 'type': 'integer'}]},
+        iter=lambda bucket: [[1], [2], [3]],
+        spec=Storage)
+    resource = Resource({'path': 'data'}, storage=storage)
+    resource.infer()
+    assert resource.descriptor == {
+        'name': 'data',
+        'path': 'data',
+        'encoding': 'utf-8',
+        'profile': 'tabular-data-resource',
+        'schema': SCHEMA}
+    assert resource.headers == ['id']
+    assert resource.read() == [[1], [2], [3]]
+
+
+def test_save_data_to_storage():
+    SCHEMA = {
+        'fields': [{'format': 'default', 'name': 'id', 'type': 'integer'}],
+        'missingValues': ['']
+    }
+    storage = Mock(spec=Storage)
+    resource = Resource({'data': [['id'], [1], [2], [3]]})
+    resource.save('data', storage=storage)
+    storage.create.assert_called_with('data', SCHEMA, force=True)
+    storage.write.assert_called_with('data', ANY)
 
 
 # Deprecated

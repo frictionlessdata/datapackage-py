@@ -15,6 +15,7 @@ import requests
 import warnings
 import tempfile
 from copy import deepcopy
+from tableschema import Storage
 from .resource import Resource
 from .profile import Profile
 from . import exceptions
@@ -28,9 +29,9 @@ class Package(object):
 
     # Public
 
-    def __init__(self, descriptor=None, base_path=None, strict=False,
+    def __init__(self, descriptor=None, base_path=None, strict=False, storage=None,
                  # Deprecated
-                 schema=None, default_base_path=None):
+                 schema=None, default_base_path=None, **options):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
@@ -66,6 +67,10 @@ class Package(object):
         if base_path is None:
             base_path = helpers.get_descriptor_base_path(descriptor)
 
+        # Instantiate storage
+        if storage and not isinstance(storage, Storage):
+            storage = Storage.connect(storage, **options)
+
         # Process descriptor
         descriptor = helpers.retrieve_descriptor(descriptor)
         descriptor = helpers.dereference_package_descriptor(descriptor, base_path)
@@ -84,6 +89,7 @@ class Package(object):
         self.__current_descriptor = deepcopy(descriptor)
         self.__next_descriptor = deepcopy(descriptor)
         self.__base_path = base_path
+        self.__storage = storage
         self.__strict = strict
         self.__resources = []
         self.__errors = []
@@ -145,9 +151,9 @@ class Package(object):
     def add_resource(self, descriptor):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
-        self.__next_descriptor.setdefault('resources', [])
-        self.__next_descriptor['resources'].append(descriptor)
-        self.commit()
+        self.__current_descriptor.setdefault('resources', [])
+        self.__current_descriptor['resources'].append(descriptor)
+        self.__build()
         return self.__resources[-1]
 
     def remove_resource(self, name):
@@ -156,17 +162,24 @@ class Package(object):
         resource = self.get_resource(name)
         if resource:
             predicat = lambda resource: resource.get('name') != name
-            self.__next_descriptor['resources'] = list(filter(
-                predicat, self.__next_descriptor['resources']))
-            self.commit()
+            self.__current_descriptor['resources'] = list(filter(
+                predicat, self.__current_descriptor['resources']))
+            self.__build()
         return resource
 
     def infer(self, pattern=False):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
+        # Storage
+        if self.__storage:
+
+            # Add resources
+            for bucket in self.__storage.buckets:
+                self.add_resource({'path': bucket})
+
         # Files
-        if pattern:
+        elif pattern:
 
             # No base path
             if not self.__base_path:
@@ -181,14 +194,14 @@ class Package(object):
         # Resources
         for index, resource in enumerate(self.resources):
             descriptor = resource.infer()
-            self.__next_descriptor['resources'][index] = descriptor
-            self.commit()
+            self.__current_descriptor['resources'][index] = descriptor
+            self.__build()
 
         # Profile
         if self.__next_descriptor['profile'] == config.DEFAULT_DATA_PACKAGE_PROFILE:
             if self.resources and all(map(lambda resource: resource.tabular, self.resources)):
-                self.__next_descriptor['profile'] = 'tabular-data-package'
-                self.commit()
+                self.__current_descriptor['profile'] = 'tabular-data-package'
+                self.__build()
 
         return self.__current_descriptor
 
@@ -203,7 +216,7 @@ class Package(object):
         self.__build()
         return True
 
-    def save(self, target):
+    def save(self, target=None, storage=None, **options):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
@@ -218,12 +231,27 @@ class Package(object):
             with io.open(target, mode=mode, encoding=encoding) as file:
                 json.dump(self.__current_descriptor, file, indent=4)
 
+        # Save package to storage
+        elif storage is not None:
+            if not isinstance(storage, Storage):
+                storage = Storage.connect(storage, **options)
+            buckets = []
+            schemas = []
+            for resource in self.resources:
+                if resource.tabular:
+                    resource.infer()
+                    buckets.append(resource.name)
+                    schemas.append(resource.schema.descriptor)
+            storage.create(buckets, schemas, force=True)
+            for bucket in storage.buckets:
+                storage.write(bucket, self.get_resource(bucket).iter())
+
         # Save package to zip
         else:
             try:
                 with zipfile.ZipFile(target, 'w') as z:
                     descriptor = json.loads(json.dumps(self.__current_descriptor))
-                    for i, resource in enumerate(self.resources):
+                    for index, resource in enumerate(self.resources):
                         if not resource.name:
                             continue
                         if not resource.local:
@@ -235,7 +263,7 @@ class Package(object):
                             basename = '.'.join([basename, resource_format.lower()])
                         path_inside_dp = os.path.join('data', basename)
                         z.write(path, path_inside_dp)
-                        descriptor['resources'][i]['path'] = path_inside_dp
+                        descriptor['resources'][index]['path'] = path_inside_dp
                     z.writestr('datapackage.json', json.dumps(descriptor))
             except (IOError, zipfile.BadZipfile, zipfile.LargeZipFile) as exception:
                 six.raise_from(exceptions.DataPackageException(exception), exception)
@@ -271,7 +299,10 @@ class Package(object):
             if (not resource or resource.descriptor != descriptor or
                     (resource.schema and resource.schema.foreign_keys)):
                 updated_resource = Resource(descriptor,
-                    strict=self.__strict, base_path=self.__base_path, package=self)
+                    strict=self.__strict,
+                    base_path=self.__base_path,
+                    storage=self.__storage,
+                    package=self)
                 if not resource:
                     self.__resources.append(updated_resource)
                 else:

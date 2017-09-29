@@ -9,6 +9,7 @@ import os
 import re
 import six
 import json
+import warnings
 import unicodecsv as csv
 from copy import deepcopy
 from importlib import import_module
@@ -30,6 +31,12 @@ def push_datapackage(descriptor, backend, **backend_options):
         backend_options (dict): backend options mentioned in backend docs
 
     """
+
+    # Deprecated
+    warnings.warn(
+        'Functions "push/pull_datapackage" are deprecated. '
+        'Please use "Package" class',
+        UserWarning)
 
     # Init maps
     tables = []
@@ -91,6 +98,12 @@ def pull_datapackage(descriptor, name, backend, **backend_options):
         backend_options (dict): backend options mentioned in backend docs
 
     """
+
+    # Deprecated
+    warnings.warn(
+        'Functions "push/pull_datapackage" are deprecated. '
+        'Please use "Package" class',
+        UserWarning)
 
     # Save datapackage name
     datapackage_name = name
