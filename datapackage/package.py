@@ -71,6 +71,12 @@ class Package(object):
         if storage and not isinstance(storage, Storage):
             storage = Storage.connect(storage, **options)
 
+        # Get descriptor from storage
+        if storage and not descriptor:
+            descriptor = {'resources': []}
+            for bucket in storage.buckets:
+                descriptor['resources'].append({'path': bucket})
+
         # Process descriptor
         descriptor = helpers.retrieve_descriptor(descriptor)
         descriptor = helpers.dereference_package_descriptor(descriptor, base_path)
@@ -171,15 +177,8 @@ class Package(object):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
-        # Storage
-        if self.__storage:
-
-            # Add resources
-            for bucket in self.__storage.buckets:
-                self.add_resource({'path': bucket})
-
         # Files
-        elif pattern:
+        if pattern:
 
             # No base path
             if not self.__base_path:
