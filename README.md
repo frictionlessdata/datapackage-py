@@ -819,6 +819,12 @@ Here is a list of the library contributors:
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
+### v1.1
+
+New API added:
+- `Package/package.save` integration with Storage
+- `Resource/resource.save` integration with Storage
+
 ### v1.0
 
 This version includes various big changes. A migration guide is under development and will be published here.
