@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import os
 import io
+import re
 import six
 import json
 import copy
@@ -239,11 +240,12 @@ class Package(object):
             for resource in self.resources:
                 if resource.tabular:
                     resource.infer()
-                    buckets.append(resource.name)
+                    buckets.append(_slugify_resource_name(resource.name))
                     schemas.append(resource.schema.descriptor)
             storage.create(buckets, schemas, force=True)
             for bucket in storage.buckets:
-                storage.write(bucket, self.get_resource(bucket).iter())
+                resource = self.resources[buckets.index(bucket)]
+                storage.write(bucket, resource.iter())
 
         # Save package to zip
         else:
@@ -481,3 +483,9 @@ def _validate_zip(the_zip):
     if len(datapackage_jsons) != 1:
         msg = 'DataPackage must have only one "datapackage.json" (had {n})'
         raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
+
+
+def _slugify_resource_name(name):
+    """Slugify resource name
+    """
+    return re.sub(r'[^a-zA-Z_]', '_', name)
