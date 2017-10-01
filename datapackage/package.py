@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 import os
 import io
+import re
 import six
 import json
 import copy
@@ -15,6 +16,7 @@ import requests
 import warnings
 import tempfile
 from copy import deepcopy
+from tableschema import Storage
 from .resource import Resource
 from .profile import Profile
 from . import exceptions
@@ -28,9 +30,9 @@ class Package(object):
 
     # Public
 
-    def __init__(self, descriptor=None, base_path=None, strict=False,
+    def __init__(self, descriptor=None, base_path=None, strict=False, storage=None,
                  # Deprecated
-                 schema=None, default_base_path=None):
+                 schema=None, default_base_path=None, **options):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
@@ -58,11 +60,23 @@ class Package(object):
             base_path = default_base_path
 
         # Extract from zip
-        descriptor = self.__extract_zip_if_possible(descriptor)
+        tempdir, descriptor = _extract_zip_if_possible(descriptor)
+        if tempdir:
+            self.__tempdir = tempdir
 
         # Get base path
         if base_path is None:
             base_path = helpers.get_descriptor_base_path(descriptor)
+
+        # Instantiate storage
+        if storage and not isinstance(storage, Storage):
+            storage = Storage.connect(storage, **options)
+
+        # Get descriptor from storage
+        if storage and not descriptor:
+            descriptor = {'resources': []}
+            for bucket in storage.buckets:
+                descriptor['resources'].append({'path': bucket})
 
         # Process descriptor
         descriptor = helpers.retrieve_descriptor(descriptor)
@@ -82,12 +96,19 @@ class Package(object):
         self.__current_descriptor = deepcopy(descriptor)
         self.__next_descriptor = deepcopy(descriptor)
         self.__base_path = base_path
+        self.__storage = storage
         self.__strict = strict
         self.__resources = []
         self.__errors = []
 
         # Build package
         self.__build()
+
+    def __del__(self):
+        """https://github.com/frictionlessdata/tableschema-py#schema
+        """
+        if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):
+            shutil.rmtree(self.__tempdir, ignore_errors=True)
 
     @property
     def valid(self):
@@ -137,9 +158,9 @@ class Package(object):
     def add_resource(self, descriptor):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
-        self.__next_descriptor.setdefault('resources', [])
-        self.__next_descriptor['resources'].append(descriptor)
-        self.commit()
+        self.__current_descriptor.setdefault('resources', [])
+        self.__current_descriptor['resources'].append(descriptor)
+        self.__build()
         return self.__resources[-1]
 
     def remove_resource(self, name):
@@ -148,9 +169,9 @@ class Package(object):
         resource = self.get_resource(name)
         if resource:
             predicat = lambda resource: resource.get('name') != name
-            self.__next_descriptor['resources'] = list(filter(
-                predicat, self.__next_descriptor['resources']))
-            self.commit()
+            self.__current_descriptor['resources'] = list(filter(
+                predicat, self.__current_descriptor['resources']))
+            self.__build()
         return resource
 
     def infer(self, pattern=False):
@@ -173,14 +194,14 @@ class Package(object):
         # Resources
         for index, resource in enumerate(self.resources):
             descriptor = resource.infer()
-            self.__next_descriptor['resources'][index] = descriptor
-            self.commit()
+            self.__current_descriptor['resources'][index] = descriptor
+            self.__build()
 
         # Profile
         if self.__next_descriptor['profile'] == config.DEFAULT_DATA_PACKAGE_PROFILE:
             if self.resources and all(map(lambda resource: resource.tabular, self.resources)):
-                self.__next_descriptor['profile'] = 'tabular-data-package'
-                self.commit()
+                self.__current_descriptor['profile'] = 'tabular-data-package'
+                self.__build()
 
         return self.__current_descriptor
 
@@ -195,40 +216,58 @@ class Package(object):
         self.__build()
         return True
 
-    def save(self, target):
+    def save(self, target=None, storage=None, **options):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
-        # Produce resource name
-        def arcname(resource):
-            basename = resource.descriptor.get('name')
-            resource_format = resource.descriptor.get('format')
-            if not basename:
-                index = self.resources.index(resource)
-                basename = 'resource-{index}'.format(index=index)
-            if resource_format:
-                basename = '.'.join([basename, resource_format.lower()])
-            return os.path.join('data', basename)
+        # Save descriptor to json
+        if str(target).endswith('.json'):
+            mode = 'w'
+            encoding = 'utf-8'
+            if six.PY2:
+                mode = 'wb'
+                encoding = None
+            helpers.ensure_dir(target)
+            with io.open(target, mode=mode, encoding=encoding) as file:
+                json.dump(self.__current_descriptor, file, indent=4)
 
-        # Save data package
-        try:
-            with zipfile.ZipFile(target, 'w') as z:
-                descriptor = json.loads(json.dumps(self.__current_descriptor))
-                for i, resource in enumerate(self.resources):
-                    path = None
-                    if resource.local:
+        # Save package to storage
+        elif storage is not None:
+            if not isinstance(storage, Storage):
+                storage = Storage.connect(storage, **options)
+            buckets = []
+            schemas = []
+            for resource in self.resources:
+                if resource.tabular:
+                    resource.infer()
+                    buckets.append(_slugify_resource_name(resource.name))
+                    schemas.append(resource.schema.descriptor)
+            storage.create(buckets, schemas, force=True)
+            for bucket in storage.buckets:
+                resource = self.resources[buckets.index(bucket)]
+                storage.write(bucket, resource.iter())
+
+        # Save package to zip
+        else:
+            try:
+                with zipfile.ZipFile(target, 'w') as z:
+                    descriptor = json.loads(json.dumps(self.__current_descriptor))
+                    for index, resource in enumerate(self.resources):
+                        if not resource.name:
+                            continue
+                        if not resource.local:
+                            continue
                         path = os.path.abspath(resource.source)
-                    if path:
-                        path_inside_dp = arcname(resource)
+                        basename = resource.descriptor.get('name')
+                        resource_format = resource.descriptor.get('format')
+                        if resource_format:
+                            basename = '.'.join([basename, resource_format.lower()])
+                        path_inside_dp = os.path.join('data', basename)
                         z.write(path, path_inside_dp)
-                        descriptor['resources'][i]['path'] = path_inside_dp
-                z.writestr('datapackage.json', json.dumps(descriptor))
-
-        # Saving error
-        except (IOError,
-                zipfile.BadZipfile,
-                zipfile.LargeZipFile) as e:
-            six.raise_from(exceptions.DataPackageException(e), e)
+                        descriptor['resources'][index]['path'] = path_inside_dp
+                    z.writestr('datapackage.json', json.dumps(descriptor))
+            except (IOError, zipfile.BadZipfile, zipfile.LargeZipFile) as exception:
+                six.raise_from(exceptions.DataPackageException(exception), exception)
 
         return True
 
@@ -237,8 +276,8 @@ class Package(object):
     def __build(self):
 
         # Process descriptor
-        self.__current_descriptor = helpers.expand_package_descriptor(
-            self.__current_descriptor)
+        expand = helpers.expand_package_descriptor
+        self.__current_descriptor = expand(self.__current_descriptor)
         self.__next_descriptor = deepcopy(self.__current_descriptor)
 
         # Instantiate profile
@@ -261,59 +300,14 @@ class Package(object):
             if (not resource or resource.descriptor != descriptor or
                     (resource.schema and resource.schema.foreign_keys)):
                 updated_resource = Resource(descriptor,
-                    strict=self.__strict, base_path=self.__base_path, package=self)
+                    strict=self.__strict,
+                    base_path=self.__base_path,
+                    storage=self.__storage,
+                    package=self)
                 if not resource:
                     self.__resources.append(updated_resource)
                 else:
                     self.__resources[index] = updated_resource
-
-    def __extract_zip_if_possible(self, descriptor):
-        result = descriptor
-        try:
-            if isinstance(descriptor, six.string_types):
-                res = requests.get(descriptor)
-                res.raise_for_status()
-                result = res.content
-        except (IOError,
-                ValueError,
-                requests.exceptions.RequestException):
-            pass
-        try:
-            the_zip = result
-            if isinstance(the_zip, bytes):
-                try:
-                    os.path.isfile(the_zip)
-                except (TypeError, ValueError):
-                    # the_zip contains the zip file contents
-                    the_zip = io.BytesIO(the_zip)
-            if zipfile.is_zipfile(the_zip):
-                with zipfile.ZipFile(the_zip, 'r') as z:
-                    self.__validate_zip(z)
-                    descriptor_path = [
-                        f for f in z.namelist() if f.endswith('datapackage.json')][0]
-                    self.__tempdir = tempfile.mkdtemp('-datapackage')
-                    z.extractall(self.__tempdir)
-                    result = os.path.join(self.__tempdir, descriptor_path)
-            else:
-                result = descriptor
-        except (TypeError,
-                zipfile.BadZipfile):
-            pass
-        if hasattr(descriptor, 'seek'):
-            # Rewind descriptor if it's a file, as we read it for testing if it's
-            # a zip file
-            descriptor.seek(0)
-        return result
-
-    def __validate_zip(self, the_zip):
-        datapackage_jsons = [f for f in the_zip.namelist() if f.endswith('datapackage.json')]
-        if len(datapackage_jsons) != 1:
-            msg = 'DataPackage must have only one "datapackage.json" (had {n})'
-            raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
-
-    def __del__(self):
-        if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):
-            shutil.rmtree(self.__tempdir, ignore_errors=True)
 
     # Deprecated
 
@@ -436,3 +430,62 @@ class Package(object):
             UserWarning)
 
         return json.dumps(self.descriptor)
+
+
+# Internal
+
+def _extract_zip_if_possible(descriptor):
+    """If descriptor is a path to zip file extract and return (tempdir, descriptor)
+    """
+    tempdir = None
+    result = descriptor
+    try:
+        if isinstance(descriptor, six.string_types):
+            res = requests.get(descriptor)
+            res.raise_for_status()
+            result = res.content
+    except (IOError,
+            ValueError,
+            requests.exceptions.RequestException):
+        pass
+    try:
+        the_zip = result
+        if isinstance(the_zip, bytes):
+            try:
+                os.path.isfile(the_zip)
+            except (TypeError, ValueError):
+                # the_zip contains the zip file contents
+                the_zip = io.BytesIO(the_zip)
+        if zipfile.is_zipfile(the_zip):
+            with zipfile.ZipFile(the_zip, 'r') as z:
+                _validate_zip(z)
+                descriptor_path = [
+                    f for f in z.namelist() if f.endswith('datapackage.json')][0]
+                tempdir = tempfile.mkdtemp('-datapackage')
+                z.extractall(tempdir)
+                result = os.path.join(tempdir, descriptor_path)
+        else:
+            result = descriptor
+    except (TypeError,
+            zipfile.BadZipfile):
+        pass
+    if hasattr(descriptor, 'seek'):
+        # Rewind descriptor if it's a file, as we read it for testing if it's
+        # a zip file
+        descriptor.seek(0)
+    return (tempdir, result)
+
+
+def _validate_zip(the_zip):
+    """Validate zipped data package
+    """
+    datapackage_jsons = [f for f in the_zip.namelist() if f.endswith('datapackage.json')]
+    if len(datapackage_jsons) != 1:
+        msg = 'DataPackage must have only one "datapackage.json" (had {n})'
+        raise exceptions.DataPackageException(msg.format(n=len(datapackage_jsons)))
+
+
+def _slugify_resource_name(name):
+    """Slugify resource name
+    """
+    return re.sub(r'[^a-zA-Z_]', '_', name)

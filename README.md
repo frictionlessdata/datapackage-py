@@ -125,13 +125,15 @@ package = Package('datapackage.zip')
 
 It was onle basic introduction to the `Package` class. To learn more let's take a look on `Package` class API reference.
 
-#### `Package(descriptor, base_path=None, strict=False)`
+#### `Package(descriptor, base_path=None, strict=False, storage=None, **options)`
 
 Constructor to instantiate `Package` class.
 
 - `descriptor (str/dict)` - data package descriptor as local path, url or object
 - `base_path (str)` - base path for all relative paths
 - `strict (bool)` - strict flag to alter validation behavior. Setting it to `True` leads to throwing errors on any operation with invalid descriptor
+- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
+- `options (dict)` - storage options to use for storage creation
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(Package)` - returns data package class instance
 
@@ -213,11 +215,13 @@ package.commit()
 package.name # renamed-package
 ```
 
-#### `package.save(target)`
+#### `package.save(target, storage=None, **options)`
 
-Saves this Data Package contents into a zip file.
+Saves this data package to storage if `storage` argument is passed or saves this data package's descriptor to json file if `target` arguments ends with `.json` or saves this data package to zip file otherwise.
 
 - `target (string/filelike)` - the file path or a file-like object where the contents of this Data Package will be saved into.
+- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
+- `options (dict)` - storage options to use for storage creation
 - `(exceptions.DataPackageException)` - raises if there was some error writing the package
 - `(bool)` - return true on success
 
@@ -365,13 +369,15 @@ resource = Resource('dataresource.json')
 
 It was onle basic introduction to the `Resource` class. To learn more let's take a look on `Resource` class API reference.
 
-#### `Resource(descriptor, base_path=None, strict=False)`
+#### `Resource(descriptor, base_path=None, strict=False, storage=None, **options)`
 
 Constructor to instantiate `Resource` class.
 
 - `descriptor (str/dict)` - data resource descriptor as local path, url or object
 - `base_path (str)` - base path for all relative paths
 - `strict (bool)` - strict flag to alter validation behavior. Setting it to `true` leads to throwing errors on any operation with invalid descriptor
+- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
+- `options (dict)` - storage options to use for storage creation
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(Resource)` - returns resource class instance
 
@@ -501,13 +507,13 @@ Update resource instance if there are in-place changes in the descriptor.
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(bool)` - returns true on success and false if not modified
 
-#### `resource.save(target)`
+#### `resource.save(target, storage=None, **options)`
 
-> For now only descriptor will be saved.
-
-Save resource to target destination.
+Saves this resource into storage if `storage` argument is passed or saves this resource's descriptor to json file otherwise.
 
 - `target (str)` - path where to save a resource
+- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
+- `options (dict)` - storage options to use for storage creation
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(bool)` - returns true on success
 

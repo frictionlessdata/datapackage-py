@@ -15,6 +15,8 @@ import pytest
 import tempfile
 import httpretty
 from copy import deepcopy
+from mock import Mock, ANY
+from tableschema import Storage
 from datapackage import Package, helpers, exceptions
 
 
@@ -499,7 +501,7 @@ def test_adds_resources_inside_data_subfolder(tmpfile):
     descriptor = {
         'name': 'proverbs',
         'resources': [
-            {'path': 'unicode.txt'}
+            {'name': 'name', 'path': 'unicode.txt'}
         ]
     }
     schema = {}
@@ -1037,6 +1039,44 @@ def test_multi_field_foreign_key_invalid():
         resource.check_relations()
     assert 'Foreign key' in str(excinfo1.value)
     assert 'Foreign key' in str(excinfo2.value)
+
+
+# Storage
+
+def test_load_data_from_storage():
+    SCHEMA = {
+        'fields': [{'format': 'default', 'name': 'id', 'type': 'integer'}],
+        'missingValues': ['']
+    }
+    storage = Mock(
+        buckets=['data'],
+        describe=lambda bucket: {'fields': [{'name': 'id', 'type': 'integer'}]},
+        iter=lambda bucket: [[1], [2], [3]],
+        spec=Storage)
+    package = Package(storage=storage)
+    package.infer()
+    resource = package.get_resource('data')
+    assert len(package.resources) == 1
+    assert resource.descriptor == {
+        'name': 'data',
+        'path': 'data',
+        'encoding': 'utf-8',
+        'profile': 'tabular-data-resource',
+        'schema': SCHEMA}
+    assert resource.headers == ['id']
+    assert resource.read() == [[1], [2], [3]]
+
+
+def test_save_data_to_storage():
+    SCHEMA = {
+        'fields': [{'format': 'default', 'name': 'id', 'type': 'integer'}],
+        'missingValues': ['']
+    }
+    storage = Mock(buckets=['data'], spec=Storage)
+    package = Package({'resources': [{'name': 'data', 'data': [['id'], [1], [2], [3]]}]})
+    package.save(storage=storage)
+    storage.create.assert_called_with(['data'], [SCHEMA], force=True)
+    storage.write.assert_called_with('data', ANY)
 
 
 # Issues

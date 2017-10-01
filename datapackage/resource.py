@@ -10,7 +10,7 @@ import json
 import warnings
 import cchardet
 from copy import deepcopy
-from tableschema import Table
+from tableschema import Table, Storage
 from six.moves.urllib.parse import urljoin
 from six.moves.urllib.request import urlopen
 from .profile import Profile
@@ -25,13 +25,19 @@ class Resource(object):
 
     # Public
 
-    def __init__(self, descriptor, base_path=None, strict=False, package=None):
+    def __init__(self, descriptor={}, base_path=None, strict=False, storage=None,
+                 # Internal
+                 package=None, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
         # Get base path
         if base_path is None:
             base_path = helpers.get_descriptor_base_path(descriptor)
+
+        # Instantiate storage
+        if storage and not isinstance(storage, Storage):
+            storage = Storage.connect(storage, **options)
 
         # Process descriptor
         descriptor = helpers.retrieve_descriptor(descriptor)
@@ -51,6 +57,7 @@ class Resource(object):
         self.__next_descriptor = deepcopy(descriptor)
         self.__base_path = base_path
         self.__package = package
+        self.__storage = storage
         self.__relations = None
         self.__strict = strict
         self.__table = None
@@ -221,22 +228,25 @@ class Resource(object):
         if not descriptor.get('name'):
             descriptor['name'] = self.__source_inspection['name']
 
-        # Format
-        if not descriptor.get('format'):
-            descriptor['format'] = self.__source_inspection['format']
+        # Only for non inline/storage
+        if not self.inline and not self.__storage:
 
-        # Mediatype
-        if not descriptor.get('mediatype'):
-            descriptor['mediatype'] = self.__source_inspection['mediatype']
+            # Format
+            if not descriptor.get('format'):
+                descriptor['format'] = self.__source_inspection['format']
 
-        # Encoding
-        if descriptor.get('encoding') == config.DEFAULT_RESOURCE_ENCODING:
-            contents = b''
-            for chunk in self.raw_iter():
-                contents += chunk
-                if len(contents) > 1000: break
-            encoding = cchardet.detect(contents)['encoding'].lower()
-            descriptor['encoding'] = 'utf-8' if encoding == 'ascii' else encoding
+            # Mediatype
+            if not descriptor.get('mediatype'):
+                descriptor['mediatype'] = self.__source_inspection['mediatype']
+
+            # Encoding
+            if descriptor.get('encoding') == config.DEFAULT_RESOURCE_ENCODING:
+                contents = b''
+                for chunk in self.raw_iter():
+                    contents += chunk
+                    if len(contents) > 1000: break
+                encoding = cchardet.detect(contents)['encoding'].lower()
+                descriptor['encoding'] = 'utf-8' if encoding == 'ascii' else encoding
 
         # Schema
         if not descriptor.get('schema'):
@@ -248,9 +258,9 @@ class Resource(object):
             if self.tabular:
                 descriptor['profile'] = 'tabular-data-resource'
 
-        # Commit descriptor
-        self.__next_descriptor = descriptor
-        self.commit()
+        # Save descriptor
+        self.__current_descriptor = descriptor
+        self.__build()
 
         return descriptor
 
@@ -262,35 +272,47 @@ class Resource(object):
         elif self.__current_descriptor == self.__next_descriptor:
             return False
         self.__current_descriptor = deepcopy(self.__next_descriptor)
+        self.__table = None
         self.__build()
         return True
 
-    def save(self, target):
+    def save(self, target, storage=None, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        mode = 'w'
-        encoding = 'utf-8'
-        if six.PY2:
-            mode = 'wb'
-            encoding = None
-        helpers.ensure_dir(target)
-        with io.open(target, mode=mode, encoding=encoding) as file:
-            json.dump(self.__current_descriptor, file, indent=4)
+
+        # Save resource to storage
+        if storage is not None:
+            if self.tabular:
+                self.infer()
+                storage.create(target, self.schema.descriptor, force=True)
+                storage.write(target, self.iter())
+
+        # Save descriptor to json
+        else:
+            mode = 'w'
+            encoding = 'utf-8'
+            if six.PY2:
+                mode = 'wb'
+                encoding = None
+            helpers.ensure_dir(target)
+            with io.open(target, mode=mode, encoding=encoding) as file:
+                json.dump(self.__current_descriptor, file, indent=4)
 
     # Private
 
     def __build(self):
 
         # Process descriptor
-        self.__current_descriptor = helpers.expand_resource_descriptor(
-            self.__current_descriptor)
+        expand = helpers.expand_resource_descriptor
+        self.__current_descriptor = expand(self.__current_descriptor)
         self.__next_descriptor = deepcopy(self.__current_descriptor)
 
         # Inspect source
         self.__source_inspection = _inspect_source(
             self.__current_descriptor.get('data'),
             self.__current_descriptor.get('path'),
-            self.__base_path)
+            self.__base_path,
+            self.__storage)
 
         # Instantiate profile
         self.__profile = Profile(self.__current_descriptor.get('profile'))
@@ -304,9 +326,6 @@ class Resource(object):
             if self.__strict:
                 raise exception
 
-        # Clear table
-        self.__table = None
-
     def __get_table(self):
         if not self.__table:
 
@@ -319,8 +338,11 @@ class Resource(object):
             if self.multipart:
                 source = _MultipartSource(self.source, remote=self.remote)
             schema = self.descriptor.get('schema')
-            options = _get_table_options(self.descriptor)
-            self.__table = Table(source, schema=schema, **options)
+            if self.__storage is None:
+                options = _get_table_options(self.descriptor)
+                self.__table = Table(source, schema=schema, **options)
+            else:
+                self.__table = Table(source, schema=schema, storage=self.__storage)
 
         return self.__table
 
@@ -351,6 +373,8 @@ class Resource(object):
 
     @property
     def table(self):
+        """Return resource table
+        """
 
         # Deprecate
         warnings.warn(
@@ -362,6 +386,8 @@ class Resource(object):
 
     @property
     def data(self):
+        """Return resource data
+        """
 
         # Deprecate
         warnings.warn(
@@ -384,7 +410,7 @@ _DIALECT_KEYS = [
 ]
 
 
-def _inspect_source(data, path, base_path):
+def _inspect_source(data, path, base_path, storage):
     inspection = {}
 
     # Normalize path
@@ -396,8 +422,15 @@ def _inspect_source(data, path, base_path):
         inspection['source'] = None
         inspection['blank'] = True
 
+    # Storage
+    elif storage is not None:
+        inspection['name'] = path[0]
+        inspection['source'] = path[0]
+        inspection['tabular'] = True
+
     # Inline
-    if data is not None:
+    elif data is not None:
+        inspection['name'] = 'inline'
         inspection['source'] = data
         inspection['inline'] = True
         inspection['tabular'] = isinstance(data, list)
@@ -439,7 +472,7 @@ def _inspect_source(data, path, base_path):
 
     # Multipart Local/Remote
     elif len(path) > 1:
-        inspections = list(map(lambda item: _inspect_source(None, item, base_path), path))
+        inspections = list(map(lambda item: _inspect_source(None, item, base_path, None), path))
         inspection.update(inspections[0])
         inspection['source'] = list(map(lambda item: item['source'], inspections))
         inspection['multipart'] = True
