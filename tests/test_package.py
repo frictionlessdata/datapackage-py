@@ -1088,6 +1088,10 @@ def test_package_dialect_no_header_issue_167():
     assert keyed_rows[1]['score'] == 1
 
 
+def test_package_save_fk_resource_names_issue_181():
+    assert False
+
+
 # Fixtures
 
 @pytest.fixture
