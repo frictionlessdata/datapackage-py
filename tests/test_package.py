@@ -1044,7 +1044,7 @@ def test_multi_field_foreign_key_invalid():
 # Storage
 
 def test_load_data_from_storage():
-    SCHEMA = {
+    schema = {
         'fields': [{'format': 'default', 'name': 'id', 'type': 'integer'}],
         'missingValues': ['']
     }
@@ -1062,20 +1062,20 @@ def test_load_data_from_storage():
         'path': 'data',
         'encoding': 'utf-8',
         'profile': 'tabular-data-resource',
-        'schema': SCHEMA}
+        'schema': schema}
     assert resource.headers == ['id']
     assert resource.read() == [[1], [2], [3]]
 
 
 def test_save_data_to_storage():
-    SCHEMA = {
+    schema = {
         'fields': [{'format': 'default', 'name': 'id', 'type': 'integer'}],
         'missingValues': ['']
     }
     storage = Mock(buckets=['data'], spec=Storage)
     package = Package({'resources': [{'name': 'data', 'data': [['id'], [1], [2], [3]]}]})
     package.save(storage=storage)
-    storage.create.assert_called_with(['data'], [SCHEMA], force=True)
+    storage.create.assert_called_with(['data'], [schema], force=True)
     storage.write.assert_called_with('data', ANY)
 
 
@@ -1087,6 +1087,42 @@ def test_package_dialect_no_header_issue_167():
     assert keyed_rows[0]['score'] == 1
     assert keyed_rows[1]['score'] == 1
 
+
+def test_package_save_slugify_fk_resource_name_issue_181():
+    descriptor = {
+        'resources': [
+            {
+                'name': 'my-langs',
+                'data': [['en'], ['ch']],
+                'schema': {
+                    'fields': [
+                        {'name': 'lang'},
+                    ]
+                }
+            },
+            {
+                'name': 'my-notes',
+                'data': [['1', 'en', 'note1'], [2, 'ch', 'note2']],
+                'schema': {
+                    'fields': [
+                        {'name': 'id', 'type': 'integer'},
+                        {'name': 'lang'},
+                        {'name': 'note'},
+                    ],
+                    'foreignKeys': [
+                        {'fields': 'lang', 'reference': {'resource': 'my-langs', 'fields': 'lang'}}
+                    ]
+                }
+            }
+        ]
+    }
+    storage = Mock(buckets=['my_langs', 'my_notes'], spec=Storage)
+    package = Package(descriptor)
+    package.save(storage=storage)
+    assert storage.create.call_args[0][0] == ['my_langs', 'my_notes']
+    assert storage.create.call_args[0][1][1]['foreignKeys'] == [
+        {'fields': 'lang', 'reference': {'resource': 'my_langs', 'fields': 'lang'}}
+    ]
 
 # Fixtures
 

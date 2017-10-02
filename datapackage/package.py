@@ -242,6 +242,7 @@ class Package(object):
                     resource.infer()
                     buckets.append(_slugify_resource_name(resource.name))
                     schemas.append(resource.schema.descriptor)
+            schemas = list(map(_slugify_foreign_key, schemas))
             storage.create(buckets, schemas, force=True)
             for bucket in storage.buckets:
                 resource = self.resources[buckets.index(bucket)]
@@ -489,3 +490,12 @@ def _slugify_resource_name(name):
     """Slugify resource name
     """
     return re.sub(r'[^a-zA-Z_]', '_', name)
+
+
+def _slugify_foreign_key(schema):
+    """Slugify foreign key
+    """
+    for foreign_key in schema.get('foreignKeys', []):
+        foreign_key['reference']['resource'] = _slugify_resource_name(
+            foreign_key['reference'].get('resource', ''))
+    return schema
