@@ -489,7 +489,7 @@ def _validate_zip(the_zip):
 def _slugify_resource_name(name):
     """Slugify resource name
     """
-    return re.sub(r'[^a-zA-Z_]', '_', name)
+    return re.sub(r'[^a-zA-Z0-9_]', '_', name)
 
 
 def _slugify_foreign_key(schema):
