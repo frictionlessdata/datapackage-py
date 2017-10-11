@@ -484,7 +484,7 @@ def _get_table_options(descriptor):
 
     # General
     options = {}
-    options['format'] = 'csv'
+    options['format'] = descriptor.get('format', 'csv')
     if descriptor.get('data'):
         options['format'] = 'inline'
     options['encoding'] = descriptor['encoding']
