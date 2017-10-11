@@ -334,20 +334,38 @@ class Resource(object):
     def __get_table(self):
         if not self.__table:
 
-            # Resource -> Regular
+            # Non tabular -> None
             if not self.tabular:
                 return None
 
-            # Resource -> Tabular
+            # Get source/schema
             source = self.source
             if self.multipart:
                 source = _MultipartSource(self.source, remote=self.remote)
             schema = self.descriptor.get('schema')
-            if self.__storage is None:
-                options = _get_table_options(self.descriptor)
-                self.__table = Table(source, schema=schema, **options)
-            else:
+
+            # Storage resource
+            if self.__storage is not None:
                 self.__table = Table(source, schema=schema, storage=self.__storage)
+
+            # General resource
+            else:
+                options = {}
+                descriptor = self.__current_descriptor
+                options['format'] = descriptor.get('format', 'csv')
+                if descriptor.get('data'):
+                    options['format'] = 'inline'
+                options['encoding'] = descriptor['encoding']
+                options['skip_rows'] = descriptor.get('skipRows', [])
+                dialect = descriptor.get('dialect')
+                if dialect:
+                    if not dialect.get('header', config.DEFAULT_DIALECT['header']):
+                        fields = descriptor.get('schema', {}).get('fields', [])
+                        options['headers'] = [field['name'] for field in fields] or None
+                    for key in _DIALECT_KEYS:
+                        if key in dialect:
+                            options[key.lower()] = dialect[key]
+                self.__table = Table(source, schema=schema, **options)
 
         return self.__table
 
@@ -482,29 +500,6 @@ def _inspect_source(data, path, base_path, storage):
         inspection['multipart'] = True
 
     return inspection
-
-
-def _get_table_options(descriptor):
-
-    # General
-    options = {}
-    options['format'] = descriptor.get('format', 'csv')
-    if descriptor.get('data'):
-        options['format'] = 'inline'
-    options['encoding'] = descriptor['encoding']
-    options['skip_rows'] = descriptor.get('skipRows', [])
-
-    # Dialect
-    dialect = descriptor.get('dialect')
-    if dialect:
-        if not dialect.get('header', config.DEFAULT_DIALECT['header']):
-            fields = descriptor.get('schema', {}).get('fields', [])
-            options['headers'] = [field['name'] for field in fields] or None
-        for key in _DIALECT_KEYS:
-            if key in dialect:
-                options[key.lower()] = dialect[key]
-
-    return options
 
 
 class _MultipartSource(object):
