@@ -125,10 +125,14 @@ class Resource(object):
     def tabular(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        tabular = self.__current_descriptor.get('profile') == 'tabular-data-resource'
+        if self.__current_descriptor.get('profile') == 'tabular-data-resource':
+            return True
         if not self.__strict:
-            tabular = tabular or self.__source_inspection.get('tabular', False)
-        return tabular
+            if self.__current_descriptor.get('format') in config.TABULAR_FORMATS:
+                return True
+            if self.__source_inspection.get('tabular', False):
+                return True
+        return False
 
     @property
     def source(self):
@@ -237,14 +241,15 @@ class Resource(object):
 
             # Mediatype
             if not descriptor.get('mediatype'):
-                descriptor['mediatype'] = self.__source_inspection['mediatype']
+                descriptor['mediatype'] = 'text/%s' % descriptor['format']
 
             # Encoding
             if descriptor.get('encoding') == config.DEFAULT_RESOURCE_ENCODING:
                 contents = b''
-                for chunk in self.raw_iter():
-                    contents += chunk
-                    if len(contents) > 1000: break
+                with self.raw_iter(stream=True) as stream:
+                    for chunk in stream:
+                        contents += chunk
+                        if len(contents) > 1000: break
                 encoding = cchardet.detect(contents)['encoding'].lower()
                 descriptor['encoding'] = 'utf-8' if encoding == 'ascii' else encoding
 
@@ -467,8 +472,7 @@ def _inspect_source(data, path, base_path, storage):
         filename = os.path.basename(path[0])
         inspection['format'] = os.path.splitext(filename)[1][1:]
         inspection['name'] = os.path.splitext(filename)[0]
-        inspection['mediatype'] = 'text/%s' % inspection['format']
-        inspection['tabular'] = inspection['format'] in ['csv', 'tsv', 'xls', 'xlsx']
+        inspection['tabular'] = inspection['format'] in config.TABULAR_FORMATS
 
     # Multipart Local/Remote
     elif len(path) > 1:

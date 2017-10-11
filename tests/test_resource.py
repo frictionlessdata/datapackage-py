@@ -581,6 +581,24 @@ def test_data():
     ]
 
 
+# Issues
+
+def test_preserve_resource_format_from_descriptor_on_infer_issue_188():
+    resource = Resource({'path': 'data/data.csvformat', 'format': 'csv'})
+    descriptor = resource.infer()
+    assert descriptor == {
+        'encoding': 'utf-8',
+        'format': 'csv',
+        'mediatype': 'text/csv',
+        'name': 'data',
+        'path': 'data/data.csvformat',
+        'profile': 'tabular-data-resource',
+        'schema': {'fields': [
+            {'format': 'default', 'name': 'city', 'type': 'string'},
+            {'format': 'default', 'name': 'population', 'type': 'integer'}],
+            'missingValues': ['']}}
+
+
 # Helpers
 
 @pytest.fixture
