@@ -585,8 +585,7 @@ def test_data():
 
 def test_preserve_resource_format_from_descriptor_on_infer_issue_188():
     resource = Resource({'path': 'data/data.csvformat', 'format': 'csv'})
-    descriptor = resource.infer()
-    assert descriptor == {
+    assert resource.infer() == {
         'encoding': 'utf-8',
         'format': 'csv',
         'mediatype': 'text/csv',
