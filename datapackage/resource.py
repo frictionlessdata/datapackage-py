@@ -125,10 +125,14 @@ class Resource(object):
     def tabular(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        tabular = self.__current_descriptor.get('profile') == 'tabular-data-resource'
+        if self.__current_descriptor.get('profile') == 'tabular-data-resource':
+            return True
         if not self.__strict:
-            tabular = tabular or self.__source_inspection.get('tabular', False)
-        return tabular
+            if self.__current_descriptor.get('format') in config.TABULAR_FORMATS:
+                return True
+            if self.__source_inspection.get('tabular', False):
+                return True
+        return False
 
     @property
     def source(self):
@@ -237,14 +241,15 @@ class Resource(object):
 
             # Mediatype
             if not descriptor.get('mediatype'):
-                descriptor['mediatype'] = self.__source_inspection['mediatype']
+                descriptor['mediatype'] = 'text/%s' % descriptor['format']
 
             # Encoding
             if descriptor.get('encoding') == config.DEFAULT_RESOURCE_ENCODING:
                 contents = b''
-                for chunk in self.raw_iter():
-                    contents += chunk
-                    if len(contents) > 1000: break
+                with self.raw_iter(stream=True) as stream:
+                    for chunk in stream:
+                        contents += chunk
+                        if len(contents) > 1000: break
                 encoding = cchardet.detect(contents)['encoding'].lower()
                 descriptor['encoding'] = 'utf-8' if encoding == 'ascii' else encoding
 
@@ -329,20 +334,38 @@ class Resource(object):
     def __get_table(self):
         if not self.__table:
 
-            # Resource -> Regular
+            # Non tabular -> None
             if not self.tabular:
                 return None
 
-            # Resource -> Tabular
+            # Get source/schema
             source = self.source
             if self.multipart:
                 source = _MultipartSource(self.source, remote=self.remote)
             schema = self.descriptor.get('schema')
-            if self.__storage is None:
-                options = _get_table_options(self.descriptor)
-                self.__table = Table(source, schema=schema, **options)
-            else:
+
+            # Storage resource
+            if self.__storage is not None:
                 self.__table = Table(source, schema=schema, storage=self.__storage)
+
+            # General resource
+            else:
+                options = {}
+                descriptor = self.__current_descriptor
+                options['format'] = descriptor.get('format', 'csv')
+                if descriptor.get('data'):
+                    options['format'] = 'inline'
+                options['encoding'] = descriptor['encoding']
+                options['skip_rows'] = descriptor.get('skipRows', [])
+                dialect = descriptor.get('dialect')
+                if dialect:
+                    if not dialect.get('header', config.DEFAULT_DIALECT['header']):
+                        fields = descriptor.get('schema', {}).get('fields', [])
+                        options['headers'] = [field['name'] for field in fields] or None
+                    for key in _DIALECT_KEYS:
+                        if key in dialect:
+                            options[key.lower()] = dialect[key]
+                self.__table = Table(source, schema=schema, **options)
 
         return self.__table
 
@@ -467,8 +490,7 @@ def _inspect_source(data, path, base_path, storage):
         filename = os.path.basename(path[0])
         inspection['format'] = os.path.splitext(filename)[1][1:]
         inspection['name'] = os.path.splitext(filename)[0]
-        inspection['mediatype'] = 'text/%s' % inspection['format']
-        inspection['tabular'] = inspection['format'] in ['csv', 'tsv', 'xls', 'xlsx']
+        inspection['tabular'] = inspection['format'] in config.TABULAR_FORMATS
 
     # Multipart Local/Remote
     elif len(path) > 1:
@@ -478,29 +500,6 @@ def _inspect_source(data, path, base_path, storage):
         inspection['multipart'] = True
 
     return inspection
-
-
-def _get_table_options(descriptor):
-
-    # General
-    options = {}
-    options['format'] = descriptor.get('format', 'csv')
-    if descriptor.get('data'):
-        options['format'] = 'inline'
-    options['encoding'] = descriptor['encoding']
-    options['skip_rows'] = descriptor.get('skipRows', [])
-
-    # Dialect
-    dialect = descriptor.get('dialect')
-    if dialect:
-        if not dialect.get('header', config.DEFAULT_DIALECT['header']):
-            fields = descriptor.get('schema', {}).get('fields', [])
-            options['headers'] = [field['name'] for field in fields] or None
-        for key in _DIALECT_KEYS:
-            if key in dialect:
-                options[key.lower()] = dialect[key]
-
-    return options
 
 
 class _MultipartSource(object):
