@@ -34,7 +34,7 @@ Code examples in this readme requires Python 3.3+ interpreter. You could see eve
 ```python
 from datapackage import Package
 
-package = Package('descriptor.json')
+package = Package('datapackage.json')
 package.getResource('resource').read()
 ```
 
