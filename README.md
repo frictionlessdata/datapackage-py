@@ -7,8 +7,6 @@
 
 A library for working with [Data Packages](http://specs.frictionlessdata.io/data-package/).
 
-> Version v1.0 includes various important changes. Please read a [migration guide](#v10).
-
 ## Features
 
  - `Package` class for working with data packages
@@ -813,22 +811,3 @@ Here is a list of the library contributors:
 - femtotrader <femto.trader@gmail.com>
 - Vitor Baptista <vitor@vitorbaptista.com>
 - Bryon Jacob <bryon@data.world>
-
-
-## Changelog
-
-Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
-
-### v1.1
-
-New API added:
-- `Package/package.save` integration with Storage
-- `Resource/resource.save` integration with Storage
-
-### v1.0
-
-This version includes various big changes. A migration guide is under development and will be published here.
-
-### v0.8
-
-Last pre-v1 stable version of the library.
