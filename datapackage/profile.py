@@ -89,7 +89,7 @@ class Profile(object):
                         the_schema = req.json()
             except (IOError, ValueError, requests.exceptions.RequestException):
                 message = 'Unable to load profile at "{0}"'
-                raise exceptions.ValidationError(message)
+                raise exceptions.ValidationError(message.format(schema))
         elif isinstance(the_schema, dict):
             the_schema = copy.deepcopy(the_schema)
         else:
