@@ -104,10 +104,12 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
             try:
                 pointer = jsonpointer.JsonPointer(value[1:])
                 descriptor[property] = pointer.resolve(base_descriptor)
-            except Exception:
-                raise exceptions.DataPackageException(
-                    'Not resolved Pointer URI "%s" '
-                    'for resource.%s' % (value, property))
+            except Exception as error:
+                message = 'Not resolved Pointer URI "%s" for resource.%s' % (value, property)
+                six.raise_from(
+                    exceptions.DataPackageException(message),
+                    error
+                )
 
         # URI -> Remote
         elif value.startswith('http'):
@@ -115,10 +117,12 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
                 response = requests.get(value)
                 response.raise_for_status()
                 descriptor[property] = response.json()
-            except Exception:
-                raise exceptions.DataPackageException(
-                    'Not resolved Remote URI "%s" '
-                    'for resource.%s' % (value, property))
+            except Exception as error:
+                message = 'Not resolved Remote URI "%s" for resource.%s' % (value, property)
+                six.raise_from(
+                    exceptions.DataPackageException(message),
+                    error
+                )
 
         # URI -> Local
         else:
@@ -134,10 +138,12 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
             try:
                 with io.open(fullpath, encoding='utf-8') as file:
                     descriptor[property] = json.load(file)
-            except Exception:
-                raise exceptions.DataPackageException(
-                    'Not resolved Local URI "%s" '
-                    'for resource.%s' % (value, property))
+            except Exception as error:
+                message = 'Not resolved Local URI "%s" for resource.%s' % (value, property)
+                six.raise_from(
+                    exceptions.DataPackageException(message),
+                    error
+                )
 
     return descriptor
 
