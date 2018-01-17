@@ -5,6 +5,7 @@ from __future__ import absolute_import
 # from __future__ import unicode_literals
 
 import click
+import json
 import datapackage
 from pprint import pprint
 click.disable_unicode_literals_warning = True
@@ -35,8 +36,7 @@ def validate(descriptor):
 @click.argument('pattern', type=click.STRING)
 def infer(pattern):
     descriptor = datapackage.infer(pattern, base_path='.')
-    click.echo('Data package descriptor:')
-    pprint(descriptor)
+    click.echo(json.dumps(descriptor, indent=2))
 
 
 # Main program
