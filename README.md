@@ -811,3 +811,13 @@ Here is a list of the library contributors:
 - femtotrader <femto.trader@gmail.com>
 - Vitor Baptista <vitor@vitorbaptista.com>
 - Bryon Jacob <bryon@data.world>
+
+## Changelog
+
+Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
+
+### v1.1
+
+New API added:
+
+- Added an integration between `Package/Resource` and the `tableschema.Storage` - https://github.com/frictionlessdata/tableschema-py#storage. It allows to load and save data package from/to different storages like SQL/BigQuery/etc.

@@ -14,8 +14,8 @@ language:
 
 python:
   - 2.7
-  - 3.3
-  # - 3.4
+#  - 3.4  # FIXME: There's a bug on setuptools on 3.4 that breaks our tests
+#  (see https://github.com/pypa/setuptools/issues/951)
   - 3.5
   - 3.6
 

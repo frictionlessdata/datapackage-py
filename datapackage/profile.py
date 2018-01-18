@@ -87,9 +87,13 @@ class Profile(object):
                         req = requests.get(schema)
                         req.raise_for_status()
                         the_schema = req.json()
-            except (IOError, ValueError, requests.exceptions.RequestException):
+            except (IOError, ValueError, requests.exceptions.RequestException) as ex:
                 message = 'Unable to load profile at "{0}"'
-                raise exceptions.ValidationError(message)
+                six.raise_from(
+                    exceptions.ValidationError(message.format(schema)),
+                    ex
+                )
+
         elif isinstance(the_schema, dict):
             the_schema = copy.deepcopy(the_schema)
         else:
@@ -105,8 +109,11 @@ class Profile(object):
     def _check_schema(self):
         try:
             self._validator.check_schema(self._schema)
-        except jsonschema.exceptions.SchemaError as exception:
-            raise exceptions.ValidationError('Profile is invalid: %s' % exception)
+        except jsonschema.exceptions.SchemaError as ex:
+            six.raise_from(
+                exceptions.ValidationError('Profile is invalid: %s' % ex),
+                ex
+            )
 
     def __getattr__(self, name):
         if name in self.__dict__.get('_schema', {}):
