@@ -7,7 +7,6 @@ from __future__ import absolute_import
 import click
 import json
 import datapackage
-from pprint import pprint
 click.disable_unicode_literals_warning = True
 
 
