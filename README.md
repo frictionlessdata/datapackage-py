@@ -816,6 +816,12 @@ Here is a list of the library contributors:
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
+### v1.2
+
+Updated behaviour:
+
+- CLI command `$ datapackage infer` now outputs only a JSON-formatted data package descriptor.
+
 ### v1.1
 
 New API added:
