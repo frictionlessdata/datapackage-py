@@ -2066,7 +2066,6 @@
                     "title": "Escape Character",
                     "description": "Specifies a one-character string to use as the escape character.",
                     "type": "string",
-                    "default": "\\",
                     "examples": [
                       "{\n  \"escapeChar\": \"\\\\\"\n}\n"
                     ]
@@ -4072,7 +4071,6 @@
                     "title": "Escape Character",
                     "description": "Specifies a one-character string to use as the escape character.",
                     "type": "string",
-                    "default": "\\",
                     "examples": [
                       "{\n  \"escapeChar\": \"\\\\\"\n}\n"
                     ]
