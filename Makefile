@@ -22,7 +22,6 @@ profiles:
 	wget -O datapackage/profiles/tabular-data-resource.json https://specs.frictionlessdata.io/schemas/tabular-data-resource.json
 
 test:
-	pylama $(PACKAGE)
 	tox
 
 version:

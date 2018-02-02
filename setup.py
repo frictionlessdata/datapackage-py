@@ -32,7 +32,6 @@ INSTALL_REQUIRES = [
     'tabulator>=1.3,<2.0',
 ]
 TESTS_REQUIRE = [
-    'pylama',
     'tox',
 ]
 README = read('README.md')
@@ -79,5 +78,6 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 )
