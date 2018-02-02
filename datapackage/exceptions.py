@@ -1,3 +1,10 @@
+'''Exceptions thrown by the datapackage library.
+
+All exceptions inherit from `DataPackageException`, so you can use it as a
+catch-all. Some exceptions contain multiple errors, for example to get the list
+of a data package's validation errors. If that's the case, the errors will be
+in the `exception.errors` list.
+'''
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function

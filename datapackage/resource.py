@@ -22,15 +22,33 @@ from . import config
 # Module API
 
 class Resource(object):
+    '''A Data Package Resource.
+
+    Args:
+        descriptor (Union[str, dict], optional): Resource descriptor as a local
+            path, URL, or dict.
+        base_path (str, optional): Base path to be used for all relative paths.
+            By default, takes the base path of the descriptor if possible.
+        strict (bool, optional): When `True`, errors are raised as soon as
+            they're detected. Otherwise you have to manually check for errors
+            via the `valid()` and `errors()` methods.
+        storage (Union[str, `tableschema.Storage`], optional): Storage name
+            (e.g. 'sql') or instance.
+        package (`Package`, optional): The data package this resource belongs to.
+        **options (dict, optional): Extra options passed to the `storage`.
+
+    Returns:
+        `Resource`: The resource object.
+
+    Raises:
+        `exceptions.DataPackageException`: Something went wrong.
+    '''
 
     # Public
 
     def __init__(self, descriptor={}, base_path=None, strict=False, storage=None,
                  # Internal
                  package=None, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
-
         # Get base path
         if base_path is None:
             base_path = helpers.get_descriptor_base_path(descriptor)
@@ -68,63 +86,47 @@ class Resource(object):
 
     @property
     def valid(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''Boolean describing if the resource is valid or not.'''
         return not bool(self.__errors)
 
     @property
     def errors(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''List of validation errors, if any.'''
         return self.__errors
 
     @property
     def profile(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''Returns the resource's `Profile` instance.'''
         return self.__profile
 
     @property
     def descriptor(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''Returns the data package descriptor as a `dict`.'''
         # Never use self.descriptor inside self class (!!!)
         return self.__next_descriptor
 
     @property
     def name(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
         return self.__current_descriptor.get('name')
 
     @property
     def inline(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
         return self.__source_inspection.get('inline', False)
 
     @property
     def local(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
         return self.__source_inspection.get('local', False)
 
     @property
     def remote(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
         return self.__source_inspection.get('remote', False)
 
     @property
     def multipart(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
         return self.__source_inspection.get('multipart', False)
 
     @property
     def tabular(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
         if self.__current_descriptor.get('profile') == 'tabular-data-resource':
             return True
         if not self.__strict:
@@ -136,29 +138,63 @@ class Resource(object):
 
     @property
     def source(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
         return self.__source_inspection.get('source')
 
     @property
     def headers(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''Tabular resource only. The headers list.'''
         if not self.tabular:
             return None
         return self.__get_table().headers
 
     @property
     def schema(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''Tabular resource only. The `tableschema.Schema` instance if it exists.'''
         if not self.tabular:
             return None
         return self.__get_table().schema
 
-    def iter(self, relations=False, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+    def iter(self, keyed=False, extended=False, cast=True, relations=False):
+        '''Tabular resource only. Iterates over the tabular resource's rows.
+
+        There are three formats of returning the rows, the default, keyed, and
+        extended. Consider a CSV as:
+
+            name,value
+            J Doe,10
+
+        This will be returned as:
+
+        * Default: `['J Doe', 10]`
+        * Keyed: `{'name': 'J Doe', 'value': 10}`
+        * Extended: `(1, ['name', 'value'], ['J Doe', 10])`
+
+        Notice that you can only set a single format at a time. The behaviour
+        of `iter(keyed=True, extended=True)` is undefined.
+
+        Args:
+            keyed (bool, optional): When `True`, each returned row will be a
+                `dict` mapping the header name to its value in the current row.
+                For example, `[{'name': 'J Smith', 'value': '10'}]`. Ignored if
+                ``extended`` is True. Defaults to False.
+            extended (bool, optional): When `True`, returns each row as a tuple
+                with row number (starts at 1), list of headers, and list of row
+                values. For example, `(1, ['name', 'value'], ['J Smith', '10'])`.
+                Defaults to False.
+            cast (bool, optional): When `True`, casts the cell values according
+                to the `schema()`. Defaults to `True`.
+            relations (bool, optional): When `True`, check and resolve foreign
+                keys, adding their contents to the returned rows. Defaults to
+                `False`.
+
+        Yields:
+            Union[List[Any], Dict[str, Any], Tuple[int, List[str], List[Any]]]:
+                The rows themselves. The format depends on the values of
+                `keyed` and `extended` arguments.
+
+        Raises:
+            `exceptions.DataPackageException`: Something went wrong.
+        '''
 
         # Error for non tabular
         if not self.tabular:
@@ -169,11 +205,56 @@ class Resource(object):
         if relations:
             relations = self.__get_relations()
 
-        return self.__get_table().iter(relations=relations, **options)
+        return self.__get_table().iter(
+            keyed=keyed,
+            extended=extended,
+            cast=cast,
+            relations=relations
+        )
 
-    def read(self, relations=False, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+    def read(self, keyed=False, extended=False, cast=True, relations=False, limit=None):
+        '''Tabular resource only. Iterates over the tabular resource's rows.
+
+        There are three formats of returning the rows, the default, keyed, and
+        extended. Consider a CSV as:
+
+            name,value
+            J Doe,10
+
+        This will be returned as:
+
+        * Default: `['J Doe', 10]`
+        * Keyed: `{'name': 'J Doe', 'value': 10}`
+        * Extended: `(1, ['name', 'value'], ['J Doe', 10])`
+
+        Notice that you can only set a single format at a time. The behaviour
+        of `read(keyed=True, extended=True)` is undefined.
+
+        Args:
+            keyed (bool, optional): When `True`, each returned row will be a
+                `dict` mapping the header name to its value in the current row.
+                For example, `[{'name': 'J Smith', 'value': '10'}]`. Ignored if
+                ``extended`` is True. Defaults to False.
+            extended (bool, optional): When `True`, returns each row as a tuple
+                with row number (starts at 1), list of headers, and list of row
+                values. For example, `(1, ['name', 'value'], ['J Smith', '10'])`.
+                Defaults to False.
+            cast (bool, optional): When `True`, casts the cell values according
+                to the `schema()`. Defaults to `True`.
+            relations (bool, optional): When `True`, check and resolve foreign
+                keys, adding their contents to the returned rows. Defaults to
+                `False`.
+            limit (int, optional): Maximum number of rows to return. Defaults
+                to `None`, i.e. returns all rows.
+
+        Returns:
+            List[Union[List[Any], Dict[str, Any], Tuple[int, List[str], List[Any]]]]:
+                The rows themselves. The format depends on the values of
+                `keyed` and `extended` arguments.
+
+        Raises:
+            `exceptions.DataPackageException`: Something went wrong.
+        '''
 
         # Error for non tabular
         if not self.tabular:
@@ -184,17 +265,38 @@ class Resource(object):
         if relations:
             relations = self.__get_relations()
 
-        return self.__get_table().read(relations=relations, **options)
+        return self.__get_table().read(
+            keyed=keyed,
+            extended=extended,
+            cast=cast,
+            relations=relations,
+            limit=limit
+        )
 
     def check_relations(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
-        self.read(relations=True)
+        '''Tabular resource only. Validate foreign key relations.
+
+        Returns:
+            bool: `True` if there are no issues.
+
+        Raises:
+            `exceptions.RelationError`: If there is any integrity relations
+                issue (e.g. an unknown foreign key).
+        '''
+        [row for row in self.iter(relations=True)]
         return True
 
-    def raw_iter(self, stream=False):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+    def raw_iter(self):
+        '''Returns file-like object that iterates over resource as a binary stream.
+
+        Can't be used with inline resources.
+
+        Returns:
+            BinaryIO: File-like object opened as binary.
+
+        Raises:
+            `exceptions.DataPackageException`: If called on a inline resource.
+        '''
 
         # Error for inline
         if self.inline:
@@ -212,16 +314,24 @@ class Resource(object):
         return filelike
 
     def raw_read(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
-        contents = b''
-        for chunk in self.iter():
-            contents += chunk
+        '''Returns resource contents as bytes.
+
+        Can't be used with inline resources.
+
+        Returns:
+            ByteString: Binary resource contents.
+
+        Raises:
+            `exceptions.DataPackageException`: If called on a inline resource.
+        '''
+
+        fp = self.raw_iter()
+        contents = b''.join([chunk for chunk in fp])
+        fp.close()
         return contents
 
     def infer(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''Infer and commit this resource's metadata.'''
         descriptor = deepcopy(self.__current_descriptor)
 
         # Blank -> Stop
@@ -270,8 +380,19 @@ class Resource(object):
         return descriptor
 
     def commit(self, strict=None):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''Commits any changes to the descriptor.
+
+        Args:
+            strict (bool, optional): If set, enables or disables this resource's
+                strict mode.
+
+        Returns:
+            bool: `True` if there were changes commited, `False` if nothing was
+                modified (because there were no modifications to be made).
+
+        Raises:
+            `exceptions.DataPackageException`: Something went wrong.
+        '''
         if strict is not None:
             self.__strict = strict
         elif self.__current_descriptor == self.__next_descriptor:
@@ -282,8 +403,23 @@ class Resource(object):
         return True
 
     def save(self, target, storage=None, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
+        '''Saves data resource.
+
+        If the `storage` is `None`, this will save this resource's descriptor
+        only. Otherwise it will save the descriptor and data to `storage`.
+
+        Args:
+            target (str): Target path to save the resource descriptor.
+            storage (tableschema.Storage, optional): Storage instance to save
+                the data package into.
+            **options (dict, optional): Options to pass to the `storage` instance.
+
+        Returns:
+            bool: `True` when successful.
+
+        Raises:
+            `exceptions.DataPackageException`: Something went wrong.
+        '''
 
         # Save resource to storage
         if storage is not None:
@@ -302,6 +438,8 @@ class Resource(object):
             helpers.ensure_dir(target)
             with io.open(target, mode=mode, encoding=encoding) as file:
                 json.dump(self.__current_descriptor, file, indent=4)
+
+        return True
 
     # Private
 

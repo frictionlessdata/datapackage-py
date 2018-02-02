@@ -17,12 +17,22 @@ from . import exceptions
 # Module API
 
 class Profile(object):
+    '''A data package or data resource profile schema.
+
+    Args:
+        profile (Union[str, dict]): Either a profile name, that must be in the
+            `datapackage.registry`, a local path or URL to a JSON Schema, or a
+            dict with the schema itself.
+
+    Raises:
+        `exceptions.ValidationError`: If the profile couldn't be loaded or is
+            invalid.
+    '''
 
     # Public
 
     def __init__(self, profile):
-        """https://github.com/frictionlessdata/datapackage-py#schema
-        """
+        # FIXME: What happens if "profile" is a URL or a dict?
         self._name = profile
         self._registry = self._load_registry()
         self._schema = self._load_schema(profile, self._registry)
@@ -31,23 +41,32 @@ class Profile(object):
 
     @property
     def name(self):
-        """https://github.com/frictionlessdata/datapackage-py#schema
-        """
         return self._name
 
     @property
     def jsonschema(self):
-        """https://github.com/frictionlessdata/datapackage-py#schema
-        """
         return self._schema
 
-    def validate(self, data):
-        """https://github.com/frictionlessdata/datapackage-py#schema
-        """
+    def validate(self, descriptor):
+        '''Validates a descriptor against the profile.
+
+        Args:
+            descriptor (dict): The dereferenced descriptor. You can use
+                `helpers.dereference_package_descriptor()` and
+                `helpers.dereference_resource_descriptor()` if you need to
+                dereference your descriptor before calling this method.
+
+        Returns:
+            bool: `True` if there are no errors.
+
+        Raises:
+            `exceptions.ValidationError`: If errors are found, they will be in
+                the exception's `.errors` list.
+        '''
 
         # Collect errors
         errors = []
-        for error in self._validator.iter_errors(data):
+        for error in self._validator.iter_errors(descriptor):
             if isinstance(error, jsonschema.exceptions.ValidationError):
                 message = str(error.message)
                 if six.PY2:

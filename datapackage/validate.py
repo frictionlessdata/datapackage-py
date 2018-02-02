@@ -11,7 +11,17 @@ from .package import Package
 
 
 def validate(descriptor):
-    """https://github.com/frictionlessdata/datapackage-py#validate
-    """
+    '''Validate a data package descriptor.
+
+    Args:
+        descriptor (Union[str, dict]): Local or remote path to the descriptor,
+            or the descriptor itself as a dict.
+
+    Returns:
+        bool: `True` if the descriptor is valid.
+
+    Raises:
+        `exceptions.ValidationError`: If the descriptor is invalid.
+    '''
     Package(descriptor, strict=True)
     return True
