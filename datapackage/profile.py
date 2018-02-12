@@ -41,13 +41,13 @@ class Profile(object):
         """
         return self._schema
 
-    def validate(self, data):
+    def validate(self, descriptor):
         """https://github.com/frictionlessdata/datapackage-py#schema
         """
 
         # Collect errors
         errors = []
-        for error in self._validator.iter_errors(data):
+        for error in self._validator.iter_errors(descriptor):
             if isinstance(error, jsonschema.exceptions.ValidationError):
                 message = str(error.message)
                 if six.PY2:
