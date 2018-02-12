@@ -123,7 +123,7 @@ package = Package('datapackage.zip')
 
 It was onle basic introduction to the `Package` class. To learn more let's take a look on `Package` class API reference.
 
-#### `Package(descriptor, base_path=None, strict=False, storage=None, **options)`
+#### `Package(descriptor=None, base_path=None, strict=False, storage=None, **options)`
 
 Constructor to instantiate `Package` class.
 
@@ -213,7 +213,7 @@ package.commit()
 package.name # renamed-package
 ```
 
-#### `package.save(target, storage=None, **options)`
+#### `package.save(target=None, storage=None, **options)`
 
 Saves this data package to storage if `storage` argument is passed or saves this data package's descriptor to json file if `target` arguments ends with `.json` or saves this data package to zip file otherwise.
 
@@ -367,7 +367,7 @@ resource = Resource('dataresource.json')
 
 It was onle basic introduction to the `Resource` class. To learn more let's take a look on `Resource` class API reference.
 
-#### `Resource(descriptor, base_path=None, strict=False, storage=None, **options)`
+#### `Resource(descriptor={}, base_path=None, strict=False, storage=None, **options)`
 
 Constructor to instantiate `Resource` class.
 
@@ -439,7 +439,7 @@ For tabular resources it returns `Schema` instance to interact with data schema.
 
 - `(tableschema.Schema)` - returns schema class instance
 
-#### `resource.iter(keyed=Fase, extended=False, cast=True, relations=False)`
+#### `resource.iter(keyed=False, extended=False, cast=True, relations=False)`
 
 > Only for tabular resources
 

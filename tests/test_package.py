@@ -300,7 +300,6 @@ def test_descriptor_apply_defaults_resource_tabular_dialect():
                 'doubleQuote': True,
                 'lineTerminator': '\r\n',
                 'quoteChar': '"',
-                'escapeChar': '\\',
                 'skipInitialSpace': True,
                 'header': True,
                 'caseSensitiveHeader': False,

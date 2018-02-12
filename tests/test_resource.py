@@ -226,7 +226,6 @@ def test_descriptor_expand_tabular_dialect():
             'doubleQuote': True,
             'lineTerminator': '\r\n',
             'quoteChar': '"',
-            'escapeChar': '\\',
             'skipInitialSpace': True,
             'header': True,
             'caseSensitiveHeader': False,
