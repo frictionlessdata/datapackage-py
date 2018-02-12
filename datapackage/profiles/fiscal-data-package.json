@@ -2058,15 +2058,13 @@
                     "type": "string",
                     "default": "\"",
                     "examples": [
-                      "{\n  \"quoteChar\": \"\"\n}\n",
-                      "{\n  \"quoteChar\": \"''\"\n}\n"
+                      "{\n  \"quoteChar\": \"'\"\n}\n"
                     ]
                   },
                   "escapeChar": {
                     "title": "Escape Character",
                     "description": "Specifies a one-character string to use as the escape character.",
                     "type": "string",
-                    "default": "\\",
                     "examples": [
                       "{\n  \"escapeChar\": \"\\\\\"\n}\n"
                     ]
@@ -2102,7 +2100,7 @@
                 },
                 "examples": [
                   "{\n  \"dialect\": {\n    \"delimiter\": \";\"\n  }\n}\n",
-                  "{\n  \"dialect\": {\n    \"delimiter\": \"\\t\",\n    \"quoteChar\": \"''\"\n  }\n}\n"
+                  "{\n  \"dialect\": {\n    \"delimiter\": \"\\t\",\n    \"quoteChar\": \"'\"\n  }\n}\n"
                 ]
               },
               "format": {
@@ -4064,15 +4062,13 @@
                     "type": "string",
                     "default": "\"",
                     "examples": [
-                      "{\n  \"quoteChar\": \"\"\n}\n",
-                      "{\n  \"quoteChar\": \"''\"\n}\n"
+                      "{\n  \"quoteChar\": \"'\"\n}\n"
                     ]
                   },
                   "escapeChar": {
                     "title": "Escape Character",
                     "description": "Specifies a one-character string to use as the escape character.",
                     "type": "string",
-                    "default": "\\",
                     "examples": [
                       "{\n  \"escapeChar\": \"\\\\\"\n}\n"
                     ]
@@ -4108,7 +4104,7 @@
                 },
                 "examples": [
                   "{\n  \"dialect\": {\n    \"delimiter\": \";\"\n  }\n}\n",
-                  "{\n  \"dialect\": {\n    \"delimiter\": \"\\t\",\n    \"quoteChar\": \"''\"\n  }\n}\n"
+                  "{\n  \"dialect\": {\n    \"delimiter\": \"\\t\",\n    \"quoteChar\": \"'\"\n  }\n}\n"
                 ]
               },
               "format": {
