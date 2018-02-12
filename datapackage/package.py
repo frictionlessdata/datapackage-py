@@ -220,19 +220,8 @@ class Package(object):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
-        # Save descriptor to json
-        if str(target).endswith('.json'):
-            mode = 'w'
-            encoding = 'utf-8'
-            if six.PY2:
-                mode = 'wb'
-                encoding = None
-            helpers.ensure_dir(target)
-            with io.open(target, mode=mode, encoding=encoding) as file:
-                json.dump(self.__current_descriptor, file, indent=4)
-
         # Save package to storage
-        elif storage is not None:
+        if storage is not None:
             if not isinstance(storage, Storage):
                 storage = Storage.connect(storage, **options)
             buckets = []
@@ -247,6 +236,17 @@ class Package(object):
             for bucket in storage.buckets:
                 resource = self.resources[buckets.index(bucket)]
                 storage.write(bucket, resource.iter())
+
+        # Save descriptor to json
+        elif str(target).endswith('.json'):
+            mode = 'w'
+            encoding = 'utf-8'
+            if six.PY2:
+                mode = 'wb'
+                encoding = None
+            helpers.ensure_dir(target)
+            with io.open(target, mode=mode, encoding=encoding) as file:
+                json.dump(self.__current_descriptor, file, indent=4)
 
         # Save package to zip
         else:
