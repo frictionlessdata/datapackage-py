@@ -54,6 +54,8 @@ def retrieve_descriptor(descriptor):
             else:
                 req = requests.get(the_descriptor)
                 req.raise_for_status()
+                # Force UTF8 encoding for 'text/plain' sources
+                req.encoding = 'utf8'
                 the_descriptor = req.json()
         except (IOError, requests.exceptions.RequestException) as error:
             message = 'Unable to load JSON at "%s"' % descriptor

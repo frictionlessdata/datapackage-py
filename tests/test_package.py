@@ -86,6 +86,15 @@ def test_init_accepts_urls():
 
 
 @httpretty.activate
+def test_init_accepts_text_plain_urls():
+    url = 'http://someplace.com/datapackage.json'
+    body = '{"profile": "data-package", "title": "כותרת"}'
+    httpretty.register_uri(httpretty.GET, url, body=body, content_type='text/plain')
+    pakcage = Package(url)
+    assert pakcage.descriptor == {'profile': 'data-package', 'title': 'כותרת'}
+
+
+@httpretty.activate
 def test_init_raises_if_url_doesnt_exist():
     url = 'http://someplace.com/datapackage.json'
     httpretty.register_uri(httpretty.GET, url, status=404)
