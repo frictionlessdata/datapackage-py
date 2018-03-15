@@ -56,6 +56,7 @@
           "title": "Path",
           "description": "A fully qualified URL, or a POSIX file path..",
           "type": "string",
+          "pattern": "^(?=^[^./~])(^((?!\\.{2}).)*$).*$",
           "examples": [
             "{\n  \"path\": \"file.csv\"\n}\n",
             "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
@@ -69,6 +70,7 @@
             "title": "Path",
             "description": "A fully qualified URL, or a POSIX file path..",
             "type": "string",
+            "pattern": "^(?=^[^./~])(^((?!\\.{2}).)*$).*$",
             "examples": [
               "{\n  \"path\": \"file.csv\"\n}\n",
               "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
@@ -1711,6 +1713,7 @@
             "title": "Path",
             "description": "A fully qualified URL, or a POSIX file path..",
             "type": "string",
+            "pattern": "^(?=^[^./~])(^((?!\\.{2}).)*$).*$",
             "examples": [
               "{\n  \"path\": \"file.csv\"\n}\n",
               "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
@@ -1756,6 +1759,7 @@
             "title": "Path",
             "description": "A fully qualified URL, or a POSIX file path..",
             "type": "string",
+            "pattern": "^(?=^[^./~])(^((?!\\.{2}).)*$).*$",
             "examples": [
               "{\n  \"path\": \"file.csv\"\n}\n",
               "{\n  \"path\": \"http://example.com/file.csv\"\n}\n"
