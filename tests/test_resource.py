@@ -180,7 +180,6 @@ def test_descriptor_expand():
         'name': 'name',
         'data': 'data',
         'profile': 'data-resource',
-        'encoding': 'utf-8',
     }
 
 
@@ -198,7 +197,6 @@ def test_descriptor_expand_tabular_schema():
         'name': 'name',
         'data': 'data',
         'profile': 'tabular-data-resource',
-        'encoding': 'utf-8',
         'schema': {
             'fields': [{'name': 'name', 'type': 'string', 'format': 'default'}],
             'missingValues': [''],
@@ -220,7 +218,6 @@ def test_descriptor_expand_tabular_dialect():
         'name': 'name',
         'data': 'data',
         'profile': 'tabular-data-resource',
-        'encoding': 'utf-8',
         'dialect': {
             'delimiter': 'custom',
             'doubleQuote': True,
@@ -550,7 +547,6 @@ def test_load_data_from_storage():
     assert resource.descriptor == {
         'name': 'data',
         'path': 'data',
-        'encoding': 'utf-8',
         'profile': 'tabular-data-resource',
         'schema': SCHEMA}
     assert resource.headers == ['id']

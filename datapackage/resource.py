@@ -244,7 +244,7 @@ class Resource(object):
                 descriptor['mediatype'] = 'text/%s' % descriptor['format']
 
             # Encoding
-            if descriptor.get('encoding') == config.DEFAULT_RESOURCE_ENCODING:
+            if not descriptor.get('encoding'):
                 contents = b''
                 with self.raw_iter(stream=True) as stream:
                     for chunk in stream:
@@ -355,7 +355,8 @@ class Resource(object):
                 options['format'] = descriptor.get('format', 'csv')
                 if descriptor.get('data'):
                     options['format'] = 'inline'
-                options['encoding'] = descriptor['encoding']
+                if descriptor.get('encoding'):
+                    options['encoding'] = descriptor['encoding']
                 options['skip_rows'] = descriptor.get('skipRows', [])
                 dialect = descriptor.get('dialect')
                 if dialect:
