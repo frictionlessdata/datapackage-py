@@ -42,3 +42,10 @@ def test_ensure_dir():
 ))
 def test_is_safe_path(path, is_safe):
     assert helpers.is_safe_path(path) is is_safe
+
+
+def test_expand_resource_descriptor_doesnt_add_default_encoding():
+    descriptor = {}
+    expanded_descriptor = helpers.expand_resource_descriptor(descriptor)
+
+    assert 'encoding' not in descriptor

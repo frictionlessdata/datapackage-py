@@ -24,3 +24,8 @@ def test_infer():
                 {'format': 'default', 'name': 'id', 'type': 'integer'},
                 {'format': 'default', 'name': 'city', 'type': 'string'}],
                 'missingValues': ['']}}]}
+
+
+def test_infer_non_utf8_file():
+    descriptor = infer('data/data_with_accents.csv')
+    assert descriptor['resources'][0]['encoding'] == 'windows-1252'

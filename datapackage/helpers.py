@@ -165,7 +165,6 @@ def expand_resource_descriptor(descriptor):
     """Apply defaults to resource descriptor (IN-PLACE FOR NOW).
     """
     descriptor.setdefault('profile', config.DEFAULT_RESOURCE_PROFILE)
-    descriptor.setdefault('encoding', config.DEFAULT_RESOURCE_ENCODING)
     if descriptor['profile'] == 'tabular-data-resource':
 
         # Schema

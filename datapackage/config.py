@@ -10,7 +10,6 @@ from __future__ import unicode_literals
 TABULAR_FORMATS = ['csv', 'tsv', 'xls', 'xlsx']
 DEFAULT_DATA_PACKAGE_PROFILE = 'data-package'
 DEFAULT_RESOURCE_PROFILE = 'data-resource'
-DEFAULT_RESOURCE_ENCODING = 'utf-8'
 DEFAULT_FIELD_TYPE = 'string'
 DEFAULT_FIELD_FORMAT = 'default'
 DEFAULT_MISSING_VALUES = ['']

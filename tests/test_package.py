@@ -253,7 +253,7 @@ def test_descriptor_apply_defaults_resource():
     assert package.descriptor == {
         'profile': 'data-package',
         'resources': [
-            {'name': 'name', 'data': 'data', 'profile': 'data-resource', 'encoding': 'utf-8'},
+            {'name': 'name', 'data': 'data', 'profile': 'data-resource'},
         ]
     }
 
@@ -276,7 +276,6 @@ def test_descriptor_apply_defaults_resource_tabular_schema():
             'name': 'name',
             'data': 'data',
             'profile': 'tabular-data-resource',
-            'encoding': 'utf-8',
             'schema': {
                 'fields': [{'name': 'name', 'type': 'string', 'format': 'default'}],
                 'missingValues': [''],
@@ -303,7 +302,6 @@ def test_descriptor_apply_defaults_resource_tabular_dialect():
             'name': 'name',
             'data': 'data',
             'profile': 'tabular-data-resource',
-            'encoding': 'utf-8',
             'dialect': {
                 'delimiter': 'custom',
                 'doubleQuote': True,
@@ -1068,7 +1066,6 @@ def test_load_data_from_storage():
     assert resource.descriptor == {
         'name': 'data',
         'path': 'data',
-        'encoding': 'utf-8',
         'profile': 'tabular-data-resource',
         'schema': schema}
     assert resource.headers == ['id']
