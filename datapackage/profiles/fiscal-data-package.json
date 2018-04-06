@@ -218,7 +218,7 @@
           },
           "context": "This property is not legally binding and does not guarantee that the package is licensed under the terms defined herein.",
           "examples": [
-            "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
+            "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"path\": \"http://opendatacommons.org/licenses/pddl/\",\n      \"title\": \"Open Data Commons Public Domain Dedication and License v1.0\"\n    }\n  ]\n}\n"
           ]
         },
         "resources": {
@@ -1865,7 +1865,6 @@
                   },
                   "missingValues": {
                     "type": "array",
-                    "minItems": 1,
                     "items": {
                       "type": "string"
                     },
@@ -1875,7 +1874,8 @@
                     "description": "Values that when encountered in the source, should be considered as `null`, 'not present', or 'blank' values.",
                     "context": "Many datasets arrive with missing data values, either because a value was not collected or it never existed.\nMissing values may be indicated simply by the value being empty in other cases a special value may have been used e.g. `-`, `NaN`, `0`, `-9999` etc.\nThe `missingValues` property provides a way to indicate that these values should be interpreted as equivalent to null.\n\n`missingValues` are strings rather than being the data type of the particular field. This allows for comparison prior to casting and for fields to have missing value which are not of their type, for example a `number` field to have missing values indicated by `-`.\n\nThe default value of `missingValue` for a non-string type field is the empty string `''`. For string type fields there is no default for `missingValue` (for string fields the empty string `''` is a valid value and need not indicate null).",
                     "examples": [
-                      "{\n  \"missingValues\": [\n    \"-\",\n    \"NaN\",\n    \"\"\n  ]\n}\n"
+                      "{\n  \"missingValues\": [\n    \"-\",\n    \"NaN\",\n    \"\"\n  ]\n}\n",
+                      "{\n  \"missingValues\": []\n}\n"
                     ]
                   }
                 },
@@ -1920,7 +1920,7 @@
                 "title": "Sources",
                 "description": "The raw sources for this resource.",
                 "type": "array",
-                "minItems": 1,
+                "minItems": 0,
                 "items": {
                   "title": "Source",
                   "description": "A source file.",
@@ -1960,7 +1960,7 @@
                   }
                 },
                 "examples": [
-                  "{\n  \"sources\": [\n    {\n      \"name\": \"World Bank and OECD\",\n      \"uri\": \"http://data.worldbank.org/indicator/NY.GDP.MKTP.CD\"\n    }\n  ]\n}\n"
+                  "{\n  \"sources\": [\n    {\n      \"title\": \"World Bank and OECD\",\n      \"path\": \"http://data.worldbank.org/indicator/NY.GDP.MKTP.CD\"\n    }\n  ]\n}\n"
                 ]
               },
               "licenses": {
@@ -2007,7 +2007,7 @@
                 },
                 "context": "This property is not legally binding and does not guarantee that the package is licensed under the terms defined herein.",
                 "examples": [
-                  "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
+                  "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"path\": \"http://opendatacommons.org/licenses/pddl/\",\n      \"title\": \"Open Data Commons Public Domain Dedication and License v1.0\"\n    }\n  ]\n}\n"
                 ]
               },
               "dialect": {
@@ -2179,7 +2179,7 @@
           "title": "Sources",
           "description": "The raw sources for this resource.",
           "type": "array",
-          "minItems": 1,
+          "minItems": 0,
           "items": {
             "title": "Source",
             "description": "A source file.",
@@ -2219,7 +2219,7 @@
             }
           },
           "examples": [
-            "{\n  \"sources\": [\n    {\n      \"name\": \"World Bank and OECD\",\n      \"uri\": \"http://data.worldbank.org/indicator/NY.GDP.MKTP.CD\"\n    }\n  ]\n}\n"
+            "{\n  \"sources\": [\n    {\n      \"title\": \"World Bank and OECD\",\n      \"path\": \"http://data.worldbank.org/indicator/NY.GDP.MKTP.CD\"\n    }\n  ]\n}\n"
           ]
         }
       }
@@ -3874,7 +3874,6 @@
                   },
                   "missingValues": {
                     "type": "array",
-                    "minItems": 1,
                     "items": {
                       "type": "string"
                     },
@@ -3884,7 +3883,8 @@
                     "description": "Values that when encountered in the source, should be considered as `null`, 'not present', or 'blank' values.",
                     "context": "Many datasets arrive with missing data values, either because a value was not collected or it never existed.\nMissing values may be indicated simply by the value being empty in other cases a special value may have been used e.g. `-`, `NaN`, `0`, `-9999` etc.\nThe `missingValues` property provides a way to indicate that these values should be interpreted as equivalent to null.\n\n`missingValues` are strings rather than being the data type of the particular field. This allows for comparison prior to casting and for fields to have missing value which are not of their type, for example a `number` field to have missing values indicated by `-`.\n\nThe default value of `missingValue` for a non-string type field is the empty string `''`. For string type fields there is no default for `missingValue` (for string fields the empty string `''` is a valid value and need not indicate null).",
                     "examples": [
-                      "{\n  \"missingValues\": [\n    \"-\",\n    \"NaN\",\n    \"\"\n  ]\n}\n"
+                      "{\n  \"missingValues\": [\n    \"-\",\n    \"NaN\",\n    \"\"\n  ]\n}\n",
+                      "{\n  \"missingValues\": []\n}\n"
                     ]
                   }
                 },
@@ -3929,7 +3929,7 @@
                 "title": "Sources",
                 "description": "The raw sources for this resource.",
                 "type": "array",
-                "minItems": 1,
+                "minItems": 0,
                 "items": {
                   "title": "Source",
                   "description": "A source file.",
@@ -3969,7 +3969,7 @@
                   }
                 },
                 "examples": [
-                  "{\n  \"sources\": [\n    {\n      \"name\": \"World Bank and OECD\",\n      \"uri\": \"http://data.worldbank.org/indicator/NY.GDP.MKTP.CD\"\n    }\n  ]\n}\n"
+                  "{\n  \"sources\": [\n    {\n      \"title\": \"World Bank and OECD\",\n      \"path\": \"http://data.worldbank.org/indicator/NY.GDP.MKTP.CD\"\n    }\n  ]\n}\n"
                 ]
               },
               "licenses": {
@@ -4016,7 +4016,7 @@
                 },
                 "context": "This property is not legally binding and does not guarantee that the package is licensed under the terms defined herein.",
                 "examples": [
-                  "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"uri\": \"http://opendatacommons.org/licenses/pddl/\"\n    }\n  ]\n}\n"
+                  "{\n  \"licenses\": [\n    {\n      \"name\": \"odc-pddl-1.0\",\n      \"path\": \"http://opendatacommons.org/licenses/pddl/\",\n      \"title\": \"Open Data Commons Public Domain Dedication and License v1.0\"\n    }\n  ]\n}\n"
                 ]
               },
               "dialect": {
