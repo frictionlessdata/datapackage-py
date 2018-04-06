@@ -56,6 +56,7 @@ setup(
     },
     zip_safe=False,
     long_description=README,
+    long_description_content_type='text/markdown',
     description='Utilities to work with Data Packages as defined on specs.frictionlessdata.io',
     author='Open Knowledge Foundation',
     author_email='info@okfn.org',
