@@ -530,6 +530,19 @@ def test_descriptor_table_tabular_dialect_header_false():
     ]
 
 
+# Resource.raw_iter/read
+
+def test_raw_iter():
+    resource = Resource({'path': 'data/foo.txt'})
+    with resource.raw_iter() as filelike:
+        assert list(filelike) == [b'foo\n']
+
+
+def test_raw_read():
+    resource = Resource({'path': 'data/foo.txt'})
+    assert resource.raw_read() == b'foo\n'
+
+
 # Storage
 
 def test_load_data_from_storage():

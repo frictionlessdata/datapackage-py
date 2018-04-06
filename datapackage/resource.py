@@ -215,8 +215,9 @@ class Resource(object):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
         contents = b''
-        for chunk in self.iter():
-            contents += chunk
+        with self.raw_iter() as filelike:
+            for chunk in filelike:
+                contents += chunk
         return contents
 
     def infer(self):
@@ -511,6 +512,12 @@ class _MultipartSource(object):
         self.__source = source
         self.__remote = remote
         self.__rows = self.__iter_rows()
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self):
+        pass
 
     def __iter__(self):
         return self.__rows
