@@ -72,3 +72,4 @@ tabulator
 tableschema
 tableschema_bigquery
 tableschema_sql
+.pytest_cache
