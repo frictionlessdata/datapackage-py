@@ -197,8 +197,8 @@ def ensure_dir(path):
 def is_safe_path(path):
     """Check if path is safe and allowed.
     """
-    contains_windows_var = lambda val: re.match('%.+%', val)
-    contains_posix_var = lambda val: re.match('\$.+', val)
+    contains_windows_var = lambda val: re.match(r'%.+%', val)
+    contains_posix_var = lambda val: re.match(r'\$.+', val)
 
     unsafeness_conditions = [
         os.path.isabs(path),

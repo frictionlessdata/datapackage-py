@@ -136,6 +136,12 @@ class Package(object):
         return self.__next_descriptor
 
     @property
+    def base_path(self):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+        return self.__base_path
+
+    @property
     def resources(self):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
@@ -146,12 +152,6 @@ class Package(object):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
         return [resource.name for resource in self.resources]
-
-    @property
-    def base_path(self):
-        """"str: The base path of this Data Package (can be None).
-        """
-        return self.__base_path
 
     def get_resource(self, name):
         """https://github.com/frictionlessdata/datapackage-py#package

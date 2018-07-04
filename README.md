@@ -151,6 +151,10 @@ Constructor to instantiate `Package` class.
 
 - `(dict)` - returns data package descriptor
 
+#### `package.base_path`
+
+- `(str/None)` - returns the data package base path
+
 #### `package.resources`
 
 - `(Resource[])` - returns an array of `Resource` instances (see below).
@@ -815,6 +819,12 @@ Here is a list of the library contributors:
 ## Changelog
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
+
+### v1.3
+
+New API added:
+
+- property `package.base_path` is now publicly available
 
 ### v1.2
 
