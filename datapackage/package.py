@@ -147,6 +147,12 @@ class Package(object):
         """
         return [resource.name for resource in self.resources]
 
+    @property
+    def base_path(self):
+        """"str: The base path of this Data Package (can be None).
+        """
+        return self.__base_path
+
     def get_resource(self, name):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
@@ -397,18 +403,6 @@ class Package(object):
             UserWarning)
 
         return self.profile.iter_errors(self.to_dict())
-
-    @property
-    def base_path(self):
-        """"str: The base path of this Data Package (can be None).
-        """
-
-        # Deprecate
-        warnings.warn(
-            'Property "package.base_path" is deprecated.',
-            UserWarning)
-
-        return self.__base_path
 
     def to_dict(self):
         """"dict: Convert this Data Package to dict.
