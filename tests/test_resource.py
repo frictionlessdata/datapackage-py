@@ -556,7 +556,7 @@ def test_load_data_from_storage():
         iter=lambda bucket: [[1], [2], [3]],
         spec=Storage)
     resource = Resource({'path': 'data'}, storage=storage)
-    resource.infer()
+    resource.infer(infer_options=dict(confidence=0.8))
     assert resource.descriptor == {
         'name': 'data',
         'path': 'data',
