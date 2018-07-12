@@ -495,9 +495,11 @@ Returns resource data as bytes.
 
 - (bytes) - returns resource data in bytes
 
-#### `resource.infer()`
+#### `resource.infer(**options)`
 
 Infer resource metadata like name, format, mediatype, encoding, schema and profile. It commits this changes into resource instance.
+
+- `options` - options will be passed to `tableschema.infer` call, for more control on results (e.g. for setting `limit`, `confidence` etc.).
 
 - `(dict)` - returns resource descriptor
 
