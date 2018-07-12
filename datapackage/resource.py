@@ -220,7 +220,7 @@ class Resource(object):
                 contents += chunk
         return contents
 
-    def infer(self, infer_options={}):
+    def infer(self, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
         descriptor = deepcopy(self.__current_descriptor)
@@ -257,7 +257,7 @@ class Resource(object):
         # Schema
         if not descriptor.get('schema'):
             if self.tabular:
-                descriptor['schema'] = self.__get_table().infer(**infer_options)
+                descriptor['schema'] = self.__get_table().infer(**options)
 
         # Profile
         if descriptor.get('profile') == config.DEFAULT_RESOURCE_PROFILE:
