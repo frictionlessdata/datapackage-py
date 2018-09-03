@@ -529,6 +529,23 @@ def test_descriptor_table_tabular_dialect_header_false():
         {'id': 2, 'name': '中国人'},
     ]
 
+# Resource table options
+def test_resource_table_options(patch_get):
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['http://example.com/resource_data.csv'],
+        'schema': 'resource_schema.json',
+    }
+    # Mocks
+    patch_get('http://example.com/resource_data.csv', body="\n\nid,name\n1,english\n2,中国人")
+    # Tests
+    resource = Resource(descriptor, base_path='data', headers=3)
+    assert resource.table.read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
 
 # Resource.raw_iter/read
 

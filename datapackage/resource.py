@@ -62,6 +62,7 @@ class Resource(object):
         self.__strict = strict
         self.__table = None
         self.__errors = []
+        self.__table_options = options
 
         # Build resource
         self.__build()
@@ -352,7 +353,7 @@ class Resource(object):
 
             # General resource
             else:
-                options = {}
+                options = self.__table_options
                 descriptor = self.__current_descriptor
                 options['format'] = descriptor.get('format', 'csv')
                 if descriptor.get('data'):
