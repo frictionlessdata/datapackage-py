@@ -12,7 +12,7 @@ import cchardet
 from copy import deepcopy
 from tableschema import Table, Storage
 from six.moves.urllib.parse import urljoin
-from six.moves.urllib.request import urlopen
+from six.moves.urllib.request import Request, urlopen
 from .profile import Profile
 from . import exceptions
 from . import helpers
@@ -205,7 +205,8 @@ class Resource(object):
         if self.multipart:
             filelike = _MultipartSource(self.source, remote=self.remote)
         elif self.remote:
-            filelike = urlopen(self.source)
+            request = Request(self.source, headers=config.HTTP_HEADERS)
+            filelike = urlopen(request)
         else:
             filelike = io.open(self.source, 'rb')
 
