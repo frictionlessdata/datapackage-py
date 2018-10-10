@@ -495,6 +495,19 @@ def test_descriptor_table_tabular_skip_rows():
     ]
 
 
+def test_resource_options_skip_rows():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['resource_data.csv'],
+        'schema': 'resource_schema.json',
+    }
+    resource = Resource(descriptor, base_path='data', skip_rows=[2])
+    assert resource.table.read(keyed=True) == [
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
 def test_descriptor_table_tabular_dialect_custom():
     descriptor = {
         'name': 'name',
