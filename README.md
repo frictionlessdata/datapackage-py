@@ -822,26 +822,27 @@ Here is a list of the library contributors:
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
+### v1.5
+
+Updated behaviour:
+- Added support for Python 3.7
+
 ### v1.4
 
 New API added:
-
 - added `skip_rows` support to the resource descriptor
 
 ### v1.3
 
 New API added:
-
 - property `package.base_path` is now publicly available
 
 ### v1.2
 
 Updated behaviour:
-
 - CLI command `$ datapackage infer` now outputs only a JSON-formatted data package descriptor.
 
 ### v1.1
 
 New API added:
-
 - Added an integration between `Package/Resource` and the `tableschema.Storage` - https://github.com/frictionlessdata/tableschema-py#storage. It allows to load and save data package from/to different storages like SQL/BigQuery/etc.
