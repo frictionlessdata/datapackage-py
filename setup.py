@@ -24,7 +24,7 @@ INSTALL_REQUIRES = [
     'six>=1.10,<2.0',
     'click>=6.7,<8.0',
     'requests>=2.8,<3.0',
-    'cchardet>=1.0,<2.0',
+    'cchardet>=1.0,<=2.1.1',
     'jsonschema>=2.5,<3.0',
     'unicodecsv>=0.14,<2.0',
     'jsonpointer>=1.10,<2.0',
