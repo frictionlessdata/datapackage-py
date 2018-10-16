@@ -10,6 +10,7 @@ python:
 #  (see https://github.com/pypa/setuptools/issues/951)
   - 3.5
   - 3.6
+  - 3.7
 
 env:
   global:
