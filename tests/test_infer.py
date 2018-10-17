@@ -32,4 +32,4 @@ def test_infer_non_utf8_file():
 
 def test_infer_empty_file():
     descriptor = infer('data/empty.csv')
-    assert descriptor['resources'][0].get('encoding') == 'utf-8'
+    assert descriptor['resources'][0].get('encoding') is None
