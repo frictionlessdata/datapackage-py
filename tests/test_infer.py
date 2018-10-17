@@ -29,3 +29,7 @@ def test_infer():
 def test_infer_non_utf8_file():
     descriptor = infer('data/data_with_accents.csv')
     assert descriptor['resources'][0]['encoding'] == 'iso-8859-1'
+
+def test_infer_empty_file():
+    descriptor = infer('data/empty.csv')
+    assert descriptor['resources'][0].get('encoding') == 'utf-8'

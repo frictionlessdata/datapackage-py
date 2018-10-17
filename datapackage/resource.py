@@ -253,7 +253,11 @@ class Resource(object):
                     for chunk in stream:
                         contents += chunk
                         if len(contents) > 1000: break
-                encoding = cchardet.detect(contents)['encoding'].lower()
+                encoding = cchardet.detect(contents)['encoding']
+                if encoding is None:
+                    encoding = 'utf-8'
+                else:
+                    encoding = encoding.lower()
                 descriptor['encoding'] = 'utf-8' if encoding == 'ascii' else encoding
 
         # Schema
