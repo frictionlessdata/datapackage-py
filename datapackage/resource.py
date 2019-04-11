@@ -9,10 +9,11 @@ import six
 import json
 import warnings
 import cchardet
+import requests
 from copy import deepcopy
 from tableschema import Table, Storage
 from six.moves.urllib.parse import urljoin
-from six.moves.urllib.request import Request, urlopen
+from six.moves.urllib.request import urlopen
 from .profile import Profile
 from . import exceptions
 from . import helpers
@@ -206,8 +207,13 @@ class Resource(object):
         if self.multipart:
             filelike = _MultipartSource(self.source, remote=self.remote)
         elif self.remote:
-            request = Request(self.source, headers=config.HTTP_HEADERS)
-            filelike = urlopen(request)
+            if self.__table_options.get('http_session'):
+                http_session = self.__table_options['http_session']
+            else:
+                http_session = requests.Session()
+                http_session.headers = config.HTTP_HEADERS
+            res = http_session.get(self.source, stream=True)
+            filelike = res.raw
         else:
             filelike = io.open(self.source, 'rb')
 
