@@ -822,6 +822,10 @@ Here is a list of the library contributors:
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
+### v1.6
+
+- Added support for custom request session
+
 ### v1.5
 
 Updated behaviour:
