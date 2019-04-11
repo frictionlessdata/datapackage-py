@@ -33,7 +33,7 @@ Code examples in this readme requires Python 3.3+ interpreter. You could see eve
 from datapackage import Package
 
 package = Package('datapackage.json')
-package.getResource('resource').read()
+package.get_resource('resource').read()
 ```
 
 ## Documentation
