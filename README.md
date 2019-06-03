@@ -275,7 +275,7 @@ resource.read(keyed=True)
 # ]
 resource.headers
 # ['city', 'location']
-# (you have to read data first)
+# (reading has to be started first)
 ```
 
 As we could see our locations are just a strings. But it should be geopoints. Also Rome's location is not available but it's also just a `N/A` string instead of Python `None`. First we have to infer resource metadata:
@@ -433,7 +433,7 @@ Combination of `resource.source` and `resource.inline/local/remote/multipart` pr
 
 #### `resource.headers`
 
-> Only for tabular resources (data has to be read first or it will return `None`)
+> Only for tabular resources (reading has to be started first or it will return `None`)
 
 - `(str[])` - returns data source headers
 
