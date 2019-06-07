@@ -29,7 +29,7 @@ INSTALL_REQUIRES = [
     'unicodecsv>=0.14',
     'jsonpointer>=1.10',
     'tableschema>=1.1.0',
-    'tabulator>=1.3',
+    'tabulator>=1.20',
 ]
 TESTS_REQUIRE = [
     'pylama',
