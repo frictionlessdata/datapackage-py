@@ -7,10 +7,21 @@
 
 A library for working with [Data Packages](http://specs.frictionlessdata.io/data-package/).
 
+## Features
+
+ - `Package` class for working with data packages
+ - `Resource` class for working with data resources
+ - `Profile` class for working with profiles
+ - `validate` function for validating data package descriptors
+ - `infer` function for inferring data package descriptors
+
+## Contents
+
 <!--TOC-->
 
 - [datapackage-py](#datapackage-py)
   - [Features](#features)
+  - [Contents](#contents)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
     - [Examples](#examples)
@@ -33,14 +44,6 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [v1.1](#v11)
 
 <!--TOC-->
-
-## Features
-
- - `Package` class for working with data packages
- - `Resource` class for working with data resources
- - `Profile` class for working with profiles
- - `validate` function for validating data package descriptors
- - `infer` function for inferring data package descriptors
 
 ## Getting Started
 
