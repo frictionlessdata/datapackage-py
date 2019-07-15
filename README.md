@@ -15,13 +15,13 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
  - `validate` function for validating data package descriptors
  - `infer` function for inferring data package descriptors
 
-## Contents
+## Table of Contents
 
 <!--TOC-->
 
 - [datapackage-py](#datapackage-py)
   - [Features](#features)
-  - [Contents](#contents)
+  - [Table of Contents](#table-of-contents)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
     - [Examples](#examples)
@@ -36,12 +36,6 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [CLI](#cli)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
-    - [v1.6](#v16)
-    - [v1.5](#v15)
-    - [v1.4](#v14)
-    - [v1.3](#v13)
-    - [v1.2](#v12)
-    - [v1.1](#v11)
 
 <!--TOC-->
 
@@ -854,31 +848,31 @@ Here is a list of the library contributors:
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
-### v1.6
+#### v1.6
 
 - Added support for custom request session
 
-### v1.5
+#### v1.5
 
 Updated behaviour:
 - Added support for Python 3.7
 
-### v1.4
+#### v1.4
 
 New API added:
 - added `skip_rows` support to the resource descriptor
 
-### v1.3
+#### v1.3
 
 New API added:
 - property `package.base_path` is now publicly available
 
-### v1.2
+#### v1.2
 
 Updated behaviour:
 - CLI command `$ datapackage infer` now outputs only a JSON-formatted data package descriptor.
 
-### v1.1
+#### v1.1
 
 New API added:
 - Added an integration between `Package/Resource` and the `tableschema.Storage` - https://github.com/frictionlessdata/tableschema-py#storage. It allows to load and save data package from/to different storages like SQL/BigQuery/etc.
