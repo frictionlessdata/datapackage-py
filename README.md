@@ -15,7 +15,7 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
  - `validate` function for validating data package descriptors
  - `infer` function for inferring data package descriptors
 
-## Table of Contents
+## Contents
 
 <!--TOC-->
 
