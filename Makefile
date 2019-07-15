@@ -22,7 +22,7 @@ profiles:
 	wget -O datapackage/profiles/tabular-data-resource.json https://specs.frictionlessdata.io/schemas/tabular-data-resource.json
 
 readme:
-	md_toc -p README.md github
+	md_toc -p README.md github --header-levels 3
 
 test:
 	pylama $(PACKAGE)

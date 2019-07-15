@@ -21,7 +21,7 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
 
 - [datapackage-py](#datapackage-py)
   - [Features](#features)
-  - [Table of Contents](#table-of-contents)
+  - [Contents](#contents)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
     - [Examples](#examples)
@@ -29,8 +29,8 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [Package](#package)
     - [Resource](#resource)
     - [Profile](#profile)
-    - [Validate](#validate)
-    - [Infer](#infer)
+    - [validate](#validate)
+    - [infer](#infer)
     - [Foreign Keys](#foreign-keys)
     - [Exceptions](#exceptions)
     - [CLI](#cli)
@@ -588,7 +588,7 @@ Validate a data package `descriptor` against the profile.
 - `(exceptions.ValidationError)` - raises if not valid
 - `(bool)` - returns True if valid
 
-### Validate
+### validate
 
 A standalone function to validate a data package descriptor:
 
@@ -613,7 +613,7 @@ Validate a data package descriptor.
 - (exceptions.ValidationError) - raises on invalid
 - `(bool)` - returns true on valid
 
-### Infer
+### infer
 
 A standalone function to infer a data package descriptor.
 
