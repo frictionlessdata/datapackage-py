@@ -7,6 +7,33 @@
 
 A library for working with [Data Packages](http://specs.frictionlessdata.io/data-package/).
 
+<!--TOC-->
+
+- [datapackage-py](#datapackage-py)
+  - [Features](#features)
+  - [Getting Started](#getting-started)
+    - [Installation](#installation)
+    - [Examples](#examples)
+  - [Documentation](#documentation)
+    - [Package](#package)
+    - [Resource](#resource)
+    - [Profile](#profile)
+    - [Validate](#validate)
+    - [Infer](#infer)
+    - [Foreign Keys](#foreign-keys)
+    - [Exceptions](#exceptions)
+    - [CLI](#cli)
+  - [Contributing](#contributing)
+  - [Changelog](#changelog)
+    - [v1.6](#v16)
+    - [v1.5](#v15)
+    - [v1.4](#v14)
+    - [v1.3](#v13)
+    - [v1.2](#v12)
+    - [v1.1](#v11)
+
+<!--TOC-->
+
 ## Features
 
  - `Package` class for working with data packages
