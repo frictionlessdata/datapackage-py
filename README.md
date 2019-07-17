@@ -19,9 +19,6 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
 
 <!--TOC-->
 
-- [datapackage-py](#datapackage-py)
-  - [Features](#features)
-  - [Contents](#contents)
   - [Getting Started](#getting-started)
     - [Installation](#installation)
     - [Examples](#examples)
