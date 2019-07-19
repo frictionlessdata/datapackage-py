@@ -392,19 +392,29 @@ class Resource(object):
                 for fk in table.schema.foreign_keys:
                     resource_name = fk['reference'].get('resource')
                     package_name = fk['reference'].get('package')
+
                     # Self-referenced resource
                     if not resource_name:
                         resource = self
+
                     # Internal resource
                     elif not package_name:
-                        if self.__package:
-                            resource = self.__package.get_resource(resource_name)
+                        if not self.__package:
+                            continue
+                        resource = self.__package.get_resource(resource_name)
+
                     # External resource (experimental)
                     # For now, we rely on uniqueness of resource names and relative paths
                     else:
                         from .package import Package
                         package = Package('/'.join([self.__base_path, package_name]))
                         resource = package.get_resource(resource_name)
+
+                    # Check/add resource
+                    if not resource:
+                        message = 'Foreign key "%s" violation: resource not found'
+                        message = message % fk['fields']
+                        raise exceptions.RelationError(message)
                     resources[resource_name] = resource
 
             # Fill relations
