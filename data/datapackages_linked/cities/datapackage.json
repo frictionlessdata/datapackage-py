@@ -1,0 +1,30 @@
+{
+  "profile": "tabular-data-package",
+  "resources": [
+    {
+      "path": "cities.csv",
+      "profile": "tabular-data-resource",
+      "name": "cities",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "integer",
+            "format": "default"
+          },
+          {
+            "name": "city",
+            "type": "string",
+            "format": "default"
+          }
+        ],
+        "missingValues": [
+          ""
+        ]
+      }
+    }
+  ]
+}

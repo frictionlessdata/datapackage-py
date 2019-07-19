@@ -1,0 +1,40 @@
+{
+  "profile": "tabular-data-package",
+  "resources": [
+    {
+      "path": "people.csv",
+      "profile": "tabular-data-resource",
+      "name": "people",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "integer",
+            "format": "default"
+          },
+          {
+            "name": "population",
+            "type": "integer",
+            "format": "default"
+          }
+        ],
+        "missingValues": [
+          ""
+        ],
+        "foreignKeys": [
+            {
+                "fields": "id",
+                "reference": {
+                    "package": "../cities/datapackage.json",
+                    "resource": "cities",
+                    "fields": "id"
+                }
+            }
+        ]
+      }
+    }
+  ]
+}
