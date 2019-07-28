@@ -31,6 +31,7 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [Foreign Keys](#foreign-keys)
     - [Exceptions](#exceptions)
     - [CLI](#cli)
+    - [Notes](#notes)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
 
@@ -784,6 +785,19 @@ Options:
 Commands:
   infer
   validate
+```
+
+### Notes
+
+#### Accessing data behind a proxy server
+
+Before the `package = Package("https://xxx.json")` call set these environment variables:
+
+```python
+import os
+
+os.environ["HTTP_PROXY"] = 'xxx'
+os.environ["HTTPS_PROXY"] = 'xxx'
 ```
 
 ## Contributing
