@@ -22,6 +22,7 @@ profiles:
 	wget -O datapackage/profiles/tabular-data-resource.json https://specs.frictionlessdata.io/schemas/tabular-data-resource.json
 
 readme:
+	pip install md-toc
 	md_toc -p README.md github --header-levels 3
 	sed -i '/(#datapackage-py)/,+2d' README.md
 
