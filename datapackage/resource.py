@@ -368,8 +368,10 @@ class Resource(object):
                     options['format'] = 'inline'
                 if descriptor.get('encoding'):
                     options['encoding'] = descriptor['encoding']
-                options['skip_rows'] = descriptor.get('skipRows',
-                                                      options.get('skip_rows', []))
+                if descriptor.get('compression'):
+                    options['compression'] = descriptor['compression']
+                options['skip_rows'] = descriptor.get(
+                    'skipRows', options.get('skip_rows', []))
                 dialect = descriptor.get('dialect')
                 if dialect:
                     if not dialect.get('header', config.DEFAULT_DIALECT['header']):
