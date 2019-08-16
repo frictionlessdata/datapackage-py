@@ -1084,6 +1084,44 @@ def test_save_data_to_storage():
     storage.write.assert_called_with('data', ANY)
 
 
+# Compression
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_compression_implicit_gz():
+    package = Package('data/datapackage-compression/datapackage.json')
+    assert package.get_resource('implicit-gz').read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_compression_implicit_zip():
+    package = Package('data/datapackage-compression/datapackage.json')
+    assert package.get_resource('implicit-zip').read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_compression_explicit_gz():
+    package = Package('data/datapackage-compression/datapackage.json')
+    assert package.get_resource('explicit-gz').read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_compression_explicit_zip():
+    package = Package('data/datapackage-compression/datapackage.json')
+    assert package.get_resource('explicit-zip').read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
 # Issues
 
 def test_package_dialect_no_header_issue_167():
