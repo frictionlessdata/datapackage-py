@@ -13,8 +13,8 @@ class Group(object):
 
         # Contract checks
         assert resources
-        assert all([resource.group for resource in resources])
         assert all([resource.tabular for resource in resources])
+        assert all([resource.descriptor.get('group') for resource in resources])
 
         # Get props from the resources
         self.__name = resources[0].descriptor['group']
@@ -41,9 +41,13 @@ class Group(object):
         return self.__schema
 
     def iter(self, **options):
-        return chain([resource.iter(**options) for resource in resources])
+        """https://github.com/frictionlessdata/datapackage-py#group
+        """
+        return chain(*[resource.iter(**options) for resource in self.__resources])
 
     def read(self, limit=None, **options):
+        """https://github.com/frictionlessdata/datapackage-py#group
+        """
         rows = []
         for count, row in enumerate(self.iter(**options), start=1):
             rows.append(row)

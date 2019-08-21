@@ -1,0 +1,28 @@
+{
+    "name": "datapackage",
+    "resources": [
+        {
+            "name": "cars-2016",
+            "group": "cars",
+            "path": "cars-2016.csv",
+            "profile": "tabular-data-resource",
+            "schema": "cars.schema.json"
+        },
+        {
+            "name": "cars-2017",
+            "group": "cars",
+            "path": "cars-2017.csv",
+            "profile": "tabular-data-resource",
+            "schema": "cars.schema.json"
+        },
+        {
+            "name": "cars-2018",
+            "group": "cars",
+            "path": "cars-2018.csv.zip",
+            "profile": "tabular-data-resource",
+            "compression": "zip",
+            "format": "csv",
+            "schema": "cars.schema.json"
+        }
+    ]
+}

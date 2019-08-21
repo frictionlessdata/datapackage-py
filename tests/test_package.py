@@ -1122,6 +1122,36 @@ def test_package_compression_explicit_zip():
     ]
 
 
+# Groups
+
+def test_package_groups():
+    package = Package('data/datapackage-groups/datapackage.json')
+
+    # Check individual resources
+    for year in [2016, 2017, 2018]:
+        assert package.get_resource('cars-%s' % year).read(keyed=True) == [
+            {'name': 'bmw', 'value': year},
+            {'name': 'tesla', 'value': year},
+            {'name': 'nissan', 'value': year},
+        ]
+
+    # Check resoruces as a group
+    group = package.get_group('cars')
+    assert group.name == 'cars'
+    assert group.headers == ['name', 'value']
+    assert group.schema.field_names == ['name', 'value']
+    assert group.read(keyed=True) == [
+        {'name': 'bmw', 'value': 2016},
+        {'name': 'tesla', 'value': 2016},
+        {'name': 'nissan', 'value': 2016},
+        {'name': 'bmw', 'value': 2017},
+        {'name': 'tesla', 'value': 2017},
+        {'name': 'nissan', 'value': 2017},
+        {'name': 'bmw', 'value': 2018},
+        {'name': 'tesla', 'value': 2018},
+        {'name': 'nissan', 'value': 2018},
+    ]
+
 # Issues
 
 def test_package_dialect_no_header_issue_167():
