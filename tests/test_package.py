@@ -1124,6 +1124,7 @@ def test_package_compression_explicit_zip():
 
 # Groups
 
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
 def test_package_groups():
     package = Package('data/datapackage-groups/datapackage.json')
 
@@ -1135,7 +1136,7 @@ def test_package_groups():
             {'name': 'nissan', 'value': year},
         ]
 
-    # Check resoruces as a group
+    # Check resources as a group
     group = package.get_group('cars')
     assert group.name == 'cars'
     assert group.headers == ['name', 'value']
