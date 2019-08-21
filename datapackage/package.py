@@ -233,7 +233,7 @@ class Package(object):
         self.__build()
         return True
 
-    def save(self, target=None, storage=None, **options):
+    def save(self, target=None, storage=None, merge_groups=False, **options):
         """https://github.com/frictionlessdata/datapackage-py#package
         """
 
@@ -243,18 +243,32 @@ class Package(object):
                 storage = Storage.connect(storage, **options)
             buckets = []
             schemas = []
-            resources = []
+            sources = []
+            group_names = []
             for resource in self.resources:
-                if resource.tabular:
+                if not resource.tabular:
+                    continue
+                if merge_groups and resource.group:
+                    if resource.group in group_names:
+                        continue
+                    group = self.get_group(resource.group)
+                    name = group.name
+                    schema = group.schema
+                    source = group.iter
+                    group_names.append(name)
+                else:
                     resource.infer()
-                    buckets.append(_slugify_resource_name(resource.name))
-                    schemas.append(resource.schema.descriptor)
-                    resources.append(resource)
+                    name = resource.name
+                    schema = resource.schema
+                    source = resource.iter
+                buckets.append(_slugify_resource_name(name))
+                schemas.append(schema.descriptor)
+                sources.append(source)
             schemas = list(map(_slugify_foreign_key, schemas))
             storage.create(buckets, schemas, force=True)
             for bucket in storage.buckets:
-                resource = resources[buckets.index(bucket)]
-                storage.write(bucket, resource.iter())
+                source = sources[buckets.index(bucket)]
+                storage.write(bucket, source())
 
         # Save descriptor to json
         elif str(target).endswith('.json'):

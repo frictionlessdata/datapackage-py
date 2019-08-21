@@ -14,6 +14,7 @@ import zipfile
 import pytest
 import tempfile
 import httpretty
+import sqlalchemy
 from copy import deepcopy
 from mock import Mock, ANY
 from tableschema import Storage
@@ -1152,6 +1153,64 @@ def test_package_groups():
         {'name': 'tesla', 'value': 2018},
         {'name': 'nissan', 'value': 2018},
     ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_groups_save_to_sql():
+    package = Package('data/datapackage-groups/datapackage.json')
+
+    # Save to storage
+    engine = sqlalchemy.create_engine('sqlite://')
+    storage = Storage.connect('sql', engine=engine)
+    package.save(storage=storage)
+
+    # Check storage
+    storage = Storage.connect('sql', engine=engine)
+    assert storage.buckets == ['cars_2016', 'cars_2017', 'cars_2018']
+    for year in [2016, 2017, 2018]:
+        assert storage.describe('cars_%s' % year) == {
+            'fields': [
+                {'name': 'name', 'type': 'string'},
+                {'name': 'value', 'type': 'integer'},
+            ],
+        }
+        assert storage.read('cars_%s' % year) == [
+            ['bmw', year],
+            ['tesla', year],
+            ['nissan', year],
+        ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_groups_save_to_sql_merge_groups():
+    package = Package('data/datapackage-groups/datapackage.json')
+
+    # Save to storage
+    engine = sqlalchemy.create_engine('sqlite://')
+    storage = Storage.connect('sql', engine=engine)
+    package.save(storage=storage, merge_groups=True)
+
+    # Check storage
+    storage = Storage.connect('sql', engine=engine)
+    assert storage.buckets == ['cars']
+    assert storage.describe('cars') == {
+        'fields': [
+            {'name': 'name', 'type': 'string'},
+            {'name': 'value', 'type': 'integer'},
+        ],
+    }
+    assert storage.read('cars') == [
+        ['bmw', 2016],
+        ['tesla', 2016],
+        ['nissan', 2016],
+        ['bmw', 2017],
+        ['tesla', 2017],
+        ['nissan', 2017],
+        ['bmw', 2018],
+        ['tesla', 2018],
+        ['nissan', 2018],
+    ]
+
 
 # Issues
 
