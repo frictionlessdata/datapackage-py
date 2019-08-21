@@ -25,6 +25,7 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
   - [Documentation](#documentation)
     - [Package](#package)
     - [Resource](#resource)
+    - [Group](#group)
     - [Profile](#profile)
     - [validate](#validate)
     - [infer](#infer)
