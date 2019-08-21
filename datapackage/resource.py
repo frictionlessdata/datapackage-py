@@ -100,6 +100,12 @@ class Resource(object):
         return self.__current_descriptor.get('name')
 
     @property
+    def group(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        return self.__current_descriptor.get('group')
+
+    @property
     def inline(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """

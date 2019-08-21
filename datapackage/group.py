@@ -12,10 +12,10 @@ class Group(object):
         # Contract checks
         assert resources
         assert all([resource.tabular for resource in resources])
-        assert all([resource.descriptor.get('group') for resource in resources])
+        assert all([resource.group for resource in resources])
 
         # Get props from the resources
-        self.__name = resources[0].descriptor['group']
+        self.__name = resources[0].group
         self.__headers = resources[0].headers
         self.__schema = resources[0].schema
         self.__resources = resources

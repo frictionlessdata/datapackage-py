@@ -186,7 +186,7 @@ class Package(object):
         """
         resources = [resource
             for resource in self.resources
-            if resource.tabular and resource.descriptor.get('group') == name]
+            if resource.tabular and resource.group == name]
         if not resources:
             return None
         return Group(resources)
