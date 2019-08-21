@@ -32,6 +32,7 @@ INSTALL_REQUIRES = [
     'tabulator>=1.24.1',
 ]
 TESTS_REQUIRE = [
+    'tableschema-sql',
     'pylama',
     'pytest',
     'mock',
