@@ -243,15 +243,17 @@ class Package(object):
                 storage = Storage.connect(storage, **options)
             buckets = []
             schemas = []
+            resources = []
             for resource in self.resources:
                 if resource.tabular:
                     resource.infer()
                     buckets.append(_slugify_resource_name(resource.name))
                     schemas.append(resource.schema.descriptor)
+                    resources.append(resource)
             schemas = list(map(_slugify_foreign_key, schemas))
             storage.create(buckets, schemas, force=True)
             for bucket in storage.buckets:
-                resource = self.resources[buckets.index(bucket)]
+                resource = resources[buckets.index(bucket)]
                 storage.write(bucket, resource.iter())
 
         # Save descriptor to json
