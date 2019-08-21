@@ -1,6 +1,4 @@
-from copy import deepcopy
 from itertools import chain
-from . import exceptions
 
 
 # Module API
