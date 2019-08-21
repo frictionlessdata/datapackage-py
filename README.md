@@ -636,7 +636,7 @@ package.get_resource('cars-2018').read(keyed=True) == [
 
 On the other hand, these resources defined with a `group: cars` field. It means we can treat them as a group:
 
-```
+```python
 package = Package('datapackage.json')
 package.get_group('cars').read(keyed=True) == [
     {'name': 'bmw', 'value': 2017},
