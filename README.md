@@ -662,7 +662,7 @@ package.save(storage='sql', engine=engine, merge_groups=True)
 # - cars
 ```
 
-#### `Group`
+#### `Group(...)`
 
 This class doesn't have any public constructor. Use `package.get_group`.
 
