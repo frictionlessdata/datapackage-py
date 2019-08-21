@@ -597,7 +597,7 @@ nissan,2018
 
 > datapackage.json
 
-```
+```json
 {
     "name": "datapackage",
     "resources": [
