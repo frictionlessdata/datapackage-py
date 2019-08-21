@@ -19,6 +19,7 @@ from copy import deepcopy
 from tableschema import Storage
 from .resource import Resource
 from .profile import Profile
+from .group import Group
 from . import exceptions
 from . import helpers
 from . import config
@@ -179,6 +180,16 @@ class Package(object):
                 predicat, self.__current_descriptor['resources']))
             self.__build()
         return resource
+
+    def get_group(self, name):
+        """https://github.com/frictionlessdata/datapackage-py#package
+        """
+        resources = [resource
+            for resource in self.resources
+            if resource.tabular and resource.descriptor.get('group') == name]
+        if not resources:
+            return None
+        return Group(resources)
 
     def infer(self, pattern=False):
         """https://github.com/frictionlessdata/datapackage-py#package
