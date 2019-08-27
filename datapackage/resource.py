@@ -94,6 +94,12 @@ class Resource(object):
         return self.__next_descriptor
 
     @property
+    def group(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        return self.__current_descriptor.get('group')
+
+    @property
     def name(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """

@@ -114,9 +114,12 @@ def dereference_resource_descriptor(descriptor, base_path, base_descriptor=None)
                 )
 
         # URI -> Remote
-        elif value.startswith('http'):
+        elif base_path.startswith('http') or value.startswith('http'):
             try:
-                response = requests.get(value)
+                fullpath = value
+                if not value.startswith('http'):
+                    fullpath = os.path.join(base_path, value)
+                response = requests.get(fullpath)
                 response.raise_for_status()
                 descriptor[property] = response.json()
             except Exception as error:

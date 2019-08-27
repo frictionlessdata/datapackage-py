@@ -29,9 +29,10 @@ INSTALL_REQUIRES = [
     'unicodecsv>=0.14',
     'jsonpointer>=1.10',
     'tableschema>=1.1.0',
-    'tabulator>=1.20',
+    'tabulator>=1.24.1',
 ]
 TESTS_REQUIRE = [
+    'tableschema-sql',
     'pylama',
     'pytest',
     'mock',
