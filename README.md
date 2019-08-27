@@ -48,6 +48,13 @@ The package use semantic versioning. It means that major versions  could include
 $ pip install datapackage
 ```
 
+#### OSX 10.14+
+If you receive an error about the `cchardet` package when installing datapackage on Mac OSX 10.14 (Mojave) or higher, follow these steps:
+1. Make sure you have the latest x-code by running the following in terminal: `xcode-select --install`
+2. Then go to [https://developer.apple.com/download/more/](https://developer.apple.com/download/more/) and download the `command line tools`. Note, this requires an Apple ID.
+3. Then, in terminal, run `open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg`
+You can read more about these steps in this [post.](https://stackoverflow.com/questions/52509602/cant-compile-c-program-on-a-mac-after-upgrade-to-mojave)
+
 ### Examples
 
 Code examples in this readme requires Python 3.3+ interpreter. You could see even more example in [examples](https://github.com/frictionlessdata/datapackage-py/tree/master/examples) directory.
