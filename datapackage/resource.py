@@ -69,6 +69,12 @@ class Resource(object):
         self.__build()
 
     @property
+    def package(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        return self.__package
+
+    @property
     def valid(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """

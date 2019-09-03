@@ -442,6 +442,11 @@ def test_can_remove_resource_from_descriptor_in_place():
     assert package.resources[0].source == '万事开头难'
 
 
+def test_resources_have_public_backreference_to_package():
+    package = Package('data/datapackage/datapackage.json')
+    assert package.get_resource('data').package == package
+
+
 # Save to zip
 
 @pytest.mark.skip('deprecated')
