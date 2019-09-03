@@ -423,6 +423,10 @@ Constructor to instantiate `Resource` class.
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(Resource)` - returns resource class instance
 
+#### `resource.package`
+
+- `(Package)` - returns a package instance if the resource belongs to some package
+
 #### `resource.valid`
 
 - `(bool)` - returns validation status. It always true in strict mode.
@@ -1006,6 +1010,10 @@ Here is a list of the library contributors:
 ## Changelog
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
+
+#### v1.9
+
+- Added `resource.package` property
 
 #### v1.8
 
