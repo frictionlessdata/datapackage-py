@@ -489,7 +489,7 @@ def _inspect_source(data, path, base_path, storage):
     elif len(path) == 1:
 
         # Remote
-        if path[0].startswith('http'):
+        if path[0].startswith('http') or path[0].startswith('s3'):
             inspection['source'] = path[0]
             inspection['remote'] = True
         elif base_path and base_path.startswith('http'):
