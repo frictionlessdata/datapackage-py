@@ -12,7 +12,7 @@ import cchardet
 import requests
 from copy import deepcopy
 from tableschema import Table, Storage
-from six.moves.urllib.parse import urljoin
+from six.moves.urllib.parse import urljoin, urlparse
 from six.moves.urllib.request import urlopen
 from .profile import Profile
 from . import exceptions
@@ -489,10 +489,10 @@ def _inspect_source(data, path, base_path, storage):
     elif len(path) == 1:
 
         # Remote
-        if path[0].startswith('http'):
+        if urlparse(path[0]).scheme in config.REMOTE_SCHEMES:
             inspection['source'] = path[0]
             inspection['remote'] = True
-        elif base_path and base_path.startswith('http'):
+        elif base_path and urlparse(base_path).scheme in config.REMOTE_SCHEMES:
             norm_base_path = base_path if base_path.endswith('/') else base_path + '/'
             inspection['source'] = urljoin(norm_base_path, path[0])
             inspection['remote'] = True
