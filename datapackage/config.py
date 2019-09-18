@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 # Module API
 
+REMOTE_SCHEMES = ['http', 'https', 'ftp', 'ftps', 's3']
 TABULAR_FORMATS = ['csv', 'tsv', 'xls', 'xlsx']
 DEFAULT_DATA_PACKAGE_PROFILE = 'data-package'
 DEFAULT_RESOURCE_PROFILE = 'data-resource'
