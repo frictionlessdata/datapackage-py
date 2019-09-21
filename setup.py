@@ -32,10 +32,11 @@ INSTALL_REQUIRES = [
     'tabulator>=1.24.2',
 ]
 TESTS_REQUIRE = [
-    'tableschema-sql',
+    'mock',
     'pylama',
     'pytest',
-    'mock',
+    'pytest-cov',
+    'tableschema-sql',
     'tox',
 ]
 README = read('README.md')
