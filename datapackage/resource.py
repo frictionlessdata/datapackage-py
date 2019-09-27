@@ -18,7 +18,6 @@ from .profile import Profile
 from . import exceptions
 from . import helpers
 from . import config
-from collections import defaultdict
 
 
 # Module API
@@ -196,33 +195,22 @@ class Resource(object):
             raise exceptions.DataPackageException(message)
 
         # Get relations
-        if relations:
+        if relations and not foreign_keys_values:
             relations = self.__get_relations()
-        
-        # alternative relations checks through foreign keys method
-        if foreign_keys_values == True:
-            # testing with True to allow to pass a precomputed set of foreign_keys_values
-            # useful to optimize group ressource testing
-            foreign_keys_values = self.__get_foreign_keys()
 
-        return self.__get_table().read(relations=relations, foreign_keys_values=foreign_keys_values, **options)
+        return self.__get_table().read(relations=relations, foreign_keys_values=foreign_keys_values,
+                                       **options)
 
-    def check_relations(self):
+    def check_relations(self, foreign_keys_values=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        self.read(relations=True)
+        self.read(relations=True, foreign_keys_values=foreign_keys_values)
         return True
-    
+
     def drop_relations(self):
         # storing relations datasets eats memory, we can need to garbage those
         self.__relations = False
-        return self.__relations == False
-    
-    def check_foreign_keys(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
-        self.read(foreign_keys_values=True)
-        return True
+        return self.__relations is False
 
     def raw_iter(self, stream=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
@@ -437,44 +425,9 @@ class Resource(object):
 
         return self.__relations
 
-    def get_foreign_keys(self):
+    def get_foreign_keys_values(self):
         # need to access it from groups for optimization
-        return self.__get_foreign_keys()
-
-    def __get_foreign_keys(self):
-        # alternative for __get_relationsfor optimization
-        # we dont need to load the complete reference table to test relations 
-        # we can lower payload AND optimize testing foreign keys by preparing the right index based on the foreign key definition 
-        # foreign_keys are sets of tuples of all possible values in the foreign table
-        # foreign keys [reference] [foreign_keys tuple] = { (foreign_key_values, ) : one_keyedrow, ... }
-        foreign_keys = defaultdict(dict)
-        relations = {} 
-        if self.schema:
-            for fk in self.schema.foreign_keys:
-                # load relation data
-                relation = fk['reference']['resource']
-                if relation not in relations:
-                    # don't load twice
-                    data = self.package.get_resource(relation)
-                    if data.tabular:
-                        relations[relation] = data.read(keyed=True)
-                    else:
-                        # do a better error management here
-                        raise('A foreign key must point to a tabular resource')
-
-                # create a set of foreign keys
-                # to optimize we prepare index of existing values
-                # this index should use reference + foreign_keys as key cause many foreign keys may use the same reference
-                foreign_keys[relation][tuple(fk['reference']['fields'])] = {}
-                for row in relations[relation]:
-                    key = tuple([row[foreign_field] for foreign_field in fk['reference']['fields']])
-                    # here we should chose to pick the first or nth row which match
-                    # previous implementation picked the first, so be it
-                    if key not in foreign_keys[relation][tuple(fk['reference']['fields'])]:
-                        foreign_keys[relation][tuple(fk['reference']['fields'])][key] = row
-        # I am memory leak paranoïd
-        del(relations)
-        return foreign_keys 
+        return self.__get_table().index_foreign_keys_values(self.__get_relations())
 
     # Deprecated
 
