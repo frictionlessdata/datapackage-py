@@ -449,6 +449,7 @@ def test_resources_have_public_backreference_to_package():
 
 # Save to json
 
+@pytest.mark.skipif(sys.version_info < (3, 6, 0), reason='Not supported in Python@3.5')
 def test_save_as_json(json_tmpfile):
     package = Package({})
     package.save(json_tmpfile.name)
