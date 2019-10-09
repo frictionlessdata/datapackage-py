@@ -447,6 +447,16 @@ def test_resources_have_public_backreference_to_package():
     assert package.get_resource('data').package == package
 
 
+# Save to json
+
+def test_save_as_json(json_tmpfile):
+    package = Package({})
+    package.save(json_tmpfile.name)
+    assert json.loads(json_tmpfile.read().decode('utf-8')) == {
+        'profile': 'data-package',
+    }
+
+
 # Save to zip
 
 @pytest.mark.skip('deprecated')
