@@ -14,6 +14,7 @@ import zipfile
 import pytest
 import tempfile
 import httpretty
+import sqlalchemy
 from copy import deepcopy
 from mock import Mock, ANY
 from tableschema import Storage
@@ -439,6 +440,21 @@ def test_can_remove_resource_from_descriptor_in_place():
     package.commit()
     assert len(package.resources) == 1
     assert package.resources[0].source == '万事开头难'
+
+
+def test_resources_have_public_backreference_to_package():
+    package = Package('data/datapackage/datapackage.json')
+    assert package.get_resource('data').package == package
+
+
+# Save to json
+
+def test_save_as_json(json_tmpfile):
+    package = Package({})
+    package.save(json_tmpfile.name)
+    assert json.loads(json_tmpfile.read().decode('utf-8')) == {
+        'profile': 'data-package',
+    }
 
 
 # Save to zip
@@ -1082,6 +1098,133 @@ def test_save_data_to_storage():
     package.save(storage=storage)
     storage.create.assert_called_with(['data'], [schema], force=True)
     storage.write.assert_called_with('data', ANY)
+
+
+# Compression
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_compression_implicit_gz():
+    package = Package('data/datapackage-compression/datapackage.json')
+    assert package.get_resource('implicit-gz').read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_compression_implicit_zip():
+    package = Package('data/datapackage-compression/datapackage.json')
+    assert package.get_resource('implicit-zip').read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_compression_explicit_gz():
+    package = Package('data/datapackage-compression/datapackage.json')
+    assert package.get_resource('explicit-gz').read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_compression_explicit_zip():
+    package = Package('data/datapackage-compression/datapackage.json')
+    assert package.get_resource('explicit-zip').read(keyed=True) == [
+        {'id': 1, 'name': 'english'},
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+# Groups
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_groups():
+    package = Package('data/datapackage-groups/datapackage.json')
+
+    # Check individual resources
+    for year in [2016, 2017, 2018]:
+        assert package.get_resource('cars-%s' % year).read(keyed=True) == [
+            {'name': 'bmw', 'value': year},
+            {'name': 'tesla', 'value': year},
+            {'name': 'nissan', 'value': year},
+        ]
+
+    # Check resources as a group
+    group = package.get_group('cars')
+    assert group.name == 'cars'
+    assert group.headers == ['name', 'value']
+    assert group.schema.field_names == ['name', 'value']
+    assert group.read(keyed=True) == [
+        {'name': 'bmw', 'value': 2016},
+        {'name': 'tesla', 'value': 2016},
+        {'name': 'nissan', 'value': 2016},
+        {'name': 'bmw', 'value': 2017},
+        {'name': 'tesla', 'value': 2017},
+        {'name': 'nissan', 'value': 2017},
+        {'name': 'bmw', 'value': 2018},
+        {'name': 'tesla', 'value': 2018},
+        {'name': 'nissan', 'value': 2018},
+    ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_groups_save_to_sql():
+    package = Package('data/datapackage-groups/datapackage.json')
+
+    # Save to storage
+    engine = sqlalchemy.create_engine('sqlite://')
+    storage = Storage.connect('sql', engine=engine)
+    package.save(storage=storage)
+
+    # Check storage
+    storage = Storage.connect('sql', engine=engine)
+    assert storage.buckets == ['cars_2016', 'cars_2017', 'cars_2018']
+    for year in [2016, 2017, 2018]:
+        assert storage.describe('cars_%s' % year) == {
+            'fields': [
+                {'name': 'name', 'type': 'string'},
+                {'name': 'value', 'type': 'integer'},
+            ],
+        }
+        assert storage.read('cars_%s' % year) == [
+            ['bmw', year],
+            ['tesla', year],
+            ['nissan', year],
+        ]
+
+
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_groups_save_to_sql_merge_groups():
+    package = Package('data/datapackage-groups/datapackage.json')
+
+    # Save to storage
+    engine = sqlalchemy.create_engine('sqlite://')
+    storage = Storage.connect('sql', engine=engine)
+    package.save(storage=storage, merge_groups=True)
+
+    # Check storage
+    storage = Storage.connect('sql', engine=engine)
+    assert storage.buckets == ['cars']
+    assert storage.describe('cars') == {
+        'fields': [
+            {'name': 'name', 'type': 'string'},
+            {'name': 'value', 'type': 'integer'},
+        ],
+    }
+    assert storage.read('cars') == [
+        ['bmw', 2016],
+        ['tesla', 2016],
+        ['nissan', 2016],
+        ['bmw', 2017],
+        ['tesla', 2017],
+        ['nissan', 2017],
+        ['bmw', 2018],
+        ['tesla', 2018],
+        ['nissan', 2018],
+    ]
 
 
 # Issues

@@ -29,12 +29,15 @@ INSTALL_REQUIRES = [
     'unicodecsv>=0.14',
     'jsonpointer>=1.10',
     'tableschema>=1.1.0',
-    'tabulator>=1.20',
+    'tabulator>=1.24.2',
 ]
 TESTS_REQUIRE = [
+    'mock',
     'pylama',
+    'pytest',
+    'pytest-cov',
+    'tableschema-sql',
     'tox',
-    'md-toc',
 ]
 README = read('README.md')
 VERSION = read(PACKAGE, 'VERSION')

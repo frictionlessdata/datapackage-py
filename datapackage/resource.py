@@ -12,7 +12,7 @@ import cchardet
 import requests
 from copy import deepcopy
 from tableschema import Table, Storage
-from six.moves.urllib.parse import urljoin
+from six.moves.urllib.parse import urljoin, urlparse
 from six.moves.urllib.request import urlopen
 from .profile import Profile
 from . import exceptions
@@ -69,6 +69,12 @@ class Resource(object):
         self.__build()
 
     @property
+    def package(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        return self.__package
+
+    @property
     def valid(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
@@ -92,6 +98,12 @@ class Resource(object):
         """
         # Never use self.descriptor inside self class (!!!)
         return self.__next_descriptor
+
+    @property
+    def group(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        return self.__current_descriptor.get('group')
 
     @property
     def name(self):
@@ -368,8 +380,10 @@ class Resource(object):
                     options['format'] = 'inline'
                 if descriptor.get('encoding'):
                     options['encoding'] = descriptor['encoding']
-                options['skip_rows'] = descriptor.get('skipRows',
-                                                      options.get('skip_rows', []))
+                if descriptor.get('compression'):
+                    options['compression'] = descriptor['compression']
+                options['skip_rows'] = descriptor.get(
+                    'skipRows', options.get('skip_rows', []))
                 dialect = descriptor.get('dialect')
                 if dialect:
                     if not dialect.get('header', config.DEFAULT_DIALECT['header']):
@@ -495,10 +509,10 @@ def _inspect_source(data, path, base_path, storage):
     elif len(path) == 1:
 
         # Remote
-        if path[0].startswith('http'):
+        if urlparse(path[0]).scheme in config.REMOTE_SCHEMES:
             inspection['source'] = path[0]
             inspection['remote'] = True
-        elif base_path and base_path.startswith('http'):
+        elif base_path and urlparse(base_path).scheme in config.REMOTE_SCHEMES:
             norm_base_path = base_path if base_path.endswith('/') else base_path + '/'
             inspection['source'] = urljoin(norm_base_path, path[0])
             inspection['remote'] = True

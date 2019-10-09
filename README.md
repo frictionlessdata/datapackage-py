@@ -3,6 +3,7 @@
 [![Travis](https://travis-ci.org/frictionlessdata/datapackage-py.svg?branch=master)](https://travis-ci.org/frictionlessdata/datapackage-py)
 [![Coveralls](https://coveralls.io/repos/github/frictionlessdata/datapackage-py/badge.svg?branch=master)](https://coveralls.io/github/frictionlessdata/datapackage-py?branch=master)
 [![PyPi](https://img.shields.io/pypi/v/datapackage.svg)](https://pypi.python.org/pypi/datapackage)
+[![Github](https://img.shields.io/badge/github-master-brightgreen)](https://github.com/frictionlessdata/datapackage-py)
 [![Gitter](https://img.shields.io/gitter/room/frictionlessdata/chat.svg)](https://gitter.im/frictionlessdata/chat)
 
 A library for working with [Data Packages](http://specs.frictionlessdata.io/data-package/).
@@ -25,12 +26,14 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
   - [Documentation](#documentation)
     - [Package](#package)
     - [Resource](#resource)
+    - [Group](#group)
     - [Profile](#profile)
     - [validate](#validate)
     - [infer](#infer)
     - [Foreign Keys](#foreign-keys)
     - [Exceptions](#exceptions)
     - [CLI](#cli)
+    - [Notes](#notes)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
 
@@ -45,6 +48,13 @@ The package use semantic versioning. It means that major versions  could include
 ```bash
 $ pip install datapackage
 ```
+
+#### OSX 10.14+
+If you receive an error about the `cchardet` package when installing datapackage on Mac OSX 10.14 (Mojave) or higher, follow these steps:
+1. Make sure you have the latest x-code by running the following in terminal: `xcode-select --install`
+2. Then go to [https://developer.apple.com/download/more/](https://developer.apple.com/download/more/) and download the `command line tools`. Note, this requires an Apple ID.
+3. Then, in terminal, run `open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg`
+You can read more about these steps in this [post.](https://stackoverflow.com/questions/52509602/cant-compile-c-program-on-a-mac-after-upgrade-to-mojave)
 
 ### Examples
 
@@ -207,6 +217,13 @@ Remove data package resource by name. The data package descriptor will be valida
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(Resource/None)` - returns removed `Resource` instances or null if not found
 
+#### `package.get_group(name)`
+
+Returns a group of tabular resources by name. For more information about groups see [Group](#group).
+
+- `name (str)` - name of a group of resources
+- `(exceptions.DataPackageException)` - raises error if something goes wrong
+- `(Group/None)` - returns a `Group` instance or null if not found
 
 #### `package.infer(pattern=False)`
 
@@ -238,12 +255,13 @@ package.commit()
 package.name # renamed-package
 ```
 
-#### `package.save(target=None, storage=None, **options)`
+#### `package.save(target=None, storage=None, merge_groups=False,  **options)`
 
 Saves this data package to storage if `storage` argument is passed or saves this data package's descriptor to json file if `target` arguments ends with `.json` or saves this data package to zip file otherwise.
 
 - `target (string/filelike)` - the file path or a file-like object where the contents of this Data Package will be saved into.
 - `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
+- `merge_groups` (bool) - save all the group's tabular resoruces into one bucket if a storage is provided (for example into one SQL table). Read more about [Group](#group).
 - `options (dict)` - storage options to use for storage creation
 - `(exceptions.DataPackageException)` - raises if there was some error writing the package
 - `(bool)` - return true on success
@@ -406,6 +424,10 @@ Constructor to instantiate `Resource` class.
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(Resource)` - returns resource class instance
 
+#### `resource.package`
+
+- `(Package)` - returns a package instance if the resource belongs to some package
+
 #### `resource.valid`
 
 - `(bool)` - returns validation status. It always true in strict mode.
@@ -543,6 +565,138 @@ Saves this resource into storage if `storage` argument is passed or saves this r
 - `options (dict)` - storage options to use for storage creation
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(bool)` - returns true on success
+
+### Group
+
+A class representing a group of tabular resources. Groups can be used to read multiple resource as one or to export them, for example, to a database as one table. To define a group add the `group: <name>` field to corresponding resources. The group's metadata will be created from the "leading" resource's metadata (the first resource with the group name).
+
+Consider we have a data package with two tables partitioned by a year and a shared schema stored separately:
+
+>  cars-2017.csv
+
+```csv
+name,value
+bmw,2017
+tesla,2017
+nissan,2017
+```
+
+>  cars-2018.csv
+
+```csv
+name,value
+bmw,2018
+tesla,2018
+nissan,2018
+```
+
+> cars.schema.json
+
+```json
+{
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "value",
+            "type": "integer"
+        }
+    ]
+}
+```
+
+> datapackage.json
+
+```json
+{
+    "name": "datapackage",
+    "resources": [
+        {
+            "group": "cars",
+            "name": "cars-2017",
+            "path": "cars-2017.csv",
+            "profile": "tabular-data-resource",
+            "schema": "cars.schema.json"
+        },
+        {
+            "group": "cars",
+            "name": "cars-2018",
+            "path": "cars-2018.csv",
+            "profile": "tabular-data-resource",
+            "schema": "cars.schema.json"
+        }
+    ]
+}
+```
+
+Let's read the resources separately:
+
+```python
+package = Package('datapackage.json')
+package.get_resource('cars-2017').read(keyed=True) == [
+    {'name': 'bmw', 'value': 2017},
+    {'name': 'tesla', 'value': 2017},
+    {'name': 'nissan', 'value': 2017},
+]
+package.get_resource('cars-2018').read(keyed=True) == [
+    {'name': 'bmw', 'value': 2018},
+    {'name': 'tesla', 'value': 2018},
+    {'name': 'nissan', 'value': 2018},
+]
+```
+
+On the other hand, these resources defined with a `group: cars` field. It means we can treat them as a group:
+
+```python
+package = Package('datapackage.json')
+package.get_group('cars').read(keyed=True) == [
+    {'name': 'bmw', 'value': 2017},
+    {'name': 'tesla', 'value': 2017},
+    {'name': 'nissan', 'value': 2017},
+    {'name': 'bmw', 'value': 2018},
+    {'name': 'tesla', 'value': 2018},
+    {'name': 'nissan', 'value': 2018},
+]
+```
+
+We can use this approach when we need to save the data package to a storage, for example, to a SQL database. There is the `merge_groups` flag to enable groupping behaviour:
+
+```python
+package = Package('datapackage.json')
+package.save(storage='sql', engine=engine)
+# SQL tables:
+# - cars-2017
+# - cars-2018
+package.save(storage='sql', engine=engine, merge_groups=True)
+# SQL tables:
+# - cars
+```
+
+#### `Group`
+
+This class doesn't have any public constructor. Use `package.get_group`.
+
+#### `group.name`
+
+- `(str)` - returns the group name
+
+#### `group.headers`
+
+The same as `resource.headers`
+
+#### `group.schema`
+
+The same as `resource.schema`
+
+#### `group.iter(...)`
+
+The same as `resource.iter`
+
+#### `group.read(...)`
+
+The same as `resource.read`
 
 ### Profile
 
@@ -786,6 +940,19 @@ Commands:
   validate
 ```
 
+### Notes
+
+#### Accessing data behind a proxy server
+
+Before the `package = Package("https://xxx.json")` call set these environment variables:
+
+```python
+import os
+
+os.environ["HTTP_PROXY"] = 'xxx'
+os.environ["HTTPS_PROXY"] = 'xxx'
+```
+
 ## Contributing
 
 The project follows the [Open Knowledge International coding standards](https://github.com/okfn/coding-standards).
@@ -844,6 +1011,18 @@ Here is a list of the library contributors:
 ## Changelog
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
+
+#### v1.9
+
+- Added `resource.package` property
+
+#### v1.8
+
+- Added support for [groups of resources](#group)
+
+#### v1.7
+
+- Added support for [compression of resources](https://frictionlessdata.io/specs/patterns/#compression-of-resources)
 
 #### v1.6
 

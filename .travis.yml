@@ -1,19 +1,17 @@
+dist:
+  xenial
+
 sudo:
   false
 
 language:
   python
 
-matrix:
-  include:
-    - python: 2.7
-    # - python: 3.4  # FIXME: There's a bug on setuptools on 3.4 that breaks our tests
-    #  (see https://github.com/pypa/setuptools/issues/951)
-    - python: 3.5
-    - python: 3.6
-    - python: 3.7
-      dist: xenial
-      sudo: required
+python:
+  - 2.7
+  - 3.5
+  - 3.6
+  - 3.7
 
 env:
   global:
