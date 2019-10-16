@@ -1,5 +1,4 @@
 from itertools import chain
-from datapackage import exceptions
 
 
 # Module API
@@ -55,6 +54,8 @@ class Group(object):
         return rows
 
     def check_relations(self):
+        """https://github.com/frictionlessdata/datapackage-py#group
+        """
         # this function mimics the resource.check_relations but optimize it for groups
         # it's also a prototype to proprose a faster check_relations process for all resources
 
@@ -63,14 +64,5 @@ class Group(object):
 
         # alternative to check_relations from tableschema-py
         for resource in self.__resources:
-            try:
-                resource.check_relations(foreign_keys_values=foreign_keys_values)
-            except exceptions.DataPackageException as exception:
-                print('in %s: ' % resource.name)
-                if exception.multiple:
-                    for error in exception.errors:
-                        print(error)
-                else:
-                    print(exception)
-
+            resource.check_relations(foreign_keys_values=foreign_keys_values)
         return True
