@@ -18,6 +18,7 @@ import sqlalchemy
 from copy import deepcopy
 from mock import Mock, ANY
 from tableschema import Storage
+import tableschema.exceptions
 from datapackage import Package, helpers, exceptions
 
 
@@ -1216,8 +1217,62 @@ def test_package_groups_save_to_sql_merge_groups():
         ['nissan', 2018],
     ]
 
+@pytest.mark.skipif(six.PY2, reason='Support only for Python3')
+def test_package_groups_check_relations():
+    with open('data/datapackage-groups/datapackage.json', 'r', encoding='utf8') as d:
+        descriptor = json.load(d)
+        # add ForeignKey to schema
+        carSchema = {
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "string"
+                },
+                {
+                    "name": "value",
+                    "type": "integer"
+                }
+            ],
+            "foreignKeys": [{"fields": "name",
+                            "reference": {"resource": "brand_country", "fields": "name"}}]
+        }
+        for r in descriptor["resources"]:
+            r['schema'] = carSchema
+        # add reference table
+        descriptor['resources'].append({
+            "name": "brand_country",
+            "data": [{"name": "nissan", "country": "Japan"},
+                {"name": "bmw", "country": "Germany"},
+                {"name": "tesla", "country": "USA"}
+            ],
+            "profile": "tabular-data-resource",
+            "schema": {
+                "fields": [
+                    {
+                        "name": "country",
+                        "type": "string"
+                    },
+                    {
+                        "name": "name",
+                        "type": "string"
+                    }
+                ]
+            }
+        })
+        package = Package(descriptor, base_path='data/datapackage-groups/')
+        group = package.get_group('cars')
+
+        assert group.check_relations() is True
+
+        descriptor['resources'][-1]['data'] = [{"name": "nissan", "country": "Japan"},
+                {"name": "bmw", "country": "Germany"}
+            ]
+        package = Package(descriptor, base_path='data/datapackage-groups/')
+        with pytest.raises(tableschema.exceptions.RelationError) as _:
+            package.get_group('cars').check_relations()
 
 # Issues
+
 
 def test_package_dialect_no_header_issue_167():
     package = Package('data/package_dialect_no_header.json')
