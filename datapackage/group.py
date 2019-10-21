@@ -52,3 +52,17 @@ class Group(object):
             if count == limit:
                 break
         return rows
+
+    def check_relations(self):
+        """https://github.com/frictionlessdata/datapackage-py#group
+        """
+        # this function mimics the resource.check_relations but optimize it for groups
+        # it's also a prototype to proprose a faster check_relations process for all resources
+
+        # opti relations should ne loaded only once for the group
+        foreign_keys_values = self.__resources[0].get_foreign_keys_values()
+
+        # alternative to check_relations from tableschema-py
+        for resource in self.__resources:
+            resource.check_relations(foreign_keys_values=foreign_keys_values)
+        return True

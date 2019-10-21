@@ -698,6 +698,15 @@ The same as `resource.iter`
 
 The same as `resource.read`
 
+#### `group.check_relations(...)`
+
+The same as `resource.check_relations` but without the optional argument *foreign_keys_values*.
+This method will test foreignKeys of the whole group at once otpimizing the process by creating the foreign_key_values hashmap only once before testing the set of resources.
+
+- () no args
+- `(tableschema.exceptions)` - raises errors if something validation fails
+- `(Boolean)` - returns True if validation succeeds
+
 ### Profile
 
 A component to represent JSON Schema profile from [Profiles Registry]( https://specs.frictionlessdata.io/schemas/registry.json):

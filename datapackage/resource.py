@@ -185,7 +185,7 @@ class Resource(object):
 
         return self.__get_table().iter(relations=relations, **options)
 
-    def read(self, relations=False, **options):
+    def read(self, relations=False, foreign_keys_values=False, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
@@ -195,16 +195,22 @@ class Resource(object):
             raise exceptions.DataPackageException(message)
 
         # Get relations
-        if relations:
+        if relations and not foreign_keys_values:
             relations = self.__get_relations()
 
-        return self.__get_table().read(relations=relations, **options)
+        return self.__get_table().read(relations=relations, foreign_keys_values=foreign_keys_values,
+                                       **options)
 
-    def check_relations(self):
+    def check_relations(self, foreign_keys_values=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        self.read(relations=True)
+        self.read(relations=True, foreign_keys_values=foreign_keys_values)
         return True
+
+    def drop_relations(self):
+        # storing relations datasets eats memory, we can need to garbage those
+        self.__relations = False
+        return self.__relations is False
 
     def raw_iter(self, stream=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
@@ -418,6 +424,10 @@ class Resource(object):
                     self.__relations[resource] = data.read(keyed=True)
 
         return self.__relations
+
+    def get_foreign_keys_values(self):
+        # need to access it from groups for optimization
+        return self.__get_table().index_foreign_keys_values(self.__get_relations())
 
     # Deprecated
 
