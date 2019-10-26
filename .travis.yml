@@ -35,6 +35,7 @@ jobs:
       deploy:
         provider: pypi
         user: roll
+        on: tags
         distributions: sdist bdist_wheel
         password:
           secure: just//2k9I1ZRuKV7XQitpHUG2jHmsHOrlP8fJK/3jhLauwO3aCRaWlK4f7GpnswfmcEb0Cf/6isiYKLxlmwKex69Fl+3yr471z1OoBx5Ws5KBwWcT0gKjiR1QPPovR8GBA+632Alg9kvN13ckyIF/FPbuzCiZmkmgAixuI5IZaZtvc658fj9t6TMcV09lqYcW+6qEeb067xEmWPLnYp5VupPu9F9+G31sjTB3Rr3gQXgUPIZwPsN6C5rXqJ2HyFj/8pGdMCPlxYq0akVCaXVBcX/et6LPvoyK8Y0raG8BMUrRNlX2R1maAaNum/MTA3nzWNNN+k7O1WInasP2r+xyE0Rt+IHLCyVkgj03u74mcqi1SOpuT6kX0JrxMvh4M1Ub42HEKD6DH8+RgI2PzSFrUYZb0xmGznr8WHEBQulX7axBG+HT9x3hzW+ohMMbUMxFz9Toq0en+nPHfEcrc1T8keiwrJBf0qFhj7sYAhslxIHRVjbibJ7Om3UITB7dz9Qq9KgvmaQEHB7FqrOIeqHa9Za4+mlnO48MLp5xfSG31tsYUXtMztzFHldchBE4E62O8giHLNWzze4FDGVhMut0pUrvdj569I85yNqbQZiyoytzj1zq7eQDN0Xae3/aCsXFJlbyuyRcyK8NxkXfXFOMPIbJIr1NOyRjo3ZnhLaUU=
