@@ -214,12 +214,14 @@ class Resource(object):
     def check_integrity(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        self.read(integrity=True)
+        # This function will benefit from rebasing it on `resource.raw_read
+        self.read(integrity=True, cast=False)
         return True
 
     def check_relations(self, foreign_keys_values=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
+        # This function will benefit from rebasing it on `resource.iter
         self.read(relations=True, foreign_keys_values=foreign_keys_values)
         return True
 
