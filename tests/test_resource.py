@@ -8,6 +8,7 @@ import io
 import json
 import pytest
 import httpretty
+from copy import deepcopy
 from mock import Mock, ANY
 from functools import partial
 from tableschema import Storage
@@ -606,6 +607,86 @@ def test_save_data_to_storage():
     resource.save('data', storage=storage)
     storage.create.assert_called_with('data', SCHEMA, force=True)
     storage.write.assert_called_with('data', ANY)
+
+
+# Integrity
+
+DESCRIPTOR = {
+    'name': 'data.csv',
+    'path': 'data/data.csv',
+    'bytes': 63,
+    'hash': 'sha256:328adab247692a1a405e83c2625d52e366389eabf8a1824931187877e8644774',
+}
+
+def test_read_integrity():
+    descriptor = deepcopy(DESCRIPTOR)
+    resource = Resource(descriptor)
+    resource.read(integrity=True)
+    assert True
+
+
+def test_read_integrity_error():
+    descriptor = deepcopy(DESCRIPTOR)
+    descriptor['bytes'] += 1
+    descriptor['hash'] += 'a'
+    resource = Resource(descriptor)
+    with pytest.raises(exceptions.IntegrityError) as excinfo:
+        resource.read(integrity=True)
+    assert str(DESCRIPTOR['bytes']) in str(excinfo.value)
+    assert DESCRIPTOR['hash'].replace('sha256:', '') in str(excinfo.value)
+
+
+def test_read_integrity_size():
+    descriptor = deepcopy(DESCRIPTOR)
+    descriptor['hash'] = None
+    resource = Resource(descriptor)
+    resource.read(integrity=True)
+    assert True
+
+
+def test_read_integrity_size_error():
+    descriptor = deepcopy(DESCRIPTOR)
+    descriptor['bytes'] += 1
+    descriptor['hash'] = None
+    resource = Resource(descriptor)
+    with pytest.raises(exceptions.IntegrityError) as excinfo:
+        resource.read(integrity=True)
+    assert str(DESCRIPTOR['bytes']) in str(excinfo.value)
+
+
+def test_read_integrity_hash():
+    descriptor = deepcopy(DESCRIPTOR)
+    descriptor['bytes'] = None
+    resource = Resource(descriptor)
+    resource.read(integrity=True)
+    assert True
+
+
+def test_read_integrity_hash_error():
+    descriptor = deepcopy(DESCRIPTOR)
+    descriptor['bytes'] = None
+    descriptor['hash'] += 'a'
+    resource = Resource(descriptor)
+    with pytest.raises(exceptions.IntegrityError) as excinfo:
+        resource.read(integrity=True)
+    assert DESCRIPTOR['hash'].replace('sha256:', '') in str(excinfo.value)
+
+
+def test_check_integrity():
+    descriptor = deepcopy(DESCRIPTOR)
+    resource = Resource(descriptor)
+    assert resource.check_integrity()
+
+
+def test_check_integrity_error():
+    descriptor = deepcopy(DESCRIPTOR)
+    descriptor['bytes'] += 1
+    descriptor['hash'] += 'a'
+    resource = Resource(descriptor)
+    with pytest.raises(exceptions.IntegrityError) as excinfo:
+        resource.check_integrity()
+    assert str(DESCRIPTOR['bytes']) in str(excinfo.value)
+    assert DESCRIPTOR['hash'].replace('sha256:', '') in str(excinfo.value)
 
 
 # Deprecated
