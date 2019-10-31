@@ -215,14 +215,15 @@ class Resource(object):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
         # This function will benefit from rebasing it on `resource.raw_read
-        self.read(integrity=True, cast=False)
+        for row in self.iter(integrity=True, cast=False):
+            pass
         return True
 
     def check_relations(self, foreign_keys_values=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        # This function will benefit from rebasing it on `resource.iter
-        self.read(relations=True, foreign_keys_values=foreign_keys_values)
+        for row in self.iter(relations=True, foreign_keys_values=foreign_keys_values):
+            pass
         return True
 
     def drop_relations(self):
