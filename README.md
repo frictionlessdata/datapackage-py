@@ -488,7 +488,7 @@ For tabular resources it returns `Schema` instance to interact with data schema.
 
 - `(tableschema.Schema)` - returns schema class instance
 
-#### `resource.iter(keyed=False, extended=False, cast=True, relations=False)`
+#### `resource.iter(keyed=False, extended=False, cast=True, integrity=False, relations=False)`
 
 > Only for tabular resources
 
@@ -497,6 +497,7 @@ Iter through the table data and emits rows cast based on table schema (async for
 - `keyed (bool)` - iter keyed rows
 - `extended (bool)` - iter extended rows
 - `cast (bool)` - disable data casting if false
+- `integrity (bool)` - if true actual size in BYTES and SHA256 hash of the file will be checked against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently)
 - `relations (bool)` - if true foreign key fields will be checked and resolved to its references
 - `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(any[]/any{})` - yields rows:
@@ -504,7 +505,7 @@ Iter through the table data and emits rows cast based on table schema (async for
   - `{header1: value1, header2: value2}` - keyed
   - `[rowNumber, [header1, header2], [value1, value2]]` - extended
 
-#### `resource.read(keyed=False, extended=False, cast=True, relations=False, limit=None)`
+#### `resource.read(keyed=False, extended=False, cast=True, integrity=False, relations=False, limit=None)`
 
 > Only for tabular resources
 
@@ -513,10 +514,20 @@ Read the whole table and returns as array of rows. Count of rows could be limite
 - `keyed (bool)` - flag to emit keyed rows
 - `extended (bool)` - flag to emit extended rows
 - `cast (bool)` - flag to disable data casting if false
+- `integrity (bool)` - if true actual size in BYTES and SHA256 hash of the file will be checked against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently)
 - `relations (bool)` - if true foreign key fields will be checked and resolved to its references
 - `limit (int)` - integer limit of rows to return
 - `(exceptions.DataPackageException)` - raises any error occured in this process
 - `(list[])` - returns array of rows (see `table.iter`)
+
+#### `resource.check_integrity()`
+
+> Only for tabular resources
+
+It checks size in BYTES and SHA256 hash of the file against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently).
+
+- `(exceptions.IntegrityError)` - raises if there are integrity issues
+- `(bool)` - returns True if no issues
 
 #### `resource.check_relations()`
 
@@ -524,7 +535,7 @@ Read the whole table and returns as array of rows. Count of rows could be limite
 
 It checks foreign keys and raises an exception if there are integrity issues.
 
-- `(exceptions.RelationError)` - raises if there are integrity issues
+- `(exceptions.RelationError)` - raises if there are relation issues
 - `(bool)` - returns True if no issues
 
 #### `resource.raw_iter(stream=False)`
@@ -908,9 +919,13 @@ All validation errors.
 
 All value cast errors.
 
-#### `exceptions.RelationError`
+#### `exceptions.IntegrityError`
 
 All integrity errors.
+
+#### `exceptions.RelationError`
+
+All relation errors.
 
 #### `exceptions.StorageError`
 

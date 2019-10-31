@@ -170,7 +170,7 @@ class Resource(object):
             return None
         return self.__get_table().schema
 
-    def iter(self, relations=False, **options):
+    def iter(self, integrity=False, relations=False, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
@@ -178,14 +178,19 @@ class Resource(object):
         if not self.tabular:
             message = 'Methods iter/read are not supported for non tabular data'
             raise exceptions.DataPackageException(message)
+
+        # Get integrity
+        if integrity:
+            integrity = self.__get_integrity()
 
         # Get relations
         if relations:
             relations = self.__get_relations()
 
-        return self.__get_table().iter(relations=relations, **options)
+        return self.__get_table().iter(
+            integrity=integrity, relations=relations, **options)
 
-    def read(self, relations=False, foreign_keys_values=False, **options):
+    def read(self, integrity=False, relations=False, foreign_keys_values=False, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
@@ -194,17 +199,31 @@ class Resource(object):
             message = 'Methods iter/read are not supported for non tabular data'
             raise exceptions.DataPackageException(message)
 
+        # Get integrity
+        if integrity:
+            integrity = self.__get_integrity()
+
         # Get relations
         if relations and not foreign_keys_values:
             relations = self.__get_relations()
 
-        return self.__get_table().read(relations=relations, foreign_keys_values=foreign_keys_values,
-                                       **options)
+        return self.__get_table().read(
+            integrity=integrity, relations=relations,
+            foreign_keys_values=foreign_keys_values, **options)
+
+    def check_integrity(self):
+        """https://github.com/frictionlessdata/datapackage-py#resource
+        """
+        # This function will benefit from rebasing it on `resource.raw_iter
+        for row in self.iter(integrity=True, cast=False):
+            pass
+        return True
 
     def check_relations(self, foreign_keys_values=False):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        self.read(relations=True, foreign_keys_values=foreign_keys_values)
+        for row in self.iter(relations=True, foreign_keys_values=foreign_keys_values):
+            pass
         return True
 
     def drop_relations(self):
@@ -371,7 +390,7 @@ class Resource(object):
             source = self.source
             if self.multipart:
                 source = _MultipartSource(self.source, remote=self.remote)
-            schema = self.descriptor.get('schema')
+            schema = self.__current_descriptor.get('schema')
 
             # Storage resource
             if self.__storage is not None:
@@ -401,6 +420,12 @@ class Resource(object):
                 self.__table = Table(source, schema=schema, **options)
 
         return self.__table
+
+    def __get_integrity(self):
+        return {
+            'size': self.__current_descriptor.get('bytes'),
+            'hash': helpers.extract_sha256_hash(self.__current_descriptor.get('hash')),
+        }
 
     def __get_relations(self):
         if not self.__relations:

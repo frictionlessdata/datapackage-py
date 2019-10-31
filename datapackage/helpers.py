@@ -213,3 +213,12 @@ def is_safe_path(path):
     ]
 
     return not any(unsafeness_conditions)
+
+
+def extract_sha256_hash(hash):
+    """Extrach SHA256 hash or return None
+    """
+    prefix = 'sha256:'
+    if hash and hash.startswith(prefix):
+        return hash.replace(prefix, '')
+    return None

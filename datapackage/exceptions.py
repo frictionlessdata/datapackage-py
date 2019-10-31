@@ -13,6 +13,7 @@ TableSchemaException = tableschema.exceptions.TableSchemaException
 LoadError = tableschema.exceptions.LoadError
 ValidationError = tableschema.exceptions.ValidationError
 CastError = tableschema.exceptions.CastError
+IntegrityError = tableschema.exceptions.IntegrityError
 RelationError = tableschema.exceptions.RelationError
 StorageError = tableschema.exceptions.StorageError
 
