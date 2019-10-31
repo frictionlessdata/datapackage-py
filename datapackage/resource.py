@@ -214,7 +214,7 @@ class Resource(object):
     def check_integrity(self):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
-        # This function will benefit from rebasing it on `resource.raw_read
+        # This function will benefit from rebasing it on `resource.raw_iter
         for row in self.iter(integrity=True, cast=False):
             pass
         return True
