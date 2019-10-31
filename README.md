@@ -908,9 +908,13 @@ All validation errors.
 
 All value cast errors.
 
-#### `exceptions.RelationError`
+#### `exceptions.IntegrityError`
 
 All integrity errors.
+
+#### `exceptions.RelationError`
+
+All relation errors.
 
 #### `exceptions.StorageError`
 
