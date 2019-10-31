@@ -28,8 +28,8 @@ INSTALL_REQUIRES = [
     'jsonschema>=2.5',
     'unicodecsv>=0.14',
     'jsonpointer>=1.10',
-    'tableschema>=1.1.0',
-    'tabulator>=1.24.2',
+    'tableschema>=1.10',
+    'tabulator>=1.29',
 ]
 TESTS_REQUIRE = [
     'mock',
