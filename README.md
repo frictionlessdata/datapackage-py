@@ -37,7 +37,6 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [`Resource`](#resource)
     - [`Group`](#group)
     - [`Profile`](#profile)
-    - [`push_datapackage`](#push_datapackage)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
 
@@ -1324,20 +1323,6 @@ Lazily yields each ValidationError for the received data dict.
 profile.to_dict(self)
 ```
 dict: Convert this :class:`.Schema` to dict.
-
-### `push_datapackage`
-```python
-push_datapackage(descriptor, backend, **backend_options)
-```
-Push Data Package to storage.
-
-All parameters should be used as keyword arguments.
-
-Args:
-    descriptor (str): path to descriptor
-    backend (str): backend name like `sql` or `bigquery`
-    backend_options (dict): backend options mentioned in backend docs
-
 
 ## Contributing
 

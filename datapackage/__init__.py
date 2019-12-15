@@ -16,6 +16,13 @@ from .group import Group
 from .profile import Profile
 from .validate import validate
 from .infer import infer
+from .exceptions import DataPackageException
+from .exceptions import TableSchemaException
+from .exceptions import LoadError
+from .exceptions import CastError
+from .exceptions import IntegrityError
+from .exceptions import RelationError
+from .exceptions import StorageError
 
 
 # Deprecated
