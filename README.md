@@ -1024,9 +1024,6 @@ __Raises__
 - `DataPackageException`: raises error if something goes wrong
 
 
-#### `package.attributes`
-tuple: Attributes defined in the schema and the data package.
-
 #### `package.base_path`
 Package's base path
 
@@ -1061,9 +1058,6 @@ __Returns__
 `Profile`: an instance of `Profile` class
 
 
-#### `package.required_attributes`
-tuple: The schema's required attributed.
-
 #### `package.resource_names`
 Package's resource names
 
@@ -1080,17 +1074,14 @@ __Returns__
 `Resource[]`: returns an array of `Resource` instances
 
 
-#### `package.schema`
-:class:`.Schema`: This data package's schema.
-
 #### `package.valid`
 Validation status
 
 Always true in strict mode.
 
-__Returns:__
+__Returns__
 
-    bool: validation status
+`bool`: validation status
 
 
 #### `package.get_resource`
@@ -1282,36 +1273,6 @@ __Returns__
 
 `bool`: return true on success
 
-
-#### `package.safe`
-```python
-package.safe(self)
-```
-True: datapackage is always safe.
-
-#### `package.validate`
-```python
-package.validate(self)
-```
-"Validate this Data Package.
-
-#### `package.iter_errors`
-```python
-package.iter_errors(self)
-```
-"Lazily yields each ValidationError for the received data dict.
-
-#### `package.to_dict`
-```python
-package.to_dict(self)
-```
-"dict: Convert this Data Package to dict.
-
-#### `package.to_json`
-```python
-package.to_json(self)
-```
-"str: Convert this Data Package to a JSON string.
 
 ### `Resource`
 ```python

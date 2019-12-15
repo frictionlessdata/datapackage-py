@@ -124,7 +124,7 @@ class Package(object):
 
         Always true in strict mode.
 
-        # Returns:
+        # Returns
             bool: validation status
 
         """
@@ -528,8 +528,7 @@ class Package(object):
     # Deprecated
 
     def safe(self):
-        """True: datapackage is always safe.
-        """
+        # True: datapackage is always safe.
 
         # Deprecate
         warnings.warn(
@@ -541,8 +540,7 @@ class Package(object):
 
     @property
     def schema(self):
-        """:class:`.Schema`: This data package's schema.
-        """
+        # Schema: This data package's schema.
 
         # Deprecate
         warnings.warn(
@@ -553,8 +551,7 @@ class Package(object):
 
     @property
     def attributes(self):
-        """tuple: Attributes defined in the schema and the data package.
-        """
+        # tuple: Attributes defined in the schema and the data package.
 
         # Deprecate
         warnings.warn(
@@ -572,8 +569,7 @@ class Package(object):
 
     @property
     def required_attributes(self):
-        """tuple: The schema's required attributed.
-        """
+        # tuple: The schema's required attributed.
 
         # Deprecate
         warnings.warn(
@@ -591,8 +587,7 @@ class Package(object):
         return required
 
     def validate(self):
-        """"Validate this Data Package.
-        """
+        # Validate this Data Package.
 
         # Deprecate
         warnings.warn(
@@ -603,8 +598,7 @@ class Package(object):
         self.profile.validate(descriptor)
 
     def iter_errors(self):
-        """"Lazily yields each ValidationError for the received data dict.
-        """
+        # Lazily yields each ValidationError for the received data dict.
 
         # Deprecate
         warnings.warn(
@@ -614,8 +608,7 @@ class Package(object):
         return self.profile.iter_errors(self.to_dict())
 
     def to_dict(self):
-        """"dict: Convert this Data Package to dict.
-        """
+        # dict: Convert this Data Package to dict.
 
         # Deprecate
         warnings.warn(
@@ -625,8 +618,7 @@ class Package(object):
         return copy.deepcopy(self.descriptor)
 
     def to_json(self):
-        """"str: Convert this Data Package to a JSON string.
-        """
+        # str: Convert this Data Package to a JSON string.
 
         # Deprecate
         warnings.warn(
