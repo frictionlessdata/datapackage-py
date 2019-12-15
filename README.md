@@ -37,6 +37,7 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [`cli`](#cli)
     - [`Package`](#package)
     - [`Resource`](#resource)
+    - [`Group`](#group)
     - [`Profile`](#profile)
     - [`push_datapackage`](#push_datapackage)
   - [Contributing](#contributing)
@@ -532,206 +533,6 @@ os.environ["HTTPS_PROXY"] = 'xxx'
 ```
 
 ### Migrate to API Reference
-
-#### `Resource(descriptor={}, base_path=None, strict=False, storage=None, **options)`
-
-Constructor to instantiate `Resource` class.
-
-- `descriptor (str/dict)` - data resource descriptor as local path, url or object
-- `base_path (str)` - base path for all relative paths
-- `strict (bool)` - strict flag to alter validation behavior. Setting it to `true` leads to throwing errors on any operation with invalid descriptor
-- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
-- `options (dict)` - storage options to use for storage creation
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(Resource)` - returns resource class instance
-
-#### `resource.package`
-
-- `(Package)` - returns a package instance if the resource belongs to some package
-
-#### `resource.valid`
-
-- `(bool)` - returns validation status. It always true in strict mode.
-
-#### `resource.errors`
-
-- `(Exception[])` - returns validation errors. It always empty in strict mode.
-
-#### `resource.profile`
-
-- `(Profile)` - returns an instance of `Profile` class (see below).
-
-#### `resource.descriptor`
-
-- (dict) - returns resource descriptor
-
-#### `resource.name`
-
-- `(str)` - returns resource name
-
-#### `resource.inline`
-
-- `(bool)` - returns true if resource is inline
-
-#### `resource.local`
-
-- `(bool)` - returns true if resource is local
-
-#### `resource.remote`
-
-- `(bool)` - returns true if resource is remote
-
-#### `resource.multipart`
-
-- `(bool)` - returns true if resource is multipart
-
-#### `resource.tabular`
-
-- `(bool)` - returns true if resource is tabular
-
-#### `resource.source`
-
-- `(list/str)` - returns `data` or `path` property
-
-Combination of `resource.source` and `resource.inline/local/remote/multipart` provides predictable interface to work with resource data.
-
-#### `resource.headers`
-
-> Only for tabular resources (reading has to be started first or it will return `None`)
-
-- `(str[])` - returns data source headers
-
-#### `resource.schema`
-
-> Only for tabular resources
-
-For tabular resources it returns `Schema` instance to interact with data schema. Read API documentation - [tableschema.Schema](https://github.com/frictionlessdata/tableschema-py#schema).
-
-- `(tableschema.Schema)` - returns schema class instance
-
-#### `resource.iter(keyed=False, extended=False, cast=True, integrity=False, relations=False)`
-
-> Only for tabular resources
-
-Iter through the table data and emits rows cast based on table schema (async for loop). Data casting could be disabled.
-
-- `keyed (bool)` - iter keyed rows
-- `extended (bool)` - iter extended rows
-- `cast (bool)` - disable data casting if false
-- `integrity (bool)` - if true actual size in BYTES and SHA256 hash of the file will be checked against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently)
-- `relations (bool)` - if true foreign key fields will be checked and resolved to its references
-- `(exceptions.DataPackageException)` - raises any error occured in this process
-- `(any[]/any{})` - yields rows:
-  - `[value1, value2]` - base
-  - `{header1: value1, header2: value2}` - keyed
-  - `[rowNumber, [header1, header2], [value1, value2]]` - extended
-
-#### `resource.read(keyed=False, extended=False, cast=True, integrity=False, relations=False, limit=None)`
-
-> Only for tabular resources
-
-Read the whole table and returns as array of rows. Count of rows could be limited.
-
-- `keyed (bool)` - flag to emit keyed rows
-- `extended (bool)` - flag to emit extended rows
-- `cast (bool)` - flag to disable data casting if false
-- `integrity (bool)` - if true actual size in BYTES and SHA256 hash of the file will be checked against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently)
-- `relations (bool)` - if true foreign key fields will be checked and resolved to its references
-- `limit (int)` - integer limit of rows to return
-- `(exceptions.DataPackageException)` - raises any error occured in this process
-- `(list[])` - returns array of rows (see `table.iter`)
-
-#### `resource.check_integrity()`
-
-> Only for tabular resources
-
-It checks size in BYTES and SHA256 hash of the file against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently).
-
-- `(exceptions.IntegrityError)` - raises if there are integrity issues
-- `(bool)` - returns True if no issues
-
-#### `resource.check_relations()`
-
-> Only for tabular resources
-
-It checks foreign keys and raises an exception if there are integrity issues.
-
-- `(exceptions.RelationError)` - raises if there are relation issues
-- `(bool)` - returns True if no issues
-
-#### `resource.raw_iter(stream=False)`
-
-Iterate over data chunks as bytes. If `stream` is true File-like object will be returned.
-
-- `stream (bool)` - File-like object will be returned
-- `(bytes[]/filelike)` - returns bytes[]/filelike
-
-#### `resource.raw_read()`
-
-Returns resource data as bytes.
-
-- (bytes) - returns resource data in bytes
-
-#### `resource.infer(**options)`
-
-Infer resource metadata like name, format, mediatype, encoding, schema and profile. It commits this changes into resource instance.
-
-- `options` - options will be passed to `tableschema.infer` call, for more control on results (e.g. for setting `limit`, `confidence` etc.).
-
-- `(dict)` - returns resource descriptor
-
-#### `resource.commit(strict=None)`
-
-Update resource instance if there are in-place changes in the descriptor.
-
-- `strict (bool)` - alter `strict` mode for further work
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(bool)` - returns true on success and false if not modified
-
-#### `resource.save(target, storage=None, **options)`
-
-Saves this resource into storage if `storage` argument is passed or saves this resource's descriptor to json file otherwise.
-
-- `target (str)` - path where to save a resource
-- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
-- `options (dict)` - storage options to use for storage creation
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(bool)` - returns true on success
-
-
-#### `Group`
-
-This class doesn't have any public constructor. Use `package.get_group`.
-
-#### `group.name`
-
-- `(str)` - returns the group name
-
-#### `group.headers`
-
-The same as `resource.headers`
-
-#### `group.schema`
-
-The same as `resource.schema`
-
-#### `group.iter(...)`
-
-The same as `resource.iter`
-
-#### `group.read(...)`
-
-The same as `resource.read`
-
-#### `group.check_relations(...)`
-
-The same as `resource.check_relations` but without the optional argument *foreign_keys_values*.
-This method will test foreignKeys of the whole group at once otpimizing the process by creating the foreign_key_values hashmap only once before testing the set of resources.
-
-- () no args
-- `(tableschema.exceptions)` - raises errors if something validation fails
-- `(Boolean)` - returns True if validation succeeds
-
 
 #### `Profile(profile)`
 
@@ -1521,6 +1322,70 @@ __Raises__
 __Returns__
 
 `bool`: returns true on success
+
+
+### `Group`
+```python
+Group(self, resources)
+```
+Group representation
+
+Arguments:
+    Resource[]: list of TABULAR resources
+
+
+#### `group.headers`
+Group's headers
+
+__Returns__
+
+`str[]/None`: returns headers
+
+
+#### `group.name`
+Group name
+
+__Returns__
+
+`str`: name
+
+
+#### `group.schema`
+Resource's schema
+
+__Returns__
+
+`tableschema.Schema`: schema
+
+
+#### `group.iter`
+```python
+group.iter(self, **options)
+```
+Iterates through the group data and emits rows cast based on table schema.
+
+> It concatenates all the resources and has the same API as `resource.iter`
+
+
+#### `group.read`
+```python
+group.read(self, limit=None, **options)
+```
+Read the whole group and return as array of rows
+
+> It concatenates all the resources and has the same API as `resource.read`
+
+
+#### `group.check_relations`
+```python
+group.check_relations(self)
+```
+Check group's relations
+
+The same as `resource.check_relations` but without the optional
+argument *foreign_keys_values*.  This method will test foreignKeys of the
+whole group at once otpimizing the process by creating the foreign_key_values
+hashmap only once before testing the set of resources.
 
 
 ### `Profile`

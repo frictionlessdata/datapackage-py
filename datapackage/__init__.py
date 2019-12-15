@@ -12,6 +12,7 @@ __version__ = config.VERSION
 from .cli import cli
 from .package import Package
 from .resource import Resource
+from .group import Group
 from .profile import Profile
 from .validate import validate
 from .infer import infer
