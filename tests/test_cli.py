@@ -5,28 +5,28 @@ from __future__ import absolute_import
 # from __future__ import unicode_literals
 
 from click.testing import CliRunner
-from datapackage import cli
+from datapackage.cli import validate, infer, cli
 
 
 # Tests
 
 def test_cli_validate_valid():
     runner = CliRunner()
-    result = runner.invoke(cli, ['validate', 'data/datapackage/datapackage.json'])
+    result = runner.invoke(validate, ['data/datapackage/datapackage.json'])
     assert result.exit_code == 0
     assert 'Data package descriptor is valid' in result.output
 
 
 def test_cli_validate_invalid():
     runner = CliRunner()
-    result = runner.invoke(cli, ['validate', 'data/data-package.json'])
+    result = runner.invoke(validate, ['data/data-package.json'])
     assert result.exit_code == 1
     assert 'Data package descriptor is invalid' in result.output
 
 
 def test_cli_infer():
     runner = CliRunner()
-    result = runner.invoke(cli, ['infer', 'data/datapackage/*.csv'])
+    result = runner.invoke(infer, ['data/datapackage/*.csv'])
     assert result.exit_code == 0
     assert 'tabular-data-package' in result.output
 
