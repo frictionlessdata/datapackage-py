@@ -55,7 +55,7 @@ setup(
     extras_require={'develop': TESTS_REQUIRE},
     entry_points={
         'console_scripts': [
-            'datapackage = datapackage.cli:cli',
+            'datapackage = datapackage.__main__:cli',
         ]
     },
     zip_safe=False,

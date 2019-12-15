@@ -22,18 +22,23 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
 
   - [Getting Started](#getting-started)
     - [Installation](#installation)
-    - [Examples](#examples)
   - [Documentation](#documentation)
-    - [Package](#package)
-    - [Resource](#resource)
-    - [Group](#group)
-    - [Profile](#profile)
-    - [validate](#validate)
+    - [Introduction](#introduction)
+    - [Working with Package](#working-with-package)
+    - [Working with Resource](#working-with-resource)
+    - [Working with Group](#working-with-group)
+    - [Working with Profile](#working-with-profile)
+    - [Working with Foreign Keys](#working-with-foreign-keys)
+    - [Working with validate/infer](#working-with-validateinfer)
+    - [FAQ](#faq)
+    - [Migrate to API Reference](#migrate-to-api-reference)
     - [infer](#infer)
-    - [Foreign Keys](#foreign-keys)
-    - [Exceptions](#exceptions)
-    - [CLI](#cli)
-    - [Notes](#notes)
+  - [API Reference](#api-reference)
+    - [`cli`](#cli)
+    - [`Package`](#package)
+    - [`Resource`](#resource)
+    - [`Profile`](#profile)
+    - [`push_datapackage`](#push_datapackage)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
 
@@ -403,42 +408,6 @@ except exceptions.ValidationError as exception:
        # handle individual error
 ```
 
-### Working with validate/infer
-
-A standalone function to validate a data package descriptor:
-
-```python
-from datapackage import validate, exceptions
-
-try:
-    valid = validate(descriptor)
-except exceptions.ValidationError as exception:
-   for error in exception.errors:
-       # handle individual error
-```
-
-A standalone function to infer a data package descriptor.
-
-```python
-descriptor = infer('**/*.csv')
-#{ profile: 'tabular-data-resource',
-#  resources:
-#   [ { path: 'data/cities.csv',
-#       profile: 'tabular-data-resource',
-#       encoding: 'utf-8',
-#       name: 'cities',
-#       format: 'csv',
-#       mediatype: 'text/csv',
-#       schema: [Object] },
-#     { path: 'data/population.csv',
-#       profile: 'tabular-data-resource',
-#       encoding: 'utf-8',
-#       name: 'population',
-#       format: 'csv',
-#       mediatype: 'text/csv',
-#       schema: [Object] } ] }
-```
-
 ### Working with Foreign Keys
 
 The library supports foreign keys described in the [Table Schema](http://specs.frictionlessdata.io/table-schema/#foreign-keys) specification. It means if your data package descriptor use `resources[].schema.foreignKeys` property for some resources a data integrity will be checked on reading operations.
@@ -512,6 +481,42 @@ teams.read(keyed=True, relations=True)
 ```
 
 Instead of plain city name we've got a dictionary containing a city data. These `resource.iter/read` methods will fail with the same as `resource.check_relations` error if there is an integrity issue. But only if `relations=True` flag is passed.
+
+### Working with validate/infer
+
+A standalone function to validate a data package descriptor:
+
+```python
+from datapackage import validate, exceptions
+
+try:
+    valid = validate(descriptor)
+except exceptions.ValidationError as exception:
+   for error in exception.errors:
+       # handle individual error
+```
+
+A standalone function to infer a data package descriptor.
+
+```python
+descriptor = infer('**/*.csv')
+#{ profile: 'tabular-data-resource',
+#  resources:
+#   [ { path: 'data/cities.csv',
+#       profile: 'tabular-data-resource',
+#       encoding: 'utf-8',
+#       name: 'cities',
+#       format: 'csv',
+#       mediatype: 'text/csv',
+#       schema: [Object] },
+#     { path: 'data/population.csv',
+#       profile: 'tabular-data-resource',
+#       encoding: 'utf-8',
+#       name: 'population',
+#       format: 'csv',
+#       mediatype: 'text/csv',
+#       schema: [Object] } ] }
+```
 
 ### FAQ
 
@@ -980,6 +985,285 @@ Commands:
 ```
 
 ## API Reference
+
+### `cli`
+```python
+cli()
+```
+Command-line interface
+
+```
+Usage: datapackage [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  infer
+  validate
+```
+
+
+### `Package`
+```python
+Package(self, descriptor=None, base_path=None, strict=False, storage=None, schema=None, default_base_path=None, **options)
+```
+
+#### `package.attributes`
+tuple: Attributes defined in the schema and the data package.
+
+#### `package.base_path`
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.descriptor`
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.errors`
+https://github.com/frictionlessdata/tableschema-py#schema
+
+#### `package.profile`
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.required_attributes`
+tuple: The schema's required attributed.
+
+#### `package.resource_names`
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.resources`
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.schema`
+:class:`.Schema`: This data package's schema.
+
+#### `package.valid`
+https://github.com/frictionlessdata/tableschema-py#schema
+
+#### `package.get_resource`
+```python
+package.get_resource(self, name)
+```
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.add_resource`
+```python
+package.add_resource(self, descriptor)
+```
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.remove_resource`
+```python
+package.remove_resource(self, name)
+```
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.get_group`
+```python
+package.get_group(self, name)
+```
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.infer`
+```python
+package.infer(self, pattern=False)
+```
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.commit`
+```python
+package.commit(self, strict=None)
+```
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.save`
+```python
+package.save(self, target=None, storage=None, merge_groups=False, **options)
+```
+https://github.com/frictionlessdata/datapackage-py#package
+
+#### `package.safe`
+```python
+package.safe(self)
+```
+True: datapackage is always safe.
+
+#### `package.validate`
+```python
+package.validate(self)
+```
+"Validate this Data Package.
+
+#### `package.iter_errors`
+```python
+package.iter_errors(self)
+```
+"Lazily yields each ValidationError for the received data dict.
+
+#### `package.to_dict`
+```python
+package.to_dict(self)
+```
+"dict: Convert this Data Package to dict.
+
+#### `package.to_json`
+```python
+package.to_json(self)
+```
+"str: Convert this Data Package to a JSON string.
+
+### `Resource`
+```python
+Resource(self, descriptor={}, base_path=None, strict=False, storage=None, package=None, **options)
+```
+
+#### `resource.data`
+Return resource data
+
+#### `resource.descriptor`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.errors`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.group`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.headers`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.inline`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.local`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.multipart`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.name`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.package`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.profile`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.remote`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.schema`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.source`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.table`
+Return resource table
+
+#### `resource.tabular`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.valid`
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.iter`
+```python
+resource.iter(self, integrity=False, relations=False, **options)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.read`
+```python
+resource.read(self, integrity=False, relations=False, foreign_keys_values=False, **options)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.check_integrity`
+```python
+resource.check_integrity(self)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.check_relations`
+```python
+resource.check_relations(self, foreign_keys_values=False)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.raw_iter`
+```python
+resource.raw_iter(self, stream=False)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.raw_read`
+```python
+resource.raw_read(self)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.infer`
+```python
+resource.infer(self, **options)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.commit`
+```python
+resource.commit(self, strict=None)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+#### `resource.save`
+```python
+resource.save(self, target, storage=None, **options)
+```
+https://github.com/frictionlessdata/datapackage-py#resource
+
+### `Profile`
+```python
+Profile(self, profile)
+```
+
+#### `profile.jsonschema`
+https://github.com/frictionlessdata/datapackage-py#schema
+
+#### `profile.name`
+https://github.com/frictionlessdata/datapackage-py#schema
+
+#### `profile.validate`
+```python
+profile.validate(self, descriptor)
+```
+https://github.com/frictionlessdata/datapackage-py#schema
+
+#### `profile.iter_errors`
+```python
+profile.iter_errors(self, data)
+```
+Lazily yields each ValidationError for the received data dict.
+
+#### `profile.to_dict`
+```python
+profile.to_dict(self)
+```
+dict: Convert this :class:`.Schema` to dict.
+
+### `push_datapackage`
+```python
+push_datapackage(descriptor, backend, **backend_options)
+```
+Push Data Package to storage.
+
+All parameters should be used as keyword arguments.
+
+Args:
+    descriptor (str): path to descriptor
+    backend (str): backend name like `sql` or `bigquery`
+    backend_options (dict): backend options mentioned in backend docs
+
 
 ## Contributing
 
