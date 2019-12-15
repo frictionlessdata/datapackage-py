@@ -17,12 +17,19 @@ from . import exceptions
 # Module API
 
 class Profile(object):
+    """Profile representation
+
+    # Arguments
+        profile (str): profile name in registry or URL to JSON Schema
+
+    # Raises
+        DataPackageException: raises error if something goes wrong
+
+    """
 
     # Public
 
     def __init__(self, profile):
-        """https://github.com/frictionlessdata/datapackage-py#schema
-        """
         self._name = profile
         self._registry = self._load_registry()
         self._schema = self._load_schema(profile, self._registry)
@@ -31,18 +38,35 @@ class Profile(object):
 
     @property
     def name(self):
-        """https://github.com/frictionlessdata/datapackage-py#schema
+        """Profile name
+
+        # Returns
+            str/None: name if available
+
         """
         return self._name
 
     @property
     def jsonschema(self):
-        """https://github.com/frictionlessdata/datapackage-py#schema
+        """JSONSchema content
+
+        # Returns
+            dict: returns profile's JSON Schema contents
+
         """
         return self._schema
 
     def validate(self, descriptor):
-        """https://github.com/frictionlessdata/datapackage-py#schema
+        """Validate a data package `descriptor` against the profile.
+
+        # Arguments
+            descriptor (dict): retrieved and dereferenced data package descriptor
+
+        # Raises
+            ValidationError: raises if not valid
+        # Returns
+            bool: returns True if valid
+
         """
 
         # Collect errors

@@ -6,7 +6,7 @@ from itertools import chain
 class Group(object):
     """Group representation
 
-    Arguments:
+    # Arguments
         Resource[]: list of TABULAR resources
 
     """

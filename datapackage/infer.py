@@ -9,9 +9,17 @@ from .package import Package
 
 # Module API
 
-
 def infer(pattern, base_path=None):
-    """https://github.com/frictionlessdata/datapackage-py#infer
+    """Infer a data package descriptor.
+
+    > Argument `pattern` works only for local files
+
+    # Arguments
+        pattern (str): glob file pattern
+
+    # Returns
+        dict: returns data package descriptor
+
     """
     package = Package({}, base_path=base_path)
     descriptor = package.infer(pattern)

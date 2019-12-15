@@ -31,8 +31,6 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [Working with Foreign Keys](#working-with-foreign-keys)
     - [Working with validate/infer](#working-with-validateinfer)
     - [Frequently Asked Questions](#frequently-asked-questions)
-    - [Migrate to API Reference](#migrate-to-api-reference)
-    - [infer](#infer)
   - [API Reference](#api-reference)
     - [`cli`](#cli)
     - [`Package`](#package)
@@ -530,124 +528,6 @@ import os
 
 os.environ["HTTP_PROXY"] = 'xxx'
 os.environ["HTTPS_PROXY"] = 'xxx'
-```
-
-### Migrate to API Reference
-
-#### `Profile(profile)`
-
-Constuctor to instantiate `Profile` class.
-
-- `profile (str)` - profile name in registry or URL to JSON Schema
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(Profile)` - returns profile class instance
-
-#### `profile.name`
-
-- `(str/None)` - returns profile name if available
-
-#### `profile.jsonschema`
-
-- `(dict)` - returns profile JSON Schema contents
-
-#### `profile.validate(descriptor)`
-
-Validate a data package `descriptor` against the profile.
-
-- `descriptor (dict)` - retrieved and dereferenced data package descriptor
-- `(exceptions.ValidationError)` - raises if not valid
-- `(bool)` - returns True if valid
-
-#### `validate(descriptor)`
-
-Validate a data package descriptor.
-
-- `descriptor (str/dict)` - package descriptor (one of):
-  - local path
-  - remote url
-  - object
-- (exceptions.ValidationError) - raises on invalid
-- `(bool)` - returns true on valid
-
-### infer
-
-
-#### `infer(pattern, base_path=None)`
-
-> Argument `pattern` works only for local files
-
-Infer a data package descriptor.
-
-- `pattern (str)` - glob file pattern
-- `(dict)` - returns data package descriptor
-
-
-#### `exceptions.DataPackageException`
-
-Base class for all library exceptions. If there are multiple errors it could be read from an exceptions object:
-
-```python
-try:
-    # lib action
-except exceptions.DataPackageException as exception:
-    if exception.multiple:
-        for error in exception.errors:
-            # handle error
-```
-
-#### `exceptions.LoadError`
-
-All loading errors.
-
-#### `exceptions.ValidationError`
-
-All validation errors.
-
-#### `exceptions.CastError`
-
-All value cast errors.
-
-#### `exceptions.IntegrityError`
-
-All integrity errors.
-
-#### `exceptions.RelationError`
-
-All relation errors.
-
-#### `exceptions.StorageError`
-
-All storage errors.
-
-> It's a provisional API. If you use it as a part of other program please pin concrete `datapackage` version to your requirements file.
-
-The library ships with a simple CLI:
-
-```bash
-$ datapackage infer '**/*.csv'
-Data package descriptor:
-{'profile': 'tabular-data-package',
- 'resources': [{'encoding': 'utf-8',
-                'format': 'csv',
-                'mediatype': 'text/csv',
-                'name': 'data',
-                'path': 'data/datapackage/data.csv',
-                'profile': 'tabular-data-resource',
-                'schema': ...}}]}
-```
-
-#### `$ datapackage`
-
-```bash
-Usage: cli.py [OPTIONS] COMMAND [ARGS]...
-
-Options:
-  --version  Show the version and exit.
-  --help     Show this message and exit.
-
-Commands:
-  infer
-  validate
 ```
 
 ## API Reference
@@ -1330,8 +1210,8 @@ Group(self, resources)
 ```
 Group representation
 
-Arguments:
-    Resource[]: list of TABULAR resources
+__Arguments__
+- __Resource[]__: list of TABULAR resources
 
 
 #### `group.headers`
@@ -1392,18 +1272,46 @@ hashmap only once before testing the set of resources.
 ```python
 Profile(self, profile)
 ```
+Profile representation
+
+__Arguments__
+- __profile (str)__: profile name in registry or URL to JSON Schema
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
 
 #### `profile.jsonschema`
-https://github.com/frictionlessdata/datapackage-py#schema
+JSONSchema content
+
+__Returns__
+
+`dict`: returns profile's JSON Schema contents
+
 
 #### `profile.name`
-https://github.com/frictionlessdata/datapackage-py#schema
+Profile name
+
+__Returns__
+
+`str/None`: name if available
+
 
 #### `profile.validate`
 ```python
 profile.validate(self, descriptor)
 ```
-https://github.com/frictionlessdata/datapackage-py#schema
+Validate a data package `descriptor` against the profile.
+
+__Arguments__
+- __descriptor (dict)__: retrieved and dereferenced data package descriptor
+
+__Raises__
+- `ValidationError`: raises if not valid
+__Returns__
+
+`bool`: returns True if valid
+
 
 #### `profile.iter_errors`
 ```python
