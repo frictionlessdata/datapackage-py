@@ -56,9 +56,11 @@ If you receive an error about the `cchardet` package when installing datapackage
 3. Then, in terminal, run `open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg`
 You can read more about these steps in this [post.](https://stackoverflow.com/questions/52509602/cant-compile-c-program-on-a-mac-after-upgrade-to-mojave)
 
-### Examples
+## Documentation
 
-Code examples in this readme requires Python 3.3+ interpreter. You could see even more example in [examples](https://github.com/frictionlessdata/datapackage-py/tree/master/examples) directory.
+### Introduction
+
+Let's start with a simple example:
 
 ```python
 from datapackage import Package
@@ -67,9 +69,7 @@ package = Package('datapackage.json')
 package.get_resource('resource').read()
 ```
 
-## Documentation
-
-### Package
+### Working with Package
 
 A class for working with data packages. It provides various capabilities like loading local or remote data package, inferring a data package descriptor, saving a data package descriptor and many more.
 
@@ -153,6 +153,380 @@ package = Package('datapackage.zip')
 ```
 
 It was onle basic introduction to the `Package` class. To learn more let's take a look on `Package` class API reference.
+
+### Working with Resource
+
+A class for working with data resources. You can read or iterate tabular resources using the `iter/read` methods and all resource as bytes using `row_iter/row_read` methods.
+
+Consider we have some local csv file. It could be inline data or remote link - all supported by `Resource` class (except local files for in-brower usage of course). But say it's `data.csv` for now:
+
+```csv
+city,location
+london,"51.50,-0.11"
+paris,"48.85,2.30"
+rome,N/A
+```
+
+Let's create and read a resource. Because resource is tabular we could use `resource.read` method with a `keyed` option to get an array of keyed rows:
+
+```python
+resource = Resource({path: 'data.csv'})
+resource.tabular # true
+resource.read(keyed=True)
+# [
+#   {city: 'london', location: '51.50,-0.11'},
+#   {city: 'paris', location: '48.85,2.30'},
+#   {city: 'rome', location: 'N/A'},
+# ]
+resource.headers
+# ['city', 'location']
+# (reading has to be started first)
+```
+
+As we could see our locations are just a strings. But it should be geopoints. Also Rome's location is not available but it's also just a `N/A` string instead of Python `None`. First we have to infer resource metadata:
+
+```python
+resource.infer()
+resource.descriptor
+#{ path: 'data.csv',
+#  profile: 'tabular-data-resource',
+#  encoding: 'utf-8',
+#  name: 'data',
+#  format: 'csv',
+#  mediatype: 'text/csv',
+# schema: { fields: [ [Object], [Object] ], missingValues: [ '' ] } }
+resource.read(keyed=True)
+# Fails with a data validation error
+```
+
+Let's fix not available location. There is a `missingValues` property in Table Schema specification. As a first try we set `missingValues` to `N/A` in `resource.descriptor.schema`. Resource descriptor could be changed in-place but all changes should be commited by `resource.commit()`:
+
+```python
+resource.descriptor['schema']['missingValues'] = 'N/A'
+resource.commit()
+resource.valid # False
+resource.errors
+# [<ValidationError: "'N/A' is not of type 'array'">]
+```
+
+As a good citiziens we've decided to check out recource descriptor validity. And it's not valid! We should use an array for `missingValues` property. Also don't forget to have an empty string as a missing value:
+
+```python
+resource.descriptor['schema']['missingValues'] = ['', 'N/A']
+resource.commit()
+resource.valid # true
+```
+
+All good. It looks like we're ready to read our data again:
+
+```python
+resource.read(keyed=True)
+# [
+#   {city: 'london', location: [51.50,-0.11]},
+#   {city: 'paris', location: [48.85,2.30]},
+#   {city: 'rome', location: null},
+# ]
+```
+
+Now we see that:
+- locations are arrays with numeric lattide and longitude
+- Rome's location is a native JavaScript `null`
+
+And because there are no errors on data reading we could be sure that our data is valid againt our schema. Let's save our resource descriptor:
+
+```python
+resource.save('dataresource.json')
+```
+
+Let's check newly-crated `dataresource.json`. It contains path to our data file, inferred metadata and our `missingValues` tweak:
+
+```json
+{
+    "path": "data.csv",
+    "profile": "tabular-data-resource",
+    "encoding": "utf-8",
+    "name": "data",
+    "format": "csv",
+    "mediatype": "text/csv",
+    "schema": {
+        "fields": [
+            {
+                "name": "city",
+                "type": "string",
+                "format": "default"
+            },
+            {
+                "name": "location",
+                "type": "geopoint",
+                "format": "default"
+            }
+        ],
+        "missingValues": [
+            "",
+            "N/A"
+        ]
+    }
+}
+```
+
+If we decide to improve it even more we could update the `dataresource.json` file and then open it again using local file name:
+
+```python
+resource = Resource('dataresource.json')
+# Continue the work
+```
+
+It was onle basic introduction to the `Resource` class. To learn more let's take a look on `Resource` class API reference.
+
+### Working with Group
+
+A class representing a group of tabular resources. Groups can be used to read multiple resource as one or to export them, for example, to a database as one table. To define a group add the `group: <name>` field to corresponding resources. The group's metadata will be created from the "leading" resource's metadata (the first resource with the group name).
+
+Consider we have a data package with two tables partitioned by a year and a shared schema stored separately:
+
+>  cars-2017.csv
+
+```csv
+name,value
+bmw,2017
+tesla,2017
+nissan,2017
+```
+
+>  cars-2018.csv
+
+```csv
+name,value
+bmw,2018
+tesla,2018
+nissan,2018
+```
+
+> cars.schema.json
+
+```json
+{
+    "fields": [
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "value",
+            "type": "integer"
+        }
+    ]
+}
+```
+
+> datapackage.json
+
+```json
+{
+    "name": "datapackage",
+    "resources": [
+        {
+            "group": "cars",
+            "name": "cars-2017",
+            "path": "cars-2017.csv",
+            "profile": "tabular-data-resource",
+            "schema": "cars.schema.json"
+        },
+        {
+            "group": "cars",
+            "name": "cars-2018",
+            "path": "cars-2018.csv",
+            "profile": "tabular-data-resource",
+            "schema": "cars.schema.json"
+        }
+    ]
+}
+```
+
+Let's read the resources separately:
+
+```python
+package = Package('datapackage.json')
+package.get_resource('cars-2017').read(keyed=True) == [
+    {'name': 'bmw', 'value': 2017},
+    {'name': 'tesla', 'value': 2017},
+    {'name': 'nissan', 'value': 2017},
+]
+package.get_resource('cars-2018').read(keyed=True) == [
+    {'name': 'bmw', 'value': 2018},
+    {'name': 'tesla', 'value': 2018},
+    {'name': 'nissan', 'value': 2018},
+]
+```
+
+On the other hand, these resources defined with a `group: cars` field. It means we can treat them as a group:
+
+```python
+package = Package('datapackage.json')
+package.get_group('cars').read(keyed=True) == [
+    {'name': 'bmw', 'value': 2017},
+    {'name': 'tesla', 'value': 2017},
+    {'name': 'nissan', 'value': 2017},
+    {'name': 'bmw', 'value': 2018},
+    {'name': 'tesla', 'value': 2018},
+    {'name': 'nissan', 'value': 2018},
+]
+```
+
+We can use this approach when we need to save the data package to a storage, for example, to a SQL database. There is the `merge_groups` flag to enable groupping behaviour:
+
+```python
+package = Package('datapackage.json')
+package.save(storage='sql', engine=engine)
+# SQL tables:
+# - cars-2017
+# - cars-2018
+package.save(storage='sql', engine=engine, merge_groups=True)
+# SQL tables:
+# - cars
+```
+
+### Working with Profile
+
+A component to represent JSON Schema profile from [Profiles Registry]( https://specs.frictionlessdata.io/schemas/registry.json):
+
+```python
+profile = Profile('data-package')
+
+profile.name # data-package
+profile.jsonschema # JSON Schema contents
+
+try:
+   valid = profile.validate(descriptor)
+except exceptions.ValidationError as exception:
+   for error in exception.errors:
+       # handle individual error
+```
+
+### Working with validate/infer
+
+A standalone function to validate a data package descriptor:
+
+```python
+from datapackage import validate, exceptions
+
+try:
+    valid = validate(descriptor)
+except exceptions.ValidationError as exception:
+   for error in exception.errors:
+       # handle individual error
+```
+
+A standalone function to infer a data package descriptor.
+
+```python
+descriptor = infer('**/*.csv')
+#{ profile: 'tabular-data-resource',
+#  resources:
+#   [ { path: 'data/cities.csv',
+#       profile: 'tabular-data-resource',
+#       encoding: 'utf-8',
+#       name: 'cities',
+#       format: 'csv',
+#       mediatype: 'text/csv',
+#       schema: [Object] },
+#     { path: 'data/population.csv',
+#       profile: 'tabular-data-resource',
+#       encoding: 'utf-8',
+#       name: 'population',
+#       format: 'csv',
+#       mediatype: 'text/csv',
+#       schema: [Object] } ] }
+```
+
+### Working with Foreign Keys
+
+The library supports foreign keys described in the [Table Schema](http://specs.frictionlessdata.io/table-schema/#foreign-keys) specification. It means if your data package descriptor use `resources[].schema.foreignKeys` property for some resources a data integrity will be checked on reading operations.
+
+Consider we have a data package:
+
+```python
+DESCRIPTOR = {
+  'resources': [
+    {
+      'name': 'teams',
+      'data': [
+        ['id', 'name', 'city'],
+        ['1', 'Arsenal', 'London'],
+        ['2', 'Real', 'Madrid'],
+        ['3', 'Bayern', 'Munich'],
+      ],
+      'schema': {
+        'fields': [
+          {'name': 'id', 'type': 'integer'},
+          {'name': 'name', 'type': 'string'},
+          {'name': 'city', 'type': 'string'},
+        ],
+        'foreignKeys': [
+          {
+            'fields': 'city',
+            'reference': {'resource': 'cities', 'fields': 'name'},
+          },
+        ],
+      },
+    }, {
+      'name': 'cities',
+      'data': [
+        ['name', 'country'],
+        ['London', 'England'],
+        ['Madrid', 'Spain'],
+      ],
+    },
+  ],
+}
+```
+
+Let's check relations for a `teams` resource:
+
+```python
+from datapackage import Package
+
+package = Package(DESCRIPTOR)
+teams = package.get_resource('teams')
+teams.check_relations()
+# tableschema.exceptions.RelationError: Foreign key "['city']" violation in row "4"
+```
+
+As we could see there is a foreign key violation. That's because our lookup table `cities` doesn't have a city of `Munich` but we have a team from there. We need to fix it in `cities` resource:
+
+```python
+package.descriptor['resources'][1]['data'].append(['Munich', 'Germany'])
+package.commit()
+teams = package.get_resource('teams')
+teams.check_relations()
+# True
+```
+
+Fixed! But not only a check operation is available. We could use `relations` argument for `resource.iter/read` methods to dereference a resource relations:
+
+```python
+teams.read(keyed=True, relations=True)
+#[{'id': 1, 'name': 'Arsenal', 'city': {'name': 'London', 'country': 'England}},
+# {'id': 2, 'name': 'Real', 'city': {'name': 'Madrid', 'country': 'Spain}},
+# {'id': 3, 'name': 'Bayern', 'city': {'name': 'Munich', 'country': 'Germany}}]
+```
+
+Instead of plain city name we've got a dictionary containing a city data. These `resource.iter/read` methods will fail with the same as `resource.check_relations` error if there is an integrity issue. But only if `relations=True` flag is passed.
+
+### FAQ
+
+#### Accessing data behind a proxy server?
+
+Before the `package = Package("https://xxx.json")` call set these environment variables:
+
+```python
+import os
+
+os.environ["HTTP_PROXY"] = 'xxx'
+os.environ["HTTPS_PROXY"] = 'xxx'
+```
+
+### Migrate to API Reference
 
 #### `Package(descriptor=None, base_path=None, strict=False, storage=None, **options)`
 
@@ -288,129 +662,6 @@ The final structure of the zip file will be:
 
 With the contents of `datapackage.json` being the same as returned `datapackage.descriptor`. The resources' file names are generated based on their `name` and `format` fields if they exist. If the resource has no `name`, it'll be used `resource-X`, where `X` is the index of the resource in the `resources` list (starting at zero). If the resource has `format`, it'll be lowercased and appended to the `name`, becoming "`name.format`".
 
-### Resource
-
-A class for working with data resources. You can read or iterate tabular resources using the `iter/read` methods and all resource as bytes using `row_iter/row_read` methods.
-
-Consider we have some local csv file. It could be inline data or remote link - all supported by `Resource` class (except local files for in-brower usage of course). But say it's `data.csv` for now:
-
-```csv
-city,location
-london,"51.50,-0.11"
-paris,"48.85,2.30"
-rome,N/A
-```
-
-Let's create and read a resource. Because resource is tabular we could use `resource.read` method with a `keyed` option to get an array of keyed rows:
-
-```python
-resource = Resource({path: 'data.csv'})
-resource.tabular # true
-resource.read(keyed=True)
-# [
-#   {city: 'london', location: '51.50,-0.11'},
-#   {city: 'paris', location: '48.85,2.30'},
-#   {city: 'rome', location: 'N/A'},
-# ]
-resource.headers
-# ['city', 'location']
-# (reading has to be started first)
-```
-
-As we could see our locations are just a strings. But it should be geopoints. Also Rome's location is not available but it's also just a `N/A` string instead of Python `None`. First we have to infer resource metadata:
-
-```python
-resource.infer()
-resource.descriptor
-#{ path: 'data.csv',
-#  profile: 'tabular-data-resource',
-#  encoding: 'utf-8',
-#  name: 'data',
-#  format: 'csv',
-#  mediatype: 'text/csv',
-# schema: { fields: [ [Object], [Object] ], missingValues: [ '' ] } }
-resource.read(keyed=True)
-# Fails with a data validation error
-```
-
-Let's fix not available location. There is a `missingValues` property in Table Schema specification. As a first try we set `missingValues` to `N/A` in `resource.descriptor.schema`. Resource descriptor could be changed in-place but all changes should be commited by `resource.commit()`:
-
-```python
-resource.descriptor['schema']['missingValues'] = 'N/A'
-resource.commit()
-resource.valid # False
-resource.errors
-# [<ValidationError: "'N/A' is not of type 'array'">]
-```
-
-As a good citiziens we've decided to check out recource descriptor validity. And it's not valid! We should use an array for `missingValues` property. Also don't forget to have an empty string as a missing value:
-
-```python
-resource.descriptor['schema']['missingValues'] = ['', 'N/A']
-resource.commit()
-resource.valid # true
-```
-
-All good. It looks like we're ready to read our data again:
-
-```python
-resource.read(keyed=True)
-# [
-#   {city: 'london', location: [51.50,-0.11]},
-#   {city: 'paris', location: [48.85,2.30]},
-#   {city: 'rome', location: null},
-# ]
-```
-
-Now we see that:
-- locations are arrays with numeric lattide and longitude
-- Rome's location is a native JavaScript `null`
-
-And because there are no errors on data reading we could be sure that our data is valid againt our schema. Let's save our resource descriptor:
-
-```python
-resource.save('dataresource.json')
-```
-
-Let's check newly-crated `dataresource.json`. It contains path to our data file, inferred metadata and our `missingValues` tweak:
-
-```json
-{
-    "path": "data.csv",
-    "profile": "tabular-data-resource",
-    "encoding": "utf-8",
-    "name": "data",
-    "format": "csv",
-    "mediatype": "text/csv",
-    "schema": {
-        "fields": [
-            {
-                "name": "city",
-                "type": "string",
-                "format": "default"
-            },
-            {
-                "name": "location",
-                "type": "geopoint",
-                "format": "default"
-            }
-        ],
-        "missingValues": [
-            "",
-            "N/A"
-        ]
-    }
-}
-```
-
-If we decide to improve it even more we could update the `dataresource.json` file and then open it again using local file name:
-
-```python
-resource = Resource('dataresource.json')
-# Continue the work
-```
-
-It was onle basic introduction to the `Resource` class. To learn more let's take a look on `Resource` class API reference.
 
 #### `Resource(descriptor={}, base_path=None, strict=False, storage=None, **options)`
 
@@ -577,113 +828,6 @@ Saves this resource into storage if `storage` argument is passed or saves this r
 - `(exceptions.DataPackageException)` - raises error if something goes wrong
 - `(bool)` - returns true on success
 
-### Group
-
-A class representing a group of tabular resources. Groups can be used to read multiple resource as one or to export them, for example, to a database as one table. To define a group add the `group: <name>` field to corresponding resources. The group's metadata will be created from the "leading" resource's metadata (the first resource with the group name).
-
-Consider we have a data package with two tables partitioned by a year and a shared schema stored separately:
-
->  cars-2017.csv
-
-```csv
-name,value
-bmw,2017
-tesla,2017
-nissan,2017
-```
-
->  cars-2018.csv
-
-```csv
-name,value
-bmw,2018
-tesla,2018
-nissan,2018
-```
-
-> cars.schema.json
-
-```json
-{
-    "fields": [
-        {
-            "name": "name",
-            "type": "string"
-        },
-        {
-            "name": "value",
-            "type": "integer"
-        }
-    ]
-}
-```
-
-> datapackage.json
-
-```json
-{
-    "name": "datapackage",
-    "resources": [
-        {
-            "group": "cars",
-            "name": "cars-2017",
-            "path": "cars-2017.csv",
-            "profile": "tabular-data-resource",
-            "schema": "cars.schema.json"
-        },
-        {
-            "group": "cars",
-            "name": "cars-2018",
-            "path": "cars-2018.csv",
-            "profile": "tabular-data-resource",
-            "schema": "cars.schema.json"
-        }
-    ]
-}
-```
-
-Let's read the resources separately:
-
-```python
-package = Package('datapackage.json')
-package.get_resource('cars-2017').read(keyed=True) == [
-    {'name': 'bmw', 'value': 2017},
-    {'name': 'tesla', 'value': 2017},
-    {'name': 'nissan', 'value': 2017},
-]
-package.get_resource('cars-2018').read(keyed=True) == [
-    {'name': 'bmw', 'value': 2018},
-    {'name': 'tesla', 'value': 2018},
-    {'name': 'nissan', 'value': 2018},
-]
-```
-
-On the other hand, these resources defined with a `group: cars` field. It means we can treat them as a group:
-
-```python
-package = Package('datapackage.json')
-package.get_group('cars').read(keyed=True) == [
-    {'name': 'bmw', 'value': 2017},
-    {'name': 'tesla', 'value': 2017},
-    {'name': 'nissan', 'value': 2017},
-    {'name': 'bmw', 'value': 2018},
-    {'name': 'tesla', 'value': 2018},
-    {'name': 'nissan', 'value': 2018},
-]
-```
-
-We can use this approach when we need to save the data package to a storage, for example, to a SQL database. There is the `merge_groups` flag to enable groupping behaviour:
-
-```python
-package = Package('datapackage.json')
-package.save(storage='sql', engine=engine)
-# SQL tables:
-# - cars-2017
-# - cars-2018
-package.save(storage='sql', engine=engine, merge_groups=True)
-# SQL tables:
-# - cars
-```
 
 #### `Group`
 
@@ -718,22 +862,6 @@ This method will test foreignKeys of the whole group at once otpimizing the proc
 - `(tableschema.exceptions)` - raises errors if something validation fails
 - `(Boolean)` - returns True if validation succeeds
 
-### Profile
-
-A component to represent JSON Schema profile from [Profiles Registry]( https://specs.frictionlessdata.io/schemas/registry.json):
-
-```python
-profile = Profile('data-package')
-
-profile.name # data-package
-profile.jsonschema # JSON Schema contents
-
-try:
-   valid = profile.validate(descriptor)
-except exceptions.ValidationError as exception:
-   for error in exception.errors:
-       # handle individual error
-```
 
 #### `Profile(profile)`
 
@@ -759,20 +887,6 @@ Validate a data package `descriptor` against the profile.
 - `(exceptions.ValidationError)` - raises if not valid
 - `(bool)` - returns True if valid
 
-### validate
-
-A standalone function to validate a data package descriptor:
-
-```python
-from datapackage import validate, exceptions
-
-try:
-    valid = validate(descriptor)
-except exceptions.ValidationError as exception:
-   for error in exception.errors:
-       # handle individual error
-```
-
 #### `validate(descriptor)`
 
 Validate a data package descriptor.
@@ -786,27 +900,6 @@ Validate a data package descriptor.
 
 ### infer
 
-A standalone function to infer a data package descriptor.
-
-```python
-descriptor = infer('**/*.csv')
-#{ profile: 'tabular-data-resource',
-#  resources:
-#   [ { path: 'data/cities.csv',
-#       profile: 'tabular-data-resource',
-#       encoding: 'utf-8',
-#       name: 'cities',
-#       format: 'csv',
-#       mediatype: 'text/csv',
-#       schema: [Object] },
-#     { path: 'data/population.csv',
-#       profile: 'tabular-data-resource',
-#       encoding: 'utf-8',
-#       name: 'population',
-#       format: 'csv',
-#       mediatype: 'text/csv',
-#       schema: [Object] } ] }
-```
 
 #### `infer(pattern, base_path=None)`
 
@@ -817,82 +910,6 @@ Infer a data package descriptor.
 - `pattern (str)` - glob file pattern
 - `(dict)` - returns data package descriptor
 
-
-### Foreign Keys
-
-The library supports foreign keys described in the [Table Schema](http://specs.frictionlessdata.io/table-schema/#foreign-keys) specification. It means if your data package descriptor use `resources[].schema.foreignKeys` property for some resources a data integrity will be checked on reading operations.
-
-Consider we have a data package:
-
-```python
-DESCRIPTOR = {
-  'resources': [
-    {
-      'name': 'teams',
-      'data': [
-        ['id', 'name', 'city'],
-        ['1', 'Arsenal', 'London'],
-        ['2', 'Real', 'Madrid'],
-        ['3', 'Bayern', 'Munich'],
-      ],
-      'schema': {
-        'fields': [
-          {'name': 'id', 'type': 'integer'},
-          {'name': 'name', 'type': 'string'},
-          {'name': 'city', 'type': 'string'},
-        ],
-        'foreignKeys': [
-          {
-            'fields': 'city',
-            'reference': {'resource': 'cities', 'fields': 'name'},
-          },
-        ],
-      },
-    }, {
-      'name': 'cities',
-      'data': [
-        ['name', 'country'],
-        ['London', 'England'],
-        ['Madrid', 'Spain'],
-      ],
-    },
-  ],
-}
-```
-
-Let's check relations for a `teams` resource:
-
-```python
-from datapackage import Package
-
-package = Package(DESCRIPTOR)
-teams = package.get_resource('teams')
-teams.check_relations()
-# tableschema.exceptions.RelationError: Foreign key "['city']" violation in row "4"
-```
-
-As we could see there is a foreign key violation. That's because our lookup table `cities` doesn't have a city of `Munich` but we have a team from there. We need to fix it in `cities` resource:
-
-```python
-package.descriptor['resources'][1]['data'].append(['Munich', 'Germany'])
-package.commit()
-teams = package.get_resource('teams')
-teams.check_relations()
-# True
-```
-
-Fixed! But not only a check operation is available. We could use `relations` argument for `resource.iter/read` methods to dereference a resource relations:
-
-```python
-teams.read(keyed=True, relations=True)
-#[{'id': 1, 'name': 'Arsenal', 'city': {'name': 'London', 'country': 'England}},
-# {'id': 2, 'name': 'Real', 'city': {'name': 'Madrid', 'country': 'Spain}},
-# {'id': 3, 'name': 'Bayern', 'city': {'name': 'Munich', 'country': 'Germany}}]
-```
-
-Instead of plain city name we've got a dictionary containing a city data. These `resource.iter/read` methods will fail with the same as `resource.check_relations` error if there is an integrity issue. But only if `relations=True` flag is passed.
-
-### Exceptions
 
 #### `exceptions.DataPackageException`
 
@@ -931,8 +948,6 @@ All relation errors.
 
 All storage errors.
 
-### CLI
-
 > It's a provisional API. If you use it as a part of other program please pin concrete `datapackage` version to your requirements file.
 
 The library ships with a simple CLI:
@@ -964,18 +979,7 @@ Commands:
   validate
 ```
 
-### Notes
-
-#### Accessing data behind a proxy server
-
-Before the `package = Package("https://xxx.json")` call set these environment variables:
-
-```python
-import os
-
-os.environ["HTTP_PROXY"] = 'xxx'
-os.environ["HTTPS_PROXY"] = 'xxx'
-```
+## API Reference
 
 ## Contributing
 

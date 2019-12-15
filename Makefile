@@ -24,7 +24,9 @@ profiles:
 
 readme:
 	pip install md-toc
-	md_toc -p README.md github --header-levels 3
+	pip install referencer
+	referencer $(PACKAGE) README.md --in-place
+	md_toc -p README.md github --header-levels 3 --in-place
 	sed -i '/(#$(PACKAGE)-py)/,+2d' README.md
 
 release:
