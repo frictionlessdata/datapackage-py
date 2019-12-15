@@ -30,7 +30,7 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [Working with Profile](#working-with-profile)
     - [Working with Foreign Keys](#working-with-foreign-keys)
     - [Working with validate/infer](#working-with-validateinfer)
-    - [FAQ](#faq)
+    - [Frequently Asked Questions](#frequently-asked-questions)
     - [Migrate to API Reference](#migrate-to-api-reference)
     - [infer](#infer)
   - [API Reference](#api-reference)
@@ -518,7 +518,7 @@ descriptor = infer('**/*.csv')
 #       schema: [Object] } ] }
 ```
 
-### FAQ
+### Frequently Asked Questions
 
 #### Accessing data behind a proxy server?
 
@@ -1009,78 +1009,279 @@ Commands:
 ```python
 Package(self, descriptor=None, base_path=None, strict=False, storage=None, schema=None, default_base_path=None, **options)
 ```
+Package representation
+
+__Arguments__
+- __descriptor (str/dict)__: data package descriptor as local path, url or object
+- __base_path (str)__: base path for all relative paths
+- __strict (bool)__: strict flag to alter validation behavior.
+        Setting it to `True` leads to throwing errors
+        on any operation with invalid descriptor
+- __storage (str/tableschema.Storage)__: storage name like `sql` or storage instance
+- __options (dict)__: storage options to use for storage creation
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
 
 #### `package.attributes`
 tuple: Attributes defined in the schema and the data package.
 
 #### `package.base_path`
-https://github.com/frictionlessdata/datapackage-py#package
+Package's base path
+
+__Returns__
+
+`str/None`: returns the data package base path
+
 
 #### `package.descriptor`
-https://github.com/frictionlessdata/datapackage-py#package
+Package's descriptor
+
+__Returns__
+
+`dict`: descriptor
+
 
 #### `package.errors`
-https://github.com/frictionlessdata/tableschema-py#schema
+Validation errors
+
+Always empty in strict mode.
+
+__Returns__
+
+`Exception[]`: validation errors
+
 
 #### `package.profile`
-https://github.com/frictionlessdata/datapackage-py#package
+Package's profile
+
+__Returns__
+
+`Profile`: an instance of `Profile` class
+
 
 #### `package.required_attributes`
 tuple: The schema's required attributed.
 
 #### `package.resource_names`
-https://github.com/frictionlessdata/datapackage-py#package
+Package's resource names
+
+__Returns__
+
+`str[]`: returns an array of resource names
+
 
 #### `package.resources`
-https://github.com/frictionlessdata/datapackage-py#package
+Package's resources
+
+__Returns__
+
+`Resource[]`: returns an array of `Resource` instances
+
 
 #### `package.schema`
 :class:`.Schema`: This data package's schema.
 
 #### `package.valid`
-https://github.com/frictionlessdata/tableschema-py#schema
+Validation status
+
+Always true in strict mode.
+
+__Returns:__
+
+    bool: validation status
+
 
 #### `package.get_resource`
 ```python
 package.get_resource(self, name)
 ```
-https://github.com/frictionlessdata/datapackage-py#package
+Get data package resource by name.
+
+__Arguments__
+- __name (str)__: data resource name
+
+__Returns__
+
+`Resource/None`: returns `Resource` instances or null if not found
+
 
 #### `package.add_resource`
 ```python
 package.add_resource(self, descriptor)
 ```
-https://github.com/frictionlessdata/datapackage-py#package
+Add new resource to data package.
+
+The data package descriptor will be validated with newly added resource descriptor.
+
+__Arguments__
+- __descriptor (dict)__: data resource descriptor
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`Resource/None`: returns added `Resource` instance or null if not added
+
 
 #### `package.remove_resource`
 ```python
 package.remove_resource(self, name)
 ```
-https://github.com/frictionlessdata/datapackage-py#package
+Remove data package resource by name.
+
+The data package descriptor will be validated after resource descriptor removal.
+
+__Arguments__
+- __name (str)__: data resource name
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`Resource/None`: returns removed `Resource` instances or null if not found
+
 
 #### `package.get_group`
 ```python
 package.get_group(self, name)
 ```
-https://github.com/frictionlessdata/datapackage-py#package
+Returns a group of tabular resources by name.
+
+For more information about groups see [Group](#group).
+
+__Arguments__
+- __name (str)__: name of a group of resources
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`Group/None`: returns a `Group` instance or null if not found
+
 
 #### `package.infer`
 ```python
 package.infer(self, pattern=False)
 ```
-https://github.com/frictionlessdata/datapackage-py#package
+Infer a data package metadata.
+
+> Argument `pattern` works only for local files
+
+If `pattern` is not provided only existent resources will be inferred
+(added metadata like encoding, profile etc). If `pattern` is provided
+new resoures with file names mathing the pattern will be added and inferred.
+It commits changes to data package instance.
+
+__Arguments__
+- __pattern (str)__: glob pattern for new resources
+
+__Returns__
+
+`dict`: returns data package descriptor
+
 
 #### `package.commit`
 ```python
 package.commit(self, strict=None)
 ```
-https://github.com/frictionlessdata/datapackage-py#package
+Update data package instance if there are in-place changes in the descriptor.
+
+__Example__
+
+
+```python
+package = Package({
+    'name': 'package',
+    'resources': [{'name': 'resource', 'data': ['data']}]
+})
+
+package.name # package
+package.descriptor['name'] = 'renamed-package'
+package.name # package
+package.commit()
+package.name # renamed-package
+```
+
+__Arguments__
+- __strict (bool)__: alter `strict` mode for further work
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`bool`: returns true on success and false if not modified
+
 
 #### `package.save`
 ```python
 package.save(self, target=None, storage=None, merge_groups=False, **options)
 ```
-https://github.com/frictionlessdata/datapackage-py#package
+Saves this data package
+
+It saves it to storage if `storage` argument is passed or
+saves this data package's descriptor to json file if `target` arguments
+ends with `.json` or saves this data package to zip file otherwise.
+
+__Example__
+
+
+It creates a zip file into ``file_or_path`` with the contents
+of this Data Package and its resources. Every resource which content
+lives in the local filesystem will be copied to the zip file.
+Consider the following Data Package descriptor:
+
+```json
+{
+    "name": "gdp",
+    "resources": [
+        {"name": "local", "format": "CSV", "path": "data.csv"},
+        {"name": "inline", "data": [4, 8, 15, 16, 23, 42]},
+        {"name": "remote", "url": "http://someplace.com/data.csv"}
+    ]
+}
+```
+
+The final structure of the zip file will be:
+
+```
+./datapackage.json
+./data/local.csv
+```
+
+With the contents of `datapackage.json` being the same as
+returned `datapackage.descriptor`. The resources' file names are generated
+based on their `name` and `format` fields if they exist.
+If the resource has no `name`, it'll be used `resource-X`,
+where `X` is the index of the resource in the `resources` list (starting at zero).
+If the resource has `format`, it'll be lowercased and appended to the `name`,
+becoming "`name.format`".
+
+__Arguments__
+- __target (string/filelike)__:
+        the file path or a file-like object where
+        the contents of this Data Package will be saved into.
+- __storage (str/tableschema.Storage)__:
+        storage name like `sql` or storage instance
+- __merge_groups (bool)__:
+        save all the group's tabular resoruces into one bucket
+        if a storage is provided (for example into one SQL table).
+        Read more about [Group](#group).
+- __options (dict)__:
+        storage options to use for storage creation
+
+__Raises__
+- `DataPackageException`: raises if there was some error writing the package
+
+__Returns__
+
+`bool`: return true on success
+
 
 #### `package.safe`
 ```python
