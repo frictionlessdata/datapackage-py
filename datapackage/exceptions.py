@@ -17,16 +17,15 @@ IntegrityError = tableschema.IntegrityError
 RelationError = tableschema.RelationError
 StorageError = tableschema.StorageError
 
-# TODO: find a solution
-# To generate documentation we need to uncomment these lines
-#  DataPackageException.__module__ = 'datapackage.exceptions'
-#  TableSchemaException.__module__ = 'datapackage.exceptions'
-#  LoadError.__module__ = 'datapackage.exceptions'
-#  ValidationError.__module__ = 'datapackage.exceptions'
-#  CastError.__module__ = 'datapackage.exceptions'
-#  IntegrityError.__module__ = 'datapackage.exceptions'
-#  RelationError.__module__ = 'datapackage.exceptions'
-#  StorageError.__module__ = 'datapackage.exceptions'
+# We need these lines to generate documentation
+DataPackageException.__module__ = 'datapackage.exceptions'
+TableSchemaException.__module__ = 'datapackage.exceptions'
+LoadError.__module__ = 'datapackage.exceptions'
+ValidationError.__module__ = 'datapackage.exceptions'
+CastError.__module__ = 'datapackage.exceptions'
+IntegrityError.__module__ = 'datapackage.exceptions'
+RelationError.__module__ = 'datapackage.exceptions'
+StorageError.__module__ = 'datapackage.exceptions'
 
 
 # Deprecated
