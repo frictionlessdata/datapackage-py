@@ -8,14 +8,14 @@ import tableschema
 
 # Module API
 
-DataPackageException = tableschema.exceptions.DataPackageException
-TableSchemaException = tableschema.exceptions.TableSchemaException
-LoadError = tableschema.exceptions.LoadError
-ValidationError = tableschema.exceptions.ValidationError
-CastError = tableschema.exceptions.CastError
-IntegrityError = tableschema.exceptions.IntegrityError
-RelationError = tableschema.exceptions.RelationError
-StorageError = tableschema.exceptions.StorageError
+DataPackageException = tableschema.DataPackageException
+TableSchemaException = tableschema.TableSchemaException
+LoadError = tableschema.LoadError
+ValidationError = tableschema.ValidationError
+CastError = tableschema.CastError
+IntegrityError = tableschema.IntegrityError
+RelationError = tableschema.RelationError
+StorageError = tableschema.StorageError
 
 
 # Deprecated

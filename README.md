@@ -22,18 +22,23 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
 
   - [Getting Started](#getting-started)
     - [Installation](#installation)
-    - [Examples](#examples)
   - [Documentation](#documentation)
-    - [Package](#package)
-    - [Resource](#resource)
-    - [Group](#group)
-    - [Profile](#profile)
-    - [validate](#validate)
-    - [infer](#infer)
-    - [Foreign Keys](#foreign-keys)
-    - [Exceptions](#exceptions)
-    - [CLI](#cli)
-    - [Notes](#notes)
+    - [Introduction](#introduction)
+    - [Working with Package](#working-with-package)
+    - [Working with Resource](#working-with-resource)
+    - [Working with Group](#working-with-group)
+    - [Working with Profile](#working-with-profile)
+    - [Working with Foreign Keys](#working-with-foreign-keys)
+    - [Working with validate/infer](#working-with-validateinfer)
+    - [Frequently Asked Questions](#frequently-asked-questions)
+  - [API Reference](#api-reference)
+    - [`cli`](#cli)
+    - [`Package`](#package)
+    - [`Resource`](#resource)
+    - [`Group`](#group)
+    - [`Profile`](#profile)
+    - [`validate`](#validate)
+    - [`infer`](#infer)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
 
@@ -56,9 +61,11 @@ If you receive an error about the `cchardet` package when installing datapackage
 3. Then, in terminal, run `open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg`
 You can read more about these steps in this [post.](https://stackoverflow.com/questions/52509602/cant-compile-c-program-on-a-mac-after-upgrade-to-mojave)
 
-### Examples
+## Documentation
 
-Code examples in this readme requires Python 3.3+ interpreter. You could see even more example in [examples](https://github.com/frictionlessdata/datapackage-py/tree/master/examples) directory.
+### Introduction
+
+Let's start with a simple example:
 
 ```python
 from datapackage import Package
@@ -67,9 +74,7 @@ package = Package('datapackage.json')
 package.get_resource('resource').read()
 ```
 
-## Documentation
-
-### Package
+### Working with Package
 
 A class for working with data packages. It provides various capabilities like loading local or remote data package, inferring a data package descriptor, saving a data package descriptor and many more.
 
@@ -154,141 +159,7 @@ package = Package('datapackage.zip')
 
 It was onle basic introduction to the `Package` class. To learn more let's take a look on `Package` class API reference.
 
-#### `Package(descriptor=None, base_path=None, strict=False, storage=None, **options)`
-
-Constructor to instantiate `Package` class.
-
-- `descriptor (str/dict)` - data package descriptor as local path, url or object
-- `base_path (str)` - base path for all relative paths
-- `strict (bool)` - strict flag to alter validation behavior. Setting it to `True` leads to throwing errors on any operation with invalid descriptor
-- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
-- `options (dict)` - storage options to use for storage creation
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(Package)` - returns data package class instance
-
-#### `package.valid`
-
-- `(bool)` - returns validation status. It always true in strict mode.
-
-#### `package.errors`
-
-- `(Exception[])` - returns validation errors. It always empty in strict mode.
-
-#### `package.profile`
-
-- `(Profile)` - returns an instance of `Profile` class (see below).
-
-#### `package.descriptor`
-
-- `(dict)` - returns data package descriptor
-
-#### `package.base_path`
-
-- `(str/None)` - returns the data package base path
-
-#### `package.resources`
-
-- `(Resource[])` - returns an array of `Resource` instances (see below).
-
-#### `package.resource_names`
-
-- `(str[])` - returns an array of resource names.
-
-#### `package.get_resource(name)`
-
-Get data package resource by name.
-
-- `name (str)` - data resource name
-- `(Resource/None)` - returns `Resource` instances or null if not found
-
-#### `package.add_resource(descriptor)`
-
-Add new resource to data package. The data package descriptor will be validated  with newly added resource descriptor.
-
-- `descriptor (dict)` - data resource descriptor
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(Resource/None)` - returns added `Resource` instance or null if not added
-
-#### `package.remove_resource(name)`
-
-Remove data package resource by name. The data package descriptor will be validated after resource descriptor removal.
-
-- `name (str)` - data resource name
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(Resource/None)` - returns removed `Resource` instances or null if not found
-
-#### `package.get_group(name)`
-
-Returns a group of tabular resources by name. For more information about groups see [Group](#group).
-
-- `name (str)` - name of a group of resources
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(Group/None)` - returns a `Group` instance or null if not found
-
-#### `package.infer(pattern=False)`
-
-> Argument `pattern` works only for local files
-
-Infer a data package metadata. If `pattern` is not provided only existent resources will be inferred (added metadata like encoding, profile etc). If `pattern` is provided new resoures with file names mathing the pattern will be added and inferred. It commits changes to data package instance.
-
-- `pattern (str)` - glob pattern for new resources
-- `(dict)` - returns data package descriptor
-
-#### `package.commit(strict=None)`
-
-Update data package instance if there are in-place changes in the descriptor.
-
-- `strict (bool)` - alter `strict` mode for further work
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(bool)` - returns true on success and false if not modified
-
-```python
-package = Package({
-    'name': 'package',
-    'resources': [{'name': 'resource', 'data': ['data']}]
-})
-
-package.name # package
-package.descriptor['name'] = 'renamed-package'
-package.name # package
-package.commit()
-package.name # renamed-package
-```
-
-#### `package.save(target=None, storage=None, merge_groups=False,  **options)`
-
-Saves this data package to storage if `storage` argument is passed or saves this data package's descriptor to json file if `target` arguments ends with `.json` or saves this data package to zip file otherwise.
-
-- `target (string/filelike)` - the file path or a file-like object where the contents of this Data Package will be saved into.
-- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
-- `merge_groups` (bool) - save all the group's tabular resoruces into one bucket if a storage is provided (for example into one SQL table). Read more about [Group](#group).
-- `options (dict)` - storage options to use for storage creation
-- `(exceptions.DataPackageException)` - raises if there was some error writing the package
-- `(bool)` - return true on success
-
-It creates a zip file into ``file_or_path`` with the contents of this Data Package and its resources. Every resource which content lives in the local filesystem will be copied to the zip file. Consider the following Data Package descriptor:
-
-```json
-{
-    "name": "gdp",
-    "resources": [
-        {"name": "local", "format": "CSV", "path": "data.csv"},
-        {"name": "inline", "data": [4, 8, 15, 16, 23, 42]},
-        {"name": "remote", "url": "http://someplace.com/data.csv"}
-    ]
-}
-```
-
-The final structure of the zip file will be:
-
-```
-./datapackage.json
-./data/local.csv
-```
-
-With the contents of `datapackage.json` being the same as returned `datapackage.descriptor`. The resources' file names are generated based on their `name` and `format` fields if they exist. If the resource has no `name`, it'll be used `resource-X`, where `X` is the index of the resource in the `resources` list (starting at zero). If the resource has `format`, it'll be lowercased and appended to the `name`, becoming "`name.format`".
-
-### Resource
+### Working with Resource
 
 A class for working with data resources. You can read or iterate tabular resources using the `iter/read` methods and all resource as bytes using `row_iter/row_read` methods.
 
@@ -412,172 +283,7 @@ resource = Resource('dataresource.json')
 
 It was onle basic introduction to the `Resource` class. To learn more let's take a look on `Resource` class API reference.
 
-#### `Resource(descriptor={}, base_path=None, strict=False, storage=None, **options)`
-
-Constructor to instantiate `Resource` class.
-
-- `descriptor (str/dict)` - data resource descriptor as local path, url or object
-- `base_path (str)` - base path for all relative paths
-- `strict (bool)` - strict flag to alter validation behavior. Setting it to `true` leads to throwing errors on any operation with invalid descriptor
-- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
-- `options (dict)` - storage options to use for storage creation
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(Resource)` - returns resource class instance
-
-#### `resource.package`
-
-- `(Package)` - returns a package instance if the resource belongs to some package
-
-#### `resource.valid`
-
-- `(bool)` - returns validation status. It always true in strict mode.
-
-#### `resource.errors`
-
-- `(Exception[])` - returns validation errors. It always empty in strict mode.
-
-#### `resource.profile`
-
-- `(Profile)` - returns an instance of `Profile` class (see below).
-
-#### `resource.descriptor`
-
-- (dict) - returns resource descriptor
-
-#### `resource.name`
-
-- `(str)` - returns resource name
-
-#### `resource.inline`
-
-- `(bool)` - returns true if resource is inline
-
-#### `resource.local`
-
-- `(bool)` - returns true if resource is local
-
-#### `resource.remote`
-
-- `(bool)` - returns true if resource is remote
-
-#### `resource.multipart`
-
-- `(bool)` - returns true if resource is multipart
-
-#### `resource.tabular`
-
-- `(bool)` - returns true if resource is tabular
-
-#### `resource.source`
-
-- `(list/str)` - returns `data` or `path` property
-
-Combination of `resource.source` and `resource.inline/local/remote/multipart` provides predictable interface to work with resource data.
-
-#### `resource.headers`
-
-> Only for tabular resources (reading has to be started first or it will return `None`)
-
-- `(str[])` - returns data source headers
-
-#### `resource.schema`
-
-> Only for tabular resources
-
-For tabular resources it returns `Schema` instance to interact with data schema. Read API documentation - [tableschema.Schema](https://github.com/frictionlessdata/tableschema-py#schema).
-
-- `(tableschema.Schema)` - returns schema class instance
-
-#### `resource.iter(keyed=False, extended=False, cast=True, integrity=False, relations=False)`
-
-> Only for tabular resources
-
-Iter through the table data and emits rows cast based on table schema (async for loop). Data casting could be disabled.
-
-- `keyed (bool)` - iter keyed rows
-- `extended (bool)` - iter extended rows
-- `cast (bool)` - disable data casting if false
-- `integrity (bool)` - if true actual size in BYTES and SHA256 hash of the file will be checked against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently)
-- `relations (bool)` - if true foreign key fields will be checked and resolved to its references
-- `(exceptions.DataPackageException)` - raises any error occured in this process
-- `(any[]/any{})` - yields rows:
-  - `[value1, value2]` - base
-  - `{header1: value1, header2: value2}` - keyed
-  - `[rowNumber, [header1, header2], [value1, value2]]` - extended
-
-#### `resource.read(keyed=False, extended=False, cast=True, integrity=False, relations=False, limit=None)`
-
-> Only for tabular resources
-
-Read the whole table and returns as array of rows. Count of rows could be limited.
-
-- `keyed (bool)` - flag to emit keyed rows
-- `extended (bool)` - flag to emit extended rows
-- `cast (bool)` - flag to disable data casting if false
-- `integrity (bool)` - if true actual size in BYTES and SHA256 hash of the file will be checked against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently)
-- `relations (bool)` - if true foreign key fields will be checked and resolved to its references
-- `limit (int)` - integer limit of rows to return
-- `(exceptions.DataPackageException)` - raises any error occured in this process
-- `(list[])` - returns array of rows (see `table.iter`)
-
-#### `resource.check_integrity()`
-
-> Only for tabular resources
-
-It checks size in BYTES and SHA256 hash of the file against `descriptor.bytes` and `descriptor.hash` (other hashing algorithms are not supported and will be skipped silently).
-
-- `(exceptions.IntegrityError)` - raises if there are integrity issues
-- `(bool)` - returns True if no issues
-
-#### `resource.check_relations()`
-
-> Only for tabular resources
-
-It checks foreign keys and raises an exception if there are integrity issues.
-
-- `(exceptions.RelationError)` - raises if there are relation issues
-- `(bool)` - returns True if no issues
-
-#### `resource.raw_iter(stream=False)`
-
-Iterate over data chunks as bytes. If `stream` is true File-like object will be returned.
-
-- `stream (bool)` - File-like object will be returned
-- `(bytes[]/filelike)` - returns bytes[]/filelike
-
-#### `resource.raw_read()`
-
-Returns resource data as bytes.
-
-- (bytes) - returns resource data in bytes
-
-#### `resource.infer(**options)`
-
-Infer resource metadata like name, format, mediatype, encoding, schema and profile. It commits this changes into resource instance.
-
-- `options` - options will be passed to `tableschema.infer` call, for more control on results (e.g. for setting `limit`, `confidence` etc.).
-
-- `(dict)` - returns resource descriptor
-
-#### `resource.commit(strict=None)`
-
-Update resource instance if there are in-place changes in the descriptor.
-
-- `strict (bool)` - alter `strict` mode for further work
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(bool)` - returns true on success and false if not modified
-
-#### `resource.save(target, storage=None, **options)`
-
-Saves this resource into storage if `storage` argument is passed or saves this resource's descriptor to json file otherwise.
-
-- `target (str)` - path where to save a resource
-- `storage (str/tableschema.Storage)` - storage name like `sql` or storage instance
-- `options (dict)` - storage options to use for storage creation
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(bool)` - returns true on success
-
-### Group
+### Working with Group
 
 A class representing a group of tabular resources. Groups can be used to read multiple resource as one or to export them, for example, to a database as one table. To define a group add the `group: <name>` field to corresponding resources. The group's metadata will be created from the "leading" resource's metadata (the first resource with the group name).
 
@@ -685,40 +391,7 @@ package.save(storage='sql', engine=engine, merge_groups=True)
 # - cars
 ```
 
-#### `Group`
-
-This class doesn't have any public constructor. Use `package.get_group`.
-
-#### `group.name`
-
-- `(str)` - returns the group name
-
-#### `group.headers`
-
-The same as `resource.headers`
-
-#### `group.schema`
-
-The same as `resource.schema`
-
-#### `group.iter(...)`
-
-The same as `resource.iter`
-
-#### `group.read(...)`
-
-The same as `resource.read`
-
-#### `group.check_relations(...)`
-
-The same as `resource.check_relations` but without the optional argument *foreign_keys_values*.
-This method will test foreignKeys of the whole group at once otpimizing the process by creating the foreign_key_values hashmap only once before testing the set of resources.
-
-- () no args
-- `(tableschema.exceptions)` - raises errors if something validation fails
-- `(Boolean)` - returns True if validation succeeds
-
-### Profile
+### Working with Profile
 
 A component to represent JSON Schema profile from [Profiles Registry]( https://specs.frictionlessdata.io/schemas/registry.json):
 
@@ -735,90 +408,7 @@ except exceptions.ValidationError as exception:
        # handle individual error
 ```
 
-#### `Profile(profile)`
-
-Constuctor to instantiate `Profile` class.
-
-- `profile (str)` - profile name in registry or URL to JSON Schema
-- `(exceptions.DataPackageException)` - raises error if something goes wrong
-- `(Profile)` - returns profile class instance
-
-#### `profile.name`
-
-- `(str/None)` - returns profile name if available
-
-#### `profile.jsonschema`
-
-- `(dict)` - returns profile JSON Schema contents
-
-#### `profile.validate(descriptor)`
-
-Validate a data package `descriptor` against the profile.
-
-- `descriptor (dict)` - retrieved and dereferenced data package descriptor
-- `(exceptions.ValidationError)` - raises if not valid
-- `(bool)` - returns True if valid
-
-### validate
-
-A standalone function to validate a data package descriptor:
-
-```python
-from datapackage import validate, exceptions
-
-try:
-    valid = validate(descriptor)
-except exceptions.ValidationError as exception:
-   for error in exception.errors:
-       # handle individual error
-```
-
-#### `validate(descriptor)`
-
-Validate a data package descriptor.
-
-- `descriptor (str/dict)` - package descriptor (one of):
-  - local path
-  - remote url
-  - object
-- (exceptions.ValidationError) - raises on invalid
-- `(bool)` - returns true on valid
-
-### infer
-
-A standalone function to infer a data package descriptor.
-
-```python
-descriptor = infer('**/*.csv')
-#{ profile: 'tabular-data-resource',
-#  resources:
-#   [ { path: 'data/cities.csv',
-#       profile: 'tabular-data-resource',
-#       encoding: 'utf-8',
-#       name: 'cities',
-#       format: 'csv',
-#       mediatype: 'text/csv',
-#       schema: [Object] },
-#     { path: 'data/population.csv',
-#       profile: 'tabular-data-resource',
-#       encoding: 'utf-8',
-#       name: 'population',
-#       format: 'csv',
-#       mediatype: 'text/csv',
-#       schema: [Object] } ] }
-```
-
-#### `infer(pattern, base_path=None)`
-
-> Argument `pattern` works only for local files
-
-Infer a data package descriptor.
-
-- `pattern (str)` - glob file pattern
-- `(dict)` - returns data package descriptor
-
-
-### Foreign Keys
+### Working with Foreign Keys
 
 The library supports foreign keys described in the [Table Schema](http://specs.frictionlessdata.io/table-schema/#foreign-keys) specification. It means if your data package descriptor use `resources[].schema.foreignKeys` property for some resources a data integrity will be checked on reading operations.
 
@@ -892,68 +482,65 @@ teams.read(keyed=True, relations=True)
 
 Instead of plain city name we've got a dictionary containing a city data. These `resource.iter/read` methods will fail with the same as `resource.check_relations` error if there is an integrity issue. But only if `relations=True` flag is passed.
 
-### Exceptions
+### Working with validate/infer
 
-#### `exceptions.DataPackageException`
-
-Base class for all library exceptions. If there are multiple errors it could be read from an exceptions object:
+A standalone function to validate a data package descriptor:
 
 ```python
+from datapackage import validate, exceptions
+
 try:
-    # lib action
-except exceptions.DataPackageException as exception:
-    if exception.multiple:
-        for error in exception.errors:
-            # handle error
+    valid = validate(descriptor)
+except exceptions.ValidationError as exception:
+   for error in exception.errors:
+       # handle individual error
 ```
 
-#### `exceptions.LoadError`
+A standalone function to infer a data package descriptor.
 
-All loading errors.
-
-#### `exceptions.ValidationError`
-
-All validation errors.
-
-#### `exceptions.CastError`
-
-All value cast errors.
-
-#### `exceptions.IntegrityError`
-
-All integrity errors.
-
-#### `exceptions.RelationError`
-
-All relation errors.
-
-#### `exceptions.StorageError`
-
-All storage errors.
-
-### CLI
-
-> It's a provisional API. If you use it as a part of other program please pin concrete `datapackage` version to your requirements file.
-
-The library ships with a simple CLI:
-
-```bash
-$ datapackage infer '**/*.csv'
-Data package descriptor:
-{'profile': 'tabular-data-package',
- 'resources': [{'encoding': 'utf-8',
-                'format': 'csv',
-                'mediatype': 'text/csv',
-                'name': 'data',
-                'path': 'data/datapackage/data.csv',
-                'profile': 'tabular-data-resource',
-                'schema': ...}}]}
+```python
+descriptor = infer('**/*.csv')
+#{ profile: 'tabular-data-resource',
+#  resources:
+#   [ { path: 'data/cities.csv',
+#       profile: 'tabular-data-resource',
+#       encoding: 'utf-8',
+#       name: 'cities',
+#       format: 'csv',
+#       mediatype: 'text/csv',
+#       schema: [Object] },
+#     { path: 'data/population.csv',
+#       profile: 'tabular-data-resource',
+#       encoding: 'utf-8',
+#       name: 'population',
+#       format: 'csv',
+#       mediatype: 'text/csv',
+#       schema: [Object] } ] }
 ```
 
-#### `$ datapackage`
+### Frequently Asked Questions
 
-```bash
-Usage: cli.py [OPTIONS] COMMAND [ARGS]...
+#### Accessing data behind a proxy server?
+
+Before the `package = Package("https://xxx.json")` call set these environment variables:
+
+```python
+import os
+
+os.environ["HTTP_PROXY"] = 'xxx'
+os.environ["HTTPS_PROXY"] = 'xxx'
+```
+
+## API Reference
+
+### `cli`
+```python
+cli()
+```
+Command-line interface
+
+```
+Usage: datapackage [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --version  Show the version and exit.
@@ -964,18 +551,804 @@ Commands:
   validate
 ```
 
-### Notes
 
-#### Accessing data behind a proxy server
+### `Package`
+```python
+Package(self, descriptor=None, base_path=None, strict=False, storage=None, schema=None, default_base_path=None, **options)
+```
+Package representation
 
-Before the `package = Package("https://xxx.json")` call set these environment variables:
+__Arguments__
+- __descriptor (str/dict)__: data package descriptor as local path, url or object
+- __base_path (str)__: base path for all relative paths
+- __strict (bool)__: strict flag to alter validation behavior.
+        Setting it to `True` leads to throwing errors
+        on any operation with invalid descriptor
+- __storage (str/tableschema.Storage)__: storage name like `sql` or storage instance
+- __options (dict)__: storage options to use for storage creation
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+
+#### `package.base_path`
+Package's base path
+
+__Returns__
+
+`str/None`: returns the data package base path
+
+
+#### `package.descriptor`
+Package's descriptor
+
+__Returns__
+
+`dict`: descriptor
+
+
+#### `package.errors`
+Validation errors
+
+Always empty in strict mode.
+
+__Returns__
+
+`Exception[]`: validation errors
+
+
+#### `package.profile`
+Package's profile
+
+__Returns__
+
+`Profile`: an instance of `Profile` class
+
+
+#### `package.resource_names`
+Package's resource names
+
+__Returns__
+
+`str[]`: returns an array of resource names
+
+
+#### `package.resources`
+Package's resources
+
+__Returns__
+
+`Resource[]`: returns an array of `Resource` instances
+
+
+#### `package.valid`
+Validation status
+
+Always true in strict mode.
+
+__Returns__
+
+`bool`: validation status
+
+
+#### `package.get_resource`
+```python
+package.get_resource(self, name)
+```
+Get data package resource by name.
+
+__Arguments__
+- __name (str)__: data resource name
+
+__Returns__
+
+`Resource/None`: returns `Resource` instances or null if not found
+
+
+#### `package.add_resource`
+```python
+package.add_resource(self, descriptor)
+```
+Add new resource to data package.
+
+The data package descriptor will be validated with newly added resource descriptor.
+
+__Arguments__
+- __descriptor (dict)__: data resource descriptor
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`Resource/None`: returns added `Resource` instance or null if not added
+
+
+#### `package.remove_resource`
+```python
+package.remove_resource(self, name)
+```
+Remove data package resource by name.
+
+The data package descriptor will be validated after resource descriptor removal.
+
+__Arguments__
+- __name (str)__: data resource name
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`Resource/None`: returns removed `Resource` instances or null if not found
+
+
+#### `package.get_group`
+```python
+package.get_group(self, name)
+```
+Returns a group of tabular resources by name.
+
+For more information about groups see [Group](#group).
+
+__Arguments__
+- __name (str)__: name of a group of resources
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`Group/None`: returns a `Group` instance or null if not found
+
+
+#### `package.infer`
+```python
+package.infer(self, pattern=False)
+```
+Infer a data package metadata.
+
+> Argument `pattern` works only for local files
+
+If `pattern` is not provided only existent resources will be inferred
+(added metadata like encoding, profile etc). If `pattern` is provided
+new resoures with file names mathing the pattern will be added and inferred.
+It commits changes to data package instance.
+
+__Arguments__
+- __pattern (str)__: glob pattern for new resources
+
+__Returns__
+
+`dict`: returns data package descriptor
+
+
+#### `package.commit`
+```python
+package.commit(self, strict=None)
+```
+Update data package instance if there are in-place changes in the descriptor.
+
+__Example__
+
 
 ```python
-import os
+package = Package({
+    'name': 'package',
+    'resources': [{'name': 'resource', 'data': ['data']}]
+})
 
-os.environ["HTTP_PROXY"] = 'xxx'
-os.environ["HTTPS_PROXY"] = 'xxx'
+package.name # package
+package.descriptor['name'] = 'renamed-package'
+package.name # package
+package.commit()
+package.name # renamed-package
 ```
+
+__Arguments__
+- __strict (bool)__: alter `strict` mode for further work
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`bool`: returns true on success and false if not modified
+
+
+#### `package.save`
+```python
+package.save(self, target=None, storage=None, merge_groups=False, **options)
+```
+Saves this data package
+
+It saves it to storage if `storage` argument is passed or
+saves this data package's descriptor to json file if `target` arguments
+ends with `.json` or saves this data package to zip file otherwise.
+
+__Example__
+
+
+It creates a zip file into ``file_or_path`` with the contents
+of this Data Package and its resources. Every resource which content
+lives in the local filesystem will be copied to the zip file.
+Consider the following Data Package descriptor:
+
+```json
+{
+    "name": "gdp",
+    "resources": [
+        {"name": "local", "format": "CSV", "path": "data.csv"},
+        {"name": "inline", "data": [4, 8, 15, 16, 23, 42]},
+        {"name": "remote", "url": "http://someplace.com/data.csv"}
+    ]
+}
+```
+
+The final structure of the zip file will be:
+
+```
+./datapackage.json
+./data/local.csv
+```
+
+With the contents of `datapackage.json` being the same as
+returned `datapackage.descriptor`. The resources' file names are generated
+based on their `name` and `format` fields if they exist.
+If the resource has no `name`, it'll be used `resource-X`,
+where `X` is the index of the resource in the `resources` list (starting at zero).
+If the resource has `format`, it'll be lowercased and appended to the `name`,
+becoming "`name.format`".
+
+__Arguments__
+- __target (string/filelike)__:
+        the file path or a file-like object where
+        the contents of this Data Package will be saved into.
+- __storage (str/tableschema.Storage)__:
+        storage name like `sql` or storage instance
+- __merge_groups (bool)__:
+        save all the group's tabular resoruces into one bucket
+        if a storage is provided (for example into one SQL table).
+        Read more about [Group](#group).
+- __options (dict)__:
+        storage options to use for storage creation
+
+__Raises__
+- `DataPackageException`: raises if there was some error writing the package
+
+__Returns__
+
+`bool`: return true on success
+
+
+### `Resource`
+```python
+Resource(self, descriptor={}, base_path=None, strict=False, storage=None, package=None, **options)
+```
+Resource represenation
+
+__Arguments__
+- __descriptor (str/dict)__: data resource descriptor as local path, url or object
+- __base_path (str)__: base path for all relative paths
+- __strict (bool)__:
+        strict flag to alter validation behavior.  Setting it to `true`
+        leads to throwing errors on any operation with invalid descriptor
+- __storage (str/tableschema.Storage)__: storage name like `sql` or storage instance
+- __options (dict)__: storage options to use for storage creation
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+
+#### `resource.data`
+Return resource data
+
+#### `resource.descriptor`
+Package's descriptor
+
+__Returns__
+
+`dict`: descriptor
+
+
+#### `resource.errors`
+Validation errors
+
+Always empty in strict mode.
+
+__Returns__
+
+`Exception[]`: validation errors
+
+
+#### `resource.group`
+Group name
+
+__Returns__
+
+`str`: group name
+
+
+#### `resource.headers`
+Resource's headers
+
+> Only for tabular resources (reading has to be started first or it's `None`)
+
+__Returns__
+
+`str[]/None`: returns data source headers
+
+
+#### `resource.inline`
+Whether resource inline
+
+__Returns__
+
+`bool`: returns true if resource is inline
+
+
+#### `resource.local`
+Whether resource local
+
+__Returns__
+
+`bool`: returns true if resource is local
+
+
+#### `resource.multipart`
+Whether resource multipart
+
+__Returns__
+
+`bool`: returns true if resource is multipart
+
+
+#### `resource.name`
+Resource name
+
+__Returns__
+
+`str`: name
+
+
+#### `resource.package`
+Package instance if the resource belongs to some package
+
+__Returns__
+
+`Package/None`: a package instance if available
+
+
+#### `resource.profile`
+Resource's profile
+
+__Returns__
+
+`Profile`: an instance of `Profile` class
+
+
+#### `resource.remote`
+Whether resource remote
+
+__Returns__
+
+`bool`: returns true if resource is remote
+
+
+#### `resource.schema`
+Resource's schema
+
+> Only for tabular resources
+
+For tabular resources it returns `Schema` instance to interact with data schema.
+Read API documentation - [tableschema.Schema](https://github.com/frictionlessdata/tableschema-py#schema).
+
+__Returns__
+
+`tableschema.Schema`: schema
+
+
+#### `resource.source`
+Resource's source
+
+Combination of `resource.source` and `resource.inline/local/remote/multipart`
+provides predictable interface to work with resource data.
+
+__Returns__
+
+`list/str`: returns `data` or `path` property
+
+
+#### `resource.table`
+Return resource table
+
+#### `resource.tabular`
+Whether resource tabular
+
+__Returns__
+
+`bool`: returns true if resource is tabular
+
+
+#### `resource.valid`
+Validation status
+
+Always true in strict mode.
+
+__Returns__
+
+`bool`: validation status
+
+
+#### `resource.iter`
+```python
+resource.iter(self, integrity=False, relations=False, **options)
+```
+Iterates through the resource data and emits rows cast based on table schema.
+
+> Only for tabular resources
+
+__Arguments__
+
+- __keyed (bool)__:
+        yield keyed rows in a form of `{header1: value1, header2: value2}`
+        (default is false; the form of rows is `[value1, value2]`)
+- __extended (bool)__:
+        yield extended rows in a for of `[rowNumber, [header1, header2], [value1, value2]]`
+        (default is false; the form of rows is `[value1, value2]`)
+- __cast (bool)__:
+        disable data casting if false
+        (default is true)
+- __integrity (bool)__:
+        if true actual size in BYTES and SHA256 hash of the file
+        will be checked against `descriptor.bytes` and `descriptor.hash`
+        (other hashing algorithms are not supported and will be skipped silently)
+- __relations (bool)__:
+        if true foreign key fields will be checked and resolved to its references
+- __foreign_keys_values (dict)__:
+        three-level dictionary of foreign key references optimized
+        to speed up validation process in a form of
+        `{resource1: {(fk_field1, fk_field2): {(value1, value2): {one_keyedrow}, ... }}}`.
+        If not provided but relations is true, it will be created
+        before the validation process by *index_foreign_keys_values* method
+- __exc_handler (func)__:
+        optional custom exception handler callable.
+        Can be used to defer raising errors (i.e. "fail late"), e.g.
+        for data validation purposes. Must support the signature below
+
+__Custom exception handler__
+
+
+```python
+def exc_handler(exc, row_number=None, row_data=None, error_data=None):
+    '''Custom exception handler (example)
+
+    # Arguments:
+        exc(Exception):
+            Deferred exception instance
+        row_number(int):
+            Data row number that triggers exception exc
+        row_data(OrderedDict):
+            Invalid data row source data
+        error_data(OrderedDict):
+            Data row source data field subset responsible for the error, if
+            applicable (e.g. invalid primary or foreign key fields). May be
+            identical to row_data.
+    '''
+    # ...
+```
+
+__Raises__
+- `DataPackageException`: base class of any error
+- `CastError`: data cast error
+- `IntegrityError`: integrity checking error
+- `UniqueKeyError`: unique key constraint violation
+- `UnresolvedFKError`: unresolved foreign key reference error
+
+__Returns__
+
+`Iterator[list]`: yields rows
+
+
+#### `resource.read`
+```python
+resource.read(self, integrity=False, relations=False, foreign_keys_values=False, **options)
+```
+Read the whole resource and return as array of rows
+
+> Only for tabular resources
+> It has the same API as `resource.iter` except for
+
+__Arguments__
+- __limit (int)__: limit count of rows to read and return
+
+__Returns__
+
+`list[]`: returns rows
+
+
+#### `resource.check_integrity`
+```python
+resource.check_integrity(self)
+```
+Checks resource integrity
+
+> Only for tabular resources
+
+It checks size in BYTES and SHA256 hash of the file
+against `descriptor.bytes` and `descriptor.hash`
+(other hashing algorithms are not supported and will be skipped silently).
+
+__Raises__
+- `exceptions.IntegrityError`: raises if there are integrity issues
+
+__Returns__
+
+`bool`: returns True if no issues
+
+
+#### `resource.check_relations`
+```python
+resource.check_relations(self, foreign_keys_values=False)
+```
+Check relations
+
+> Only for tabular resources
+
+It checks foreign keys and raises an exception if there are integrity issues.
+
+__Raises__
+- `exceptions.RelationError`: raises if there are relation issues
+
+__Returns__
+
+`bool`: returns True if no issues
+
+
+#### `resource.drop_relations`
+```python
+resource.drop_relations(self)
+```
+Drop relations
+
+> Only for tabular resources
+
+Remove relations data from memory
+
+__Returns__
+
+`bool`: returns True
+
+
+#### `resource.raw_iter`
+```python
+resource.raw_iter(self, stream=False)
+```
+Iterate over data chunks as bytes.
+
+If `stream` is true File-like object will be returned.
+
+__Arguments__
+- __stream (bool)__: File-like object will be returned
+
+__Returns__
+
+`bytes[]/filelike`: returns bytes[]/filelike
+
+
+#### `resource.raw_read`
+```python
+resource.raw_read(self)
+```
+Returns resource data as bytes.
+
+__Returns__
+
+`bytes`: returns resource data in bytes
+
+
+#### `resource.infer`
+```python
+resource.infer(self, **options)
+```
+Infer resource metadata
+
+Like name, format, mediatype, encoding, schema and profile.
+It commits this changes into resource instance.
+
+__Arguments__
+- __options__:
+        options will be passed to `tableschema.infer` call,
+        for more control on results (e.g. for setting `limit`, `confidence` etc.).
+
+__Returns__
+
+`dict`: returns resource descriptor
+
+
+#### `resource.commit`
+```python
+resource.commit(self, strict=None)
+```
+Update resource instance if there are in-place changes in the descriptor.
+
+__Arguments__
+- __strict (bool)__: alter `strict` mode for further work
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`bool`: returns true on success and false if not modified
+
+
+#### `resource.save`
+```python
+resource.save(self, target, storage=None, **options)
+```
+Saves this resource
+
+Into storage if `storage` argument is passed or
+saves this resource's descriptor to json file otherwise.
+
+__Arguments__
+- __target (str)__: path where to save a resource
+- __storage (str/tableschema.Storage)__: storage name like `sql` or storage instance
+- __options (dict)__: storage options to use for storage creation
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+__Returns__
+
+`bool`: returns true on success
+
+
+### `Group`
+```python
+Group(self, resources)
+```
+Group representation
+
+__Arguments__
+- __Resource[]__: list of TABULAR resources
+
+
+#### `group.headers`
+Group's headers
+
+__Returns__
+
+`str[]/None`: returns headers
+
+
+#### `group.name`
+Group name
+
+__Returns__
+
+`str`: name
+
+
+#### `group.schema`
+Resource's schema
+
+__Returns__
+
+`tableschema.Schema`: schema
+
+
+#### `group.iter`
+```python
+group.iter(self, **options)
+```
+Iterates through the group data and emits rows cast based on table schema.
+
+> It concatenates all the resources and has the same API as `resource.iter`
+
+
+#### `group.read`
+```python
+group.read(self, limit=None, **options)
+```
+Read the whole group and return as array of rows
+
+> It concatenates all the resources and has the same API as `resource.read`
+
+
+#### `group.check_relations`
+```python
+group.check_relations(self)
+```
+Check group's relations
+
+The same as `resource.check_relations` but without the optional
+argument *foreign_keys_values*.  This method will test foreignKeys of the
+whole group at once otpimizing the process by creating the foreign_key_values
+hashmap only once before testing the set of resources.
+
+
+### `Profile`
+```python
+Profile(self, profile)
+```
+Profile representation
+
+__Arguments__
+- __profile (str)__: profile name in registry or URL to JSON Schema
+
+__Raises__
+- `DataPackageException`: raises error if something goes wrong
+
+
+#### `profile.jsonschema`
+JSONSchema content
+
+__Returns__
+
+`dict`: returns profile's JSON Schema contents
+
+
+#### `profile.name`
+Profile name
+
+__Returns__
+
+`str/None`: name if available
+
+
+#### `profile.validate`
+```python
+profile.validate(self, descriptor)
+```
+Validate a data package `descriptor` against the profile.
+
+__Arguments__
+- __descriptor (dict)__: retrieved and dereferenced data package descriptor
+
+__Raises__
+- `ValidationError`: raises if not valid
+__Returns__
+
+`bool`: returns True if valid
+
+
+### `validate`
+```python
+validate(descriptor)
+```
+Validate a data package descriptor.
+
+__Arguments__
+- __descriptor (str/dict)__: package descriptor (one of):
+      - local path
+      - remote url
+      - object
+
+__Raises__
+- `ValidationError`: raises on invalid
+
+__Returns__
+
+`bool`: returns true on valid
+
+
+### `infer`
+```python
+infer(pattern, base_path=None)
+```
+Infer a data package descriptor.
+
+> Argument `pattern` works only for local files
+
+__Arguments__
+- __pattern (str)__: glob file pattern
+
+__Returns__
+
+`dict`: returns data package descriptor
+
 
 ## Contributing
 
