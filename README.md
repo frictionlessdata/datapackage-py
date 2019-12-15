@@ -39,6 +39,13 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [`Profile`](#profile)
     - [`validate`](#validate)
     - [`infer`](#infer)
+    - [`DataPackageException`](#datapackageexception)
+    - [`TableSchemaException`](#tableschemaexception)
+    - [`LoadError`](#loaderror)
+    - [`CastError`](#casterror)
+    - [`IntegrityError`](#integrityerror)
+    - [`RelationError`](#relationerror)
+    - [`StorageError`](#storageerror)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
 
@@ -1349,6 +1356,76 @@ __Returns__
 
 `dict`: returns data package descriptor
 
+
+### `DataPackageException`
+```python
+DataPackageException(self, message, errors=[])
+```
+Base class for all DataPackage/TableSchema exceptions.
+
+If there are multiple errors, they can be read from the exception object:
+
+```python
+try:
+    # lib action
+except DataPackageException as exception:
+    if exception.multiple:
+        for error in exception.errors:
+            # handle error
+```
+
+
+#### `datapackageexception.errors`
+List of nested errors
+
+__Returns__
+
+`DataPackageException[]`: list of nested errors
+
+
+#### `datapackageexception.multiple`
+Whether it's a nested exception
+
+__Returns__
+
+`bool`: whether it's a nested exception
+
+
+### `TableSchemaException`
+```python
+TableSchemaException(self, message, errors=[])
+```
+Base class for all TableSchema exceptions.
+
+### `LoadError`
+```python
+LoadError(self, message, errors=[])
+```
+All loading errors.
+
+### `CastError`
+```python
+CastError(self, message, errors=[])
+```
+All value cast errors.
+
+### `IntegrityError`
+```python
+IntegrityError(self, message, errors=[])
+```
+All integrity errors.
+
+### `RelationError`
+```python
+RelationError(self, message, errors=[])
+```
+All relations errors.
+
+### `StorageError`
+```python
+StorageError(self, message, errors=[])
+```
+All storage errors.
 
 ## Contributing
 

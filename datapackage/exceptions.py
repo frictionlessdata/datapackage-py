@@ -17,6 +17,16 @@ IntegrityError = tableschema.IntegrityError
 RelationError = tableschema.RelationError
 StorageError = tableschema.StorageError
 
+# To generate documentation we need to uncomment this lines
+#  DataPackageException.__module__ = 'datapackage.exceptions'
+#  TableSchemaException.__module__ = 'datapackage.exceptions'
+#  LoadError.__module__ = 'datapackage.exceptions'
+#  ValidationError.__module__ = 'datapackage.exceptions'
+#  CastError.__module__ = 'datapackage.exceptions'
+#  IntegrityError.__module__ = 'datapackage.exceptions'
+#  RelationError.__module__ = 'datapackage.exceptions'
+#  StorageError.__module__ = 'datapackage.exceptions'
+
 
 # Deprecated
 
