@@ -17,7 +17,8 @@ IntegrityError = tableschema.IntegrityError
 RelationError = tableschema.RelationError
 StorageError = tableschema.StorageError
 
-# To generate documentation we need to uncomment this lines
+# TODO: find a solution
+# To generate documentation we need to uncomment these lines
 #  DataPackageException.__module__ = 'datapackage.exceptions'
 #  TableSchemaException.__module__ = 'datapackage.exceptions'
 #  LoadError.__module__ = 'datapackage.exceptions'
