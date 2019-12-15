@@ -37,6 +37,8 @@ A library for working with [Data Packages](http://specs.frictionlessdata.io/data
     - [`Resource`](#resource)
     - [`Group`](#group)
     - [`Profile`](#profile)
+    - [`validate`](#validate)
+    - [`infer`](#infer)
   - [Contributing](#contributing)
   - [Changelog](#changelog)
 
@@ -1310,6 +1312,42 @@ __Raises__
 __Returns__
 
 `bool`: returns True if valid
+
+
+### `validate`
+```python
+validate(descriptor)
+```
+Validate a data package descriptor.
+
+__Arguments__
+- __descriptor (str/dict)__: package descriptor (one of):
+      - local path
+      - remote url
+      - object
+
+__Raises__
+- `ValidationError`: raises on invalid
+
+__Returns__
+
+`bool`: returns true on valid
+
+
+### `infer`
+```python
+infer(pattern, base_path=None)
+```
+Infer a data package descriptor.
+
+> Argument `pattern` works only for local files
+
+__Arguments__
+- __pattern (str)__: glob file pattern
+
+__Returns__
+
+`dict`: returns data package descriptor
 
 
 ## Contributing
