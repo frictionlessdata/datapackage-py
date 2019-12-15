@@ -157,8 +157,7 @@ class Profile(object):
     # Deprecated
 
     def iter_errors(self, data):
-        """Lazily yields each ValidationError for the received data dict.
-        """
+        # Lazily yields each ValidationError for the received data dict.
 
         # Deprecate
         warnings.warn(
@@ -169,8 +168,7 @@ class Profile(object):
             yield error
 
     def to_dict(self):
-        """dict: Convert this :class:`.Schema` to dict.
-        """
+        # dict: Convert this :class:`.Schema` to dict.
 
         # Deprecate
         warnings.warn(

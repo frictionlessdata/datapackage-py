@@ -1312,18 +1312,6 @@ __Returns__
 `bool`: returns True if valid
 
 
-#### `profile.iter_errors`
-```python
-profile.iter_errors(self, data)
-```
-Lazily yields each ValidationError for the received data dict.
-
-#### `profile.to_dict`
-```python
-profile.to_dict(self)
-```
-dict: Convert this :class:`.Schema` to dict.
-
 ## Contributing
 
 The project follows the [Open Knowledge International coding standards](https://github.com/okfn/coding-standards).
