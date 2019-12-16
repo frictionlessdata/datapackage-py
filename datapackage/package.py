@@ -277,8 +277,14 @@ class Package(object):
             if six.PY2:
                 mode = 'wb'
                 encoding = None
-            helpers.ensure_dir(target)
-            with io.open(target, mode=mode, encoding=encoding) as file:
+            json_target = target
+            if not os.path.isabs(json_target):
+                if not helpers.is_safe_path(target):
+                    raise exceptions.DataPackageException('Target path "%s" is not safe', target)
+                json_target = os.path.join(self.__base_path, target)
+            else:
+                helpers.ensure_dir(json_target)
+            with io.open(json_target, mode=mode, encoding=encoding) as file:
                 json.dump(self.__current_descriptor, file, indent=4)
 
         # Save package to zip
