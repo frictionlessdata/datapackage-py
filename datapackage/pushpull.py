@@ -21,16 +21,7 @@ from . import helpers
 # Module API
 
 def push_datapackage(descriptor, backend, **backend_options):
-    """Push Data Package to storage.
-
-    All parameters should be used as keyword arguments.
-
-    Args:
-        descriptor (str): path to descriptor
-        backend (str): backend name like `sql` or `bigquery`
-        backend_options (dict): backend options mentioned in backend docs
-
-    """
+    # Push Data Package to storage.
 
     # Deprecated
     warnings.warn(
@@ -87,17 +78,7 @@ def push_datapackage(descriptor, backend, **backend_options):
 
 
 def pull_datapackage(descriptor, name, backend, **backend_options):
-    """Pull Data Package from storage.
-
-    All parameters should be used as keyword arguments.
-
-    Args:
-        descriptor (str): path where to store descriptor
-        name (str): name of the pulled datapackage
-        backend (str): backend name like `sql` or `bigquery`
-        backend_options (dict): backend options mentioned in backend docs
-
-    """
+    # Pull Data Package from storage.
 
     # Deprecated
     warnings.warn(
