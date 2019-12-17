@@ -27,6 +27,6 @@ from .exceptions import StorageError
 
 # Deprecated
 
-DataPackage = Package
 from .pushpull import (push_datapackage,)
 from .pushpull import (pull_datapackage,)
+DataPackage = Package
