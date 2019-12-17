@@ -411,7 +411,7 @@ class Package(object):
             DataPackageException: raises if there was some error writing the package
 
         # Returns
-            bool: return true on success
+            bool/Storage: on success return true or a `Storage` instance
 
         """
 
@@ -447,6 +447,7 @@ class Package(object):
             for bucket in storage.buckets:
                 source = sources[buckets.index(bucket)]
                 storage.write(bucket, source())
+            return storage
 
         # Save descriptor to json
         elif str(target).endswith('.json'):
