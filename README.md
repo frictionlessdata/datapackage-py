@@ -825,7 +825,7 @@ __Raises__
 
 __Returns__
 
-`bool`: return true on success
+`bool/Storage`: on success return true or a `Storage` instance
 
 
 ### `Resource`
@@ -1429,12 +1429,12 @@ All storage errors.
 
 ## Contributing
 
-The project follows the [Open Knowledge International coding standards](https://github.com/okfn/coding-standards).
+> The project follows the [Open Knowledge International coding standards](https://github.com/okfn/coding-standards).
 
 Recommended way to get started is to create and activate a project virtual environment.
 To install package and development dependencies into active environment:
 
-```
+```bash
 $ make install
 ```
 
@@ -1444,47 +1444,13 @@ To run tests with linting and coverage:
 $ make test
 ```
 
-For linting `pylama` configured in `pylama.ini` is used. On this stage it's already
-installed into your environment and could be used separately with more fine-grained control
-as described in documentation - https://pylama.readthedocs.io/en/latest/.
-
-For example to sort results by error type:
-
-```bash
-$ pylama --sort <path>
-```
-
-For testing `tox` configured in `tox.ini` is used.
-It's already installed into your environment and could be used separately with more fine-grained control as described in documentation - https://testrun.org/tox/latest/.
-
-For example to check subset of tests against Python 2 environment with increased verbosity.
-All positional arguments and options after `--` will be passed to `py.test`:
-
-```bash
-tox -e py27 -- -v tests/<path>
-```
-
-Under the hood `tox` uses `pytest` configured in `pytest.ini`, `coverage`
-and `mock` packages. This packages are available only in tox envionments.
-
-Here is a list of the library contributors:
-- Tryggvi Björgvinsson <tryggvi.bjorgvinsson@okfn.org>
-- Gunnlaugur Thor Briem <gunnlaugur@gmail.com>
-- Edouard <edou4rd@gmail.com>
-- Michael Bauer <mihi@lo-res.org>
-- Alex Chandel <alexchandel@gmail.com>
-- Jessica B. Hamrick <jhamrick@berkeley.edu>
-- Ricardo Lafuente
-- Paul Walsh <paulywalsh@gmail.com>
-- Luiz Armesto <luiz.armesto@gmail.com>
-- hansl <hansl@edge-net.net>
-- femtotrader <femto.trader@gmail.com>
-- Vitor Baptista <vitor@vitorbaptista.com>
-- Bryon Jacob <bryon@data.world>
-
 ## Changelog
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
+
+#### v1.11
+
+- `package.save` now returns a `Storage` instance if available
 
 #### v1.10
 
