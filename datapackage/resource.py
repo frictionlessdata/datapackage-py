@@ -329,7 +329,7 @@ class Resource(object):
         self.__build()
         return True
 
-    def save(self, target, storage=None, **options):
+    def save(self, target, storage=None, to_base_path=False, **options):
         """https://github.com/frictionlessdata/datapackage-py#resource
         """
 
@@ -348,7 +348,7 @@ class Resource(object):
                 mode = 'wb'
                 encoding = None
             json_target = target
-            if not os.path.isabs(json_target):
+            if not os.path.isabs(json_target) and to_base_path:
                 if not helpers.is_safe_path(target):
                     raise exceptions.DataPackageException('Target path "%s" is not safe', target)
                 json_target = os.path.join(self.__base_path, target)
