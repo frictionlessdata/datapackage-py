@@ -28,14 +28,27 @@ from . import config
 # Module API
 
 class Package(object):
+    """ Package representation
+
+    # Arguments
+        descriptor (str/dict): data package descriptor as local path, url or object
+        base_path (str): base path for all relative paths
+        strict (bool): strict flag to alter validation behavior.
+            Setting it to `True` leads to throwing errors
+            on any operation with invalid descriptor
+        storage (str/tableschema.Storage): storage name like `sql` or storage instance
+        options (dict): storage options to use for storage creation
+
+    # Raises
+        DataPackageException: raises error if something goes wrong
+
+    """
 
     # Public
 
     def __init__(self, descriptor=None, base_path=None, strict=False, storage=None,
                  # Deprecated
                  schema=None, default_base_path=None, **options):
-        """https://github.com/frictionlessdata/datapackage-py#package
-        """
 
         # Handle deprecated schema argument
         if schema is not None:
@@ -105,57 +118,90 @@ class Package(object):
         # Build package
         self.__build()
 
-    def __del__(self):
-        """https://github.com/frictionlessdata/tableschema-py#schema
-        """
-        if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):
-            shutil.rmtree(self.__tempdir, ignore_errors=True)
-
     @property
     def valid(self):
-        """https://github.com/frictionlessdata/tableschema-py#schema
+        """Validation status
+
+        Always true in strict mode.
+
+        # Returns
+            bool: validation status
+
         """
         return not bool(self.__errors)
 
     @property
     def errors(self):
-        """https://github.com/frictionlessdata/tableschema-py#schema
+        """Validation errors
+
+        Always empty in strict mode.
+
+        # Returns
+            Exception[]: validation errors
+
         """
         return self.__errors
 
     @property
     def profile(self):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Package's profile
+
+        # Returns
+            Profile: an instance of `Profile` class
+
         """
         return self.__profile
 
     @property
     def descriptor(self):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Package's descriptor
+
+        # Returns
+            dict: descriptor
+
         """
         # Never use self.descriptor inside this class (!!!)
         return self.__next_descriptor
 
     @property
     def base_path(self):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Package's base path
+
+        # Returns
+            str/None: returns the data package base path
+
         """
         return self.__base_path
 
     @property
     def resources(self):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Package's resources
+
+        # Returns
+            Resource[]: returns an array of `Resource` instances
+
         """
         return self.__resources
 
     @property
     def resource_names(self):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Package's resource names
+
+        # Returns
+            str[]: returns an array of resource names
+
         """
         return [resource.name for resource in self.resources]
 
     def get_resource(self, name):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Get data package resource by name.
+
+        # Arguments
+            name (str): data resource name
+
+        # Returns
+            Resource/None: returns `Resource` instances or null if not found
+
         """
         for resource in self.resources:
             if resource.name == name:
@@ -163,7 +209,19 @@ class Package(object):
         return None
 
     def add_resource(self, descriptor):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Add new resource to data package.
+
+        The data package descriptor will be validated with newly added resource descriptor.
+
+        # Arguments
+            descriptor (dict): data resource descriptor
+
+        # Raises
+            DataPackageException: raises error if something goes wrong
+
+        # Returns
+            Resource/None: returns added `Resource` instance or null if not added
+
         """
         self.__current_descriptor.setdefault('resources', [])
         self.__current_descriptor['resources'].append(descriptor)
@@ -171,7 +229,19 @@ class Package(object):
         return self.__resources[-1]
 
     def remove_resource(self, name):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Remove data package resource by name.
+
+        The data package descriptor will be validated after resource descriptor removal.
+
+        # Arguments
+            name (str): data resource name
+
+        # Raises
+            DataPackageException: raises error if something goes wrong
+
+        # Returns
+            Resource/None: returns removed `Resource` instances or null if not found
+
         """
         resource = self.get_resource(name)
         if resource:
@@ -182,7 +252,19 @@ class Package(object):
         return resource
 
     def get_group(self, name):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Returns a group of tabular resources by name.
+
+        For more information about groups see [Group](#group).
+
+        # Arguments
+            name (str): name of a group of resources
+
+        # Raises
+            DataPackageException: raises error if something goes wrong
+
+        # Returns
+            Group/None: returns a `Group` instance or null if not found
+
         """
         resources = [resource
             for resource in self.resources
@@ -192,7 +274,21 @@ class Package(object):
         return Group(resources)
 
     def infer(self, pattern=False):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Infer a data package metadata.
+
+        > Argument `pattern` works only for local files
+
+        If `pattern` is not provided only existent resources will be inferred
+        (added metadata like encoding, profile etc). If `pattern` is provided
+        new resoures with file names mathing the pattern will be added and inferred.
+        It commits changes to data package instance.
+
+        # Arguments
+            pattern (str): glob pattern for new resources
+
+        # Returns
+            dict: returns data package descriptor
+
         """
 
         # Files
@@ -223,7 +319,32 @@ class Package(object):
         return self.__current_descriptor
 
     def commit(self, strict=None):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Update data package instance if there are in-place changes in the descriptor.
+
+        # Example
+
+        ```python
+        package = Package({
+            'name': 'package',
+            'resources': [{'name': 'resource', 'data': ['data']}]
+        })
+
+        package.name # package
+        package.descriptor['name'] = 'renamed-package'
+        package.name # package
+        package.commit()
+        package.name # renamed-package
+        ```
+
+        # Arguments
+            strict (bool): alter `strict` mode for further work
+
+        # Raises
+            DataPackageException: raises error if something goes wrong
+
+        # Returns
+            bool: returns true on success and false if not modified
+
         """
         if strict is not None:
             self.__strict = strict
@@ -234,7 +355,63 @@ class Package(object):
         return True
 
     def save(self, target=None, storage=None, merge_groups=False, to_base_path=False, **options):
-        """https://github.com/frictionlessdata/datapackage-py#package
+        """Saves this data package
+
+        It saves it to storage if `storage` argument is passed or
+        saves this data package's descriptor to json file if `target` arguments
+        ends with `.json` or saves this data package to zip file otherwise.
+
+        # Example
+
+        It creates a zip file into ``file_or_path`` with the contents
+        of this Data Package and its resources. Every resource which content
+        lives in the local filesystem will be copied to the zip file.
+        Consider the following Data Package descriptor:
+
+        ```json
+        {
+            "name": "gdp",
+            "resources": [
+                {"name": "local", "format": "CSV", "path": "data.csv"},
+                {"name": "inline", "data": [4, 8, 15, 16, 23, 42]},
+                {"name": "remote", "url": "http://someplace.com/data.csv"}
+            ]
+        }
+        ```
+
+        The final structure of the zip file will be:
+
+        ```
+        ./datapackage.json
+        ./data/local.csv
+        ```
+
+        With the contents of `datapackage.json` being the same as
+        returned `datapackage.descriptor`. The resources' file names are generated
+        based on their `name` and `format` fields if they exist.
+        If the resource has no `name`, it'll be used `resource-X`,
+        where `X` is the index of the resource in the `resources` list (starting at zero).
+        If the resource has `format`, it'll be lowercased and appended to the `name`,
+        becoming "`name.format`".
+
+        # Arguments
+            target (string/filelike):
+                the file path or a file-like object where
+                the contents of this Data Package will be saved into.
+            storage (str/tableschema.Storage):
+                storage name like `sql` or storage instance
+            merge_groups (bool):
+                save all the group's tabular resoruces into one bucket
+                if a storage is provided (for example into one SQL table).
+                Read more about [Group](#group).
+            options (dict):
+                storage options to use for storage creation
+
+        # Raises
+            DataPackageException: raises if there was some error writing the package
+
+        # Returns
+            bool/Storage: on success return true or a `Storage` instance
         """
 
         # Save package to storage
@@ -269,6 +446,7 @@ class Package(object):
             for bucket in storage.buckets:
                 source = sources[buckets.index(bucket)]
                 storage.write(bucket, source())
+            return storage
 
         # Save descriptor to json
         elif str(target).endswith('.json'):
@@ -313,6 +491,10 @@ class Package(object):
 
     # Private
 
+    def __del__(self):
+        if hasattr(self, '_tempdir') and os.path.exists(self.__tempdir):
+            shutil.rmtree(self.__tempdir, ignore_errors=True)
+
     def __build(self):
 
         # Process descriptor
@@ -352,8 +534,7 @@ class Package(object):
     # Deprecated
 
     def safe(self):
-        """True: datapackage is always safe.
-        """
+        # True: datapackage is always safe.
 
         # Deprecate
         warnings.warn(
@@ -365,8 +546,7 @@ class Package(object):
 
     @property
     def schema(self):
-        """:class:`.Schema`: This data package's schema.
-        """
+        # Schema: This data package's schema.
 
         # Deprecate
         warnings.warn(
@@ -377,8 +557,7 @@ class Package(object):
 
     @property
     def attributes(self):
-        """tuple: Attributes defined in the schema and the data package.
-        """
+        # tuple: Attributes defined in the schema and the data package.
 
         # Deprecate
         warnings.warn(
@@ -396,8 +575,7 @@ class Package(object):
 
     @property
     def required_attributes(self):
-        """tuple: The schema's required attributed.
-        """
+        # tuple: The schema's required attributed.
 
         # Deprecate
         warnings.warn(
@@ -415,8 +593,7 @@ class Package(object):
         return required
 
     def validate(self):
-        """"Validate this Data Package.
-        """
+        # Validate this Data Package.
 
         # Deprecate
         warnings.warn(
@@ -427,8 +604,7 @@ class Package(object):
         self.profile.validate(descriptor)
 
     def iter_errors(self):
-        """"Lazily yields each ValidationError for the received data dict.
-        """
+        # Lazily yields each ValidationError for the received data dict.
 
         # Deprecate
         warnings.warn(
@@ -438,8 +614,7 @@ class Package(object):
         return self.profile.iter_errors(self.to_dict())
 
     def to_dict(self):
-        """"dict: Convert this Data Package to dict.
-        """
+        # dict: Convert this Data Package to dict.
 
         # Deprecate
         warnings.warn(
@@ -449,8 +624,7 @@ class Package(object):
         return copy.deepcopy(self.descriptor)
 
     def to_json(self):
-        """"str: Convert this Data Package to a JSON string.
-        """
+        # str: Convert this Data Package to a JSON string.
 
         # Deprecate
         warnings.warn(

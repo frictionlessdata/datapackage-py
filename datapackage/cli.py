@@ -7,14 +7,30 @@ from __future__ import absolute_import
 import click
 import json
 import datapackage
+from . import config
 click.disable_unicode_literals_warning = True
 
 
 # Module API
 
-@click.group()
-@click.version_option(datapackage.__version__, message='%(version)s')
+@click.group(help='')
+@click.version_option(config.VERSION, message='%(version)s')
 def cli():
+    """Command-line interface
+
+    ```
+    Usage: datapackage [OPTIONS] COMMAND [ARGS]...
+
+    Options:
+      --version  Show the version and exit.
+      --help     Show this message and exit.
+
+    Commands:
+      infer
+      validate
+    ```
+
+    """
     pass
 
 
@@ -36,9 +52,3 @@ def validate(descriptor):
 def infer(pattern):
     descriptor = datapackage.infer(pattern, base_path='.')
     click.echo(json.dumps(descriptor, indent=2))
-
-
-# Main program
-
-if __name__ == '__main__':
-    cli()

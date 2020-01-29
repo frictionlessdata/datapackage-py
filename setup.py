@@ -28,7 +28,7 @@ INSTALL_REQUIRES = [
     'jsonschema>=2.5',
     'unicodecsv>=0.14',
     'jsonpointer>=1.10',
-    'tableschema>=1.10',
+    'tableschema>=1.12.1',
     'tabulator>=1.29',
 ]
 TESTS_REQUIRE = [
@@ -55,7 +55,7 @@ setup(
     extras_require={'develop': TESTS_REQUIRE},
     entry_points={
         'console_scripts': [
-            'datapackage = datapackage.cli:cli',
+            'datapackage = datapackage.__main__:cli',
         ]
     },
     zip_safe=False,

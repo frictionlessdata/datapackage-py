@@ -23,14 +23,27 @@ from . import config
 # Module API
 
 class Resource(object):
+    """Resource represenation
+
+    # Arguments
+        descriptor (str/dict): data resource descriptor as local path, url or object
+        base_path (str): base path for all relative paths
+        strict (bool):
+            strict flag to alter validation behavior.  Setting it to `true`
+            leads to throwing errors on any operation with invalid descriptor
+        storage (str/tableschema.Storage): storage name like `sql` or storage instance
+        options (dict): storage options to use for storage creation
+
+    # Raises
+        DataPackageException: raises error if something goes wrong
+
+    """
 
     # Public
 
     def __init__(self, descriptor={}, base_path=None, strict=False, storage=None,
                  # Internal
                  package=None, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
-        """
 
         # Get base path
         if base_path is None:
@@ -70,74 +83,126 @@ class Resource(object):
 
     @property
     def package(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Package instance if the resource belongs to some package
+
+        # Returns
+            Package/None: a package instance if available
+
         """
         return self.__package
 
     @property
     def valid(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Validation status
+
+        Always true in strict mode.
+
+        # Returns
+            bool: validation status
+
         """
         return not bool(self.__errors)
 
     @property
     def errors(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Validation errors
+
+        Always empty in strict mode.
+
+        # Returns
+            Exception[]: validation errors
+
         """
         return self.__errors
 
     @property
     def profile(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Resource's profile
+
+        # Returns
+            Profile: an instance of `Profile` class
+
         """
         return self.__profile
 
     @property
     def descriptor(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Package's descriptor
+
+        # Returns
+            dict: descriptor
+
         """
         # Never use self.descriptor inside self class (!!!)
         return self.__next_descriptor
 
     @property
     def group(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Group name
+
+        # Returns
+            str: group name
+
         """
         return self.__current_descriptor.get('group')
 
     @property
     def name(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Resource name
+
+        # Returns
+            str: name
+
         """
         return self.__current_descriptor.get('name')
 
     @property
     def inline(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Whether resource inline
+
+        # Returns
+            bool: returns true if resource is inline
+
         """
         return self.__source_inspection.get('inline', False)
 
     @property
     def local(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Whether resource local
+
+        # Returns
+            bool: returns true if resource is local
+
         """
         return self.__source_inspection.get('local', False)
 
     @property
     def remote(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Whether resource remote
+
+        # Returns
+            bool: returns true if resource is remote
+
         """
         return self.__source_inspection.get('remote', False)
 
     @property
     def multipart(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Whether resource multipart
+
+        # Returns
+            bool: returns true if resource is multipart
+
         """
         return self.__source_inspection.get('multipart', False)
 
     @property
     def tabular(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Whether resource tabular
+
+        # Returns
+            bool: returns true if resource is tabular
+
         """
         if self.__current_descriptor.get('profile') == 'tabular-data-resource':
             return True
@@ -150,13 +215,26 @@ class Resource(object):
 
     @property
     def source(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Resource's source
+
+        Combination of `resource.source` and `resource.inline/local/remote/multipart`
+        provides predictable interface to work with resource data.
+
+        # Returns
+            list/str: returns `data` or `path` property
+
         """
         return self.__source_inspection.get('source')
 
     @property
     def headers(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Resource's headers
+
+        > Only for tabular resources (reading has to be started first or it's `None`)
+
+        # Returns
+            str[]/None: returns data source headers
+
         """
         if not self.tabular:
             return None
@@ -164,14 +242,91 @@ class Resource(object):
 
     @property
     def schema(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Resource's schema
+
+        > Only for tabular resources
+
+        For tabular resources it returns `Schema` instance to interact with data schema.
+        Read API documentation - [tableschema.Schema](https://github.com/frictionlessdata/tableschema-py#schema).
+
+        # Returns
+            tableschema.Schema: schema
+
         """
         if not self.tabular:
             return None
         return self.__get_table().schema
 
     def iter(self, integrity=False, relations=False, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Iterates through the resource data and emits rows cast based on table schema.
+
+        > Only for tabular resources
+
+        # Arguments
+
+            keyed (bool):
+                yield keyed rows in a form of `{header1\\: value1, header2\\: value2}`
+                (default is false; the form of rows is `[value1, value2]`)
+
+            extended (bool):
+                yield extended rows in a for of `[rowNumber, [header1, header2], [value1, value2]]`
+                (default is false; the form of rows is `[value1, value2]`)
+
+            cast (bool):
+                disable data casting if false
+                (default is true)
+
+            integrity (bool):
+                if true actual size in BYTES and SHA256 hash of the file
+                will be checked against `descriptor.bytes` and `descriptor.hash`
+                (other hashing algorithms are not supported and will be skipped silently)
+
+            relations (bool):
+                if true foreign key fields will be checked and resolved to its references
+
+            foreign_keys_values (dict):
+                three-level dictionary of foreign key references optimized
+                to speed up validation process in a form of
+                `{resource1\\: {(fk_field1, fk_field2)\\: {(value1, value2)\\: {one_keyedrow}, ... }}}`.
+                If not provided but relations is true, it will be created
+                before the validation process by *index_foreign_keys_values* method
+
+            exc_handler (func):
+                optional custom exception handler callable.
+                Can be used to defer raising errors (i.e. "fail late"), e.g.
+                for data validation purposes. Must support the signature below
+
+        # Custom exception handler
+
+        ```python
+        def exc_handler(exc, row_number=None, row_data=None, error_data=None):
+            '''Custom exception handler (example)
+
+            # Arguments:
+                exc(Exception):
+                    Deferred exception instance
+                row_number(int):
+                    Data row number that triggers exception exc
+                row_data(OrderedDict):
+                    Invalid data row source data
+                error_data(OrderedDict):
+                    Data row source data field subset responsible for the error, if
+                    applicable (e.g. invalid primary or foreign key fields). May be
+                    identical to row_data.
+            '''
+            # ...
+        ```
+
+        # Raises
+            DataPackageException: base class of any error
+            CastError: data cast error
+            IntegrityError: integrity checking error
+            UniqueKeyError: unique key constraint violation
+            UnresolvedFKError: unresolved foreign key reference error
+
+        # Returns
+            Iterator[list]: yields rows
+
         """
 
         # Error for non tabular
@@ -191,7 +346,17 @@ class Resource(object):
             integrity=integrity, relations=relations, **options)
 
     def read(self, integrity=False, relations=False, foreign_keys_values=False, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Read the whole resource and return as array of rows
+
+        > Only for tabular resources
+        > It has the same API as `resource.iter` except for
+
+        # Arguments
+            limit (int): limit count of rows to read and return
+
+        # Returns
+            list[]: returns rows
+
         """
 
         # Error for non tabular
@@ -212,7 +377,20 @@ class Resource(object):
             foreign_keys_values=foreign_keys_values, **options)
 
     def check_integrity(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Checks resource integrity
+
+        > Only for tabular resources
+
+        It checks size in BYTES and SHA256 hash of the file
+        against `descriptor.bytes` and `descriptor.hash`
+        (other hashing algorithms are not supported and will be skipped silently).
+
+        # Raises
+            exceptions.IntegrityError: raises if there are integrity issues
+
+        # Returns
+            bool: returns True if no issues
+
         """
         # This function will benefit from rebasing it on `resource.raw_iter
         for row in self.iter(integrity=True, cast=False):
@@ -220,19 +398,48 @@ class Resource(object):
         return True
 
     def check_relations(self, foreign_keys_values=False):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Check relations
+
+        > Only for tabular resources
+
+        It checks foreign keys and raises an exception if there are integrity issues.
+
+        # Raises
+            exceptions.RelationError: raises if there are relation issues
+
+        # Returns
+            bool: returns True if no issues
+
         """
         for row in self.iter(relations=True, foreign_keys_values=foreign_keys_values):
             pass
         return True
 
     def drop_relations(self):
-        # storing relations datasets eats memory, we can need to garbage those
+        """Drop relations
+
+        > Only for tabular resources
+
+        Remove relations data from memory
+
+        # Returns
+            bool: returns True
+
+        """
         self.__relations = False
         return self.__relations is False
 
     def raw_iter(self, stream=False):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Iterate over data chunks as bytes.
+
+        If `stream` is true File-like object will be returned.
+
+        # Arguments
+            stream (bool): File-like object will be returned
+
+        # Returns
+            bytes[]/filelike: returns bytes[]/filelike
+
         """
 
         # Error for inline
@@ -257,7 +464,11 @@ class Resource(object):
         return filelike
 
     def raw_read(self):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Returns resource data as bytes.
+
+        # Returns
+            bytes: returns resource data in bytes
+
         """
         contents = b''
         with self.raw_iter() as filelike:
@@ -266,7 +477,19 @@ class Resource(object):
         return contents
 
     def infer(self, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Infer resource metadata
+
+        Like name, format, mediatype, encoding, schema and profile.
+        It commits this changes into resource instance.
+
+        # Arguments
+            options:
+                options will be passed to `tableschema.infer` call,
+                for more control on results (e.g. for setting `limit`, `confidence` etc.).
+
+        # Returns
+            dict: returns resource descriptor
+
         """
         descriptor = deepcopy(self.__current_descriptor)
 
@@ -318,7 +541,17 @@ class Resource(object):
         return descriptor
 
     def commit(self, strict=None):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Update resource instance if there are in-place changes in the descriptor.
+
+        # Arguments
+            strict (bool): alter `strict` mode for further work
+
+        # Raises
+            DataPackageException: raises error if something goes wrong
+
+        # Returns
+            bool: returns true on success and false if not modified
+
         """
         if strict is not None:
             self.__strict = strict
@@ -330,7 +563,21 @@ class Resource(object):
         return True
 
     def save(self, target, storage=None, to_base_path=False, **options):
-        """https://github.com/frictionlessdata/datapackage-py#resource
+        """Saves this resource
+
+        Into storage if `storage` argument is passed or
+        saves this resource's descriptor to json file otherwise.
+
+        # Arguments
+            target (str): path where to save a resource
+            storage (str/tableschema.Storage): storage name like `sql` or storage instance
+            options (dict): storage options to use for storage creation
+
+        # Raises
+            DataPackageException: raises error if something goes wrong
+
+        # Returns
+            bool: returns true on success
         """
 
         # Save resource to storage

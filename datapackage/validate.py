@@ -9,9 +9,21 @@ from .package import Package
 
 # Module API
 
-
 def validate(descriptor):
-    """https://github.com/frictionlessdata/datapackage-py#validate
+    """Validate a data package descriptor.
+
+    # Arguments
+        descriptor (str/dict): package descriptor (one of):
+          - local path
+          - remote url
+          - object
+
+    # Raises
+        ValidationError: raises on invalid
+
+    # Returns
+        bool: returns true on valid
+
     """
     Package(descriptor, strict=True)
     return True
