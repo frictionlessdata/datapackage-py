@@ -458,6 +458,15 @@ def test_save_as_json(json_tmpfile):
     }
 
 
+def test_save_as_json_base_path(json_tmpfile):
+    package = Package({}, base_path='/data')
+    package.save(json_tmpfile.name, to_base_path=True)
+    with open(os.path.join('/data', json_tmpfile.name), 'r') as test_file:
+        assert json.loads(test_file.read()) == {
+        'profile': 'data-package',
+    }
+
+
 # Save to zip
 
 @pytest.mark.skip('deprecated')
