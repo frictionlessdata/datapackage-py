@@ -449,7 +449,7 @@ class Resource(object):
 
         # Get filelike
         if self.multipart:
-            filelike = _MultipartSource(self.source, remote=self.remote)
+            filelike = _MultipartSource(self)
         elif self.remote:
             if self.__table_options.get('http_session'):
                 http_session = self.__table_options['http_session']
@@ -637,7 +637,7 @@ class Resource(object):
             # Get source/schema
             source = self.source
             if self.multipart:
-                source = _MultipartSource(self.source, remote=self.remote)
+                source = _MultipartSource(self)
             schema = self.__current_descriptor.get('schema')
 
             # Storage resource
@@ -816,9 +816,17 @@ class _MultipartSource(object):
 
     # Public
 
-    def __init__(self, source, remote=False):
-        self.__source = source
-        self.__remote = remote
+    def __init__(self, resource):
+        # testing if we have headers
+        if resource.tabular \
+           and (resource.descriptor.get('dialect') and resource.descriptor.get('dialect').get('header')
+               or (not resource.descriptor.get('dialect') and config.DEFAULT_DIALECT['header'])):
+            remove_chunk_header_row = True
+        else:
+            remove_chunk_header_row = False
+        self.__source = resource.source
+        self.__remote = resource.remote
+        self.__remove_chunk_header_row = remove_chunk_header_row
         self.__rows = self.__iter_rows()
 
     def __enter__(self):
@@ -875,8 +883,14 @@ class _MultipartSource(object):
             streams = [urlopen(chunk) for chunk in self.__source]
         else:
             streams = [io.open(chunk, 'rb') for chunk in self.__source]
+        firstStream = True
         for stream in streams:
+            # if tabular, skip header row in the concatenation stream
+            if self.__remove_chunk_header_row and not firstStream:
+                # remove header row
+                stream.next()
             for row in stream:
                 if not row.endswith(b'\n'):
                     row += b'\n'
                 yield row
+            firstStream = False

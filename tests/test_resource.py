@@ -449,7 +449,7 @@ def test_descriptor_table_tabular_multipart_local():
     descriptor = {
         'name': 'name',
         'profile': 'tabular-data-resource',
-        'path': ['chunk1.csv', 'chunk2.csv'],
+        'path': ['chunk1.csv', 'chunk2-with-headers.csv'],
         'schema': 'resource_schema.json',
     }
     resource = Resource(descriptor, base_path='data')
@@ -458,6 +458,19 @@ def test_descriptor_table_tabular_multipart_local():
         {'id': 2, 'name': '中国人'},
     ]
 
+def test_descriptor_table_tabular_multipart_noheader_local():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['chunk2.csv', 'chunk2.csv'],
+        'schema': 'resource_schema.json',
+        'dialect': {'header': False},
+    }
+    resource = Resource(descriptor, base_path='data')
+    assert resource.table.read(keyed=True) == [
+        {'id': 2, 'name': '中国人'},
+        {'id': 2, 'name': '中国人'},
+    ]
 
 def test_descriptor_table_tabular_multipart_remote(patch_get):
     descriptor = {
@@ -471,14 +484,15 @@ def test_descriptor_table_tabular_multipart_remote(patch_get):
         'schema': 'resource_schema.json',
     }
     # Mocks
-    patch_get('http://example.com/chunk1.csv', body="id,name\n")
-    patch_get('http://example.com/chunk2.csv', body="1,english")
-    patch_get('http://example.com/chunk3.csv', body="2,中国人\n")
+    patch_get('http://example.com/chunk1.csv', body="id,name\n1,english")
+    patch_get('http://example.com/chunk2.csv', body="id,name\n2,中国人\n")
+    patch_get('http://example.com/chunk3.csv', body="id,name\n3,français\n")
     # Tests
     resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 1, 'name': 'english'},
         {'id': 2, 'name': '中国人'},
+        {'id': 3, 'name': 'français'},
     ]
 
 
