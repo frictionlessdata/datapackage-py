@@ -655,8 +655,13 @@ class Resource(object):
                     options['encoding'] = descriptor['encoding']
                 if descriptor.get('compression'):
                     options['compression'] = descriptor['compression']
+                # TODO: these options are experimental
                 options['skip_rows'] = descriptor.get(
                     'skipRows', options.get('skip_rows', []))
+                options['ignore_listed_headers'] = descriptor.get(
+                    'skipColumns', options.get('ignore_listed_headers', None))
+                options['ignore_not_listed_headers'] = descriptor.get(
+                    'pickColumns', options.get('ignore_not_listed_headers', None))
                 dialect = descriptor.get('dialect')
                 if dialect:
                     if not dialect.get('header', config.DEFAULT_DIALECT['header']):
