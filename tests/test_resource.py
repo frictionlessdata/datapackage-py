@@ -609,6 +609,20 @@ def test_save_data_to_storage():
     storage.write.assert_called_with('data', ANY)
 
 
+def test_save_data_to_json():
+    resource = Resource({'data': [['id'], [1], [2], [3]]})
+    resource.save('data.json')
+    with open('data.json', 'r') as test_file:
+        assert json.loads(test_file.read()) == {'data': [['id'], [1], [2], [3]], 'profile': 'data-resource'}
+
+
+def test_save_data_to_json_base_path():
+    resource = Resource({'data': [['id'], [1], [2], [3]]}, base_path='data')
+    resource.save('data.json', to_base_path=True)
+    with open('data/data.json', 'r') as test_file:
+        assert json.loads(test_file.read()) == {'data': [['id'], [1], [2], [3]], 'profile': 'data-resource'}
+
+
 # Integrity
 
 DESCRIPTOR = {

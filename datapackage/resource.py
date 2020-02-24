@@ -562,7 +562,7 @@ class Resource(object):
         self.__build()
         return True
 
-    def save(self, target, storage=None, **options):
+    def save(self, target, storage=None, to_base_path=False, **options):
         """Saves this resource
 
         Into storage if `storage` argument is passed or
@@ -578,7 +578,6 @@ class Resource(object):
 
         # Returns
             bool: returns true on success
-
         """
 
         # Save resource to storage
@@ -595,8 +594,14 @@ class Resource(object):
             if six.PY2:
                 mode = 'wb'
                 encoding = None
-            helpers.ensure_dir(target)
-            with io.open(target, mode=mode, encoding=encoding) as file:
+            json_target = target
+            if not os.path.isabs(json_target) and to_base_path:
+                if not helpers.is_safe_path(target):
+                    raise exceptions.DataPackageException('Target path "%s" is not safe', target)
+                json_target = os.path.join(self.__base_path, target)
+            else:
+                helpers.ensure_dir(target)
+            with io.open(json_target, mode=mode, encoding=encoding) as file:
                 json.dump(self.__current_descriptor, file, indent=4)
 
     # Private
