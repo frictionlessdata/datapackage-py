@@ -569,9 +569,15 @@ class Resource(object):
         saves this resource's descriptor to json file otherwise.
 
         # Arguments
-            target (str): path where to save a resource
-            storage (str/tableschema.Storage): storage name like `sql` or storage instance
-            options (dict): storage options to use for storage creation
+            target (str):
+                path where to save a resource
+            storage (str/tableschema.Storage):
+                storage name like `sql` or storage instance
+            to_base_path (bool):
+                save the resource to the resource's base path
+                using the "<base_path>/<target>" route
+            options (dict):
+                storage options to use for storage creation
 
         # Raises
             DataPackageException: raises error if something goes wrong

@@ -404,6 +404,9 @@ class Package(object):
                 save all the group's tabular resoruces into one bucket
                 if a storage is provided (for example into one SQL table).
                 Read more about [Group](#group).
+            to_base_path (bool):
+                save the package to the package's base path
+                using the "<base_path>/<target>" route
             options (dict):
                 storage options to use for storage creation
 
