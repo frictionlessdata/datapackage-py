@@ -1457,6 +1457,10 @@ $ make test
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
+#### v1.12
+
+- `resource/package.save` now accept a `to_base_path` argument (#254)
+
 #### v1.11
 
 - `package.save` now returns a `Storage` instance if available
