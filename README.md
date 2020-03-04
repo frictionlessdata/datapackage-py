@@ -765,7 +765,7 @@ __Returns__
 
 #### `package.save`
 ```python
-package.save(self, target=None, storage=None, merge_groups=False, **options)
+package.save(self, target=None, storage=None, merge_groups=False, to_base_path=False, **options)
 ```
 Saves this data package
 
@@ -817,6 +817,9 @@ __Arguments__
         save all the group's tabular resoruces into one bucket
         if a storage is provided (for example into one SQL table).
         Read more about [Group](#group).
+- __to_base_path (bool)__:
+        save the package to the package's base path
+        using the "<base_path>/<target>" route
 - __options (dict)__:
         storage options to use for storage creation
 
@@ -826,7 +829,6 @@ __Raises__
 __Returns__
 
 `bool/Storage`: on success return true or a `Storage` instance
-
 
 ### `Resource`
 ```python
@@ -1192,7 +1194,7 @@ __Returns__
 
 #### `resource.save`
 ```python
-resource.save(self, target, storage=None, **options)
+resource.save(self, target, storage=None, to_base_path=False, **options)
 ```
 Saves this resource
 
@@ -1200,9 +1202,15 @@ Into storage if `storage` argument is passed or
 saves this resource's descriptor to json file otherwise.
 
 __Arguments__
-- __target (str)__: path where to save a resource
-- __storage (str/tableschema.Storage)__: storage name like `sql` or storage instance
-- __options (dict)__: storage options to use for storage creation
+- __target (str)__:
+        path where to save a resource
+- __storage (str/tableschema.Storage)__:
+        storage name like `sql` or storage instance
+- __to_base_path (bool)__:
+        save the resource to the resource's base path
+        using the "<base_path>/<target>" route
+- __options (dict)__:
+        storage options to use for storage creation
 
 __Raises__
 - `DataPackageException`: raises error if something goes wrong
@@ -1210,7 +1218,8 @@ __Raises__
 __Returns__
 
 `bool`: returns true on success
-
+Building index...
+Started generating documentation...
 
 ### `Group`
 ```python

@@ -562,23 +562,28 @@ class Resource(object):
         self.__build()
         return True
 
-    def save(self, target, storage=None, **options):
+    def save(self, target, storage=None, to_base_path=False, **options):
         """Saves this resource
 
         Into storage if `storage` argument is passed or
         saves this resource's descriptor to json file otherwise.
 
         # Arguments
-            target (str): path where to save a resource
-            storage (str/tableschema.Storage): storage name like `sql` or storage instance
-            options (dict): storage options to use for storage creation
+            target (str):
+                path where to save a resource
+            storage (str/tableschema.Storage):
+                storage name like `sql` or storage instance
+            to_base_path (bool):
+                save the resource to the resource's base path
+                using the "<base_path>/<target>" route
+            options (dict):
+                storage options to use for storage creation
 
         # Raises
             DataPackageException: raises error if something goes wrong
 
         # Returns
             bool: returns true on success
-
         """
 
         # Save resource to storage
@@ -595,8 +600,14 @@ class Resource(object):
             if six.PY2:
                 mode = 'wb'
                 encoding = None
-            helpers.ensure_dir(target)
-            with io.open(target, mode=mode, encoding=encoding) as file:
+            json_target = target
+            if not os.path.isabs(json_target) and to_base_path:
+                if not helpers.is_safe_path(target):
+                    raise exceptions.DataPackageException('Target path "%s" is not safe', target)
+                json_target = os.path.join(self.__base_path, target)
+            else:
+                helpers.ensure_dir(target)
+            with io.open(json_target, mode=mode, encoding=encoding) as file:
                 json.dump(self.__current_descriptor, file, indent=4)
 
     # Private
@@ -655,8 +666,13 @@ class Resource(object):
                     options['encoding'] = descriptor['encoding']
                 if descriptor.get('compression'):
                     options['compression'] = descriptor['compression']
+                # TODO: these options are experimental
                 options['skip_rows'] = descriptor.get(
                     'skipRows', options.get('skip_rows', []))
+                options['ignore_listed_headers'] = descriptor.get(
+                    'skipColumns', options.get('ignore_listed_headers', None))
+                options['ignore_not_listed_headers'] = descriptor.get(
+                    'pickColumns', options.get('ignore_not_listed_headers', None))
                 dialect = descriptor.get('dialect')
                 if dialect:
                     if not dialect.get('header', config.DEFAULT_DIALECT['header']):
