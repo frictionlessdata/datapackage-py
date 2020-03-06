@@ -901,12 +901,15 @@ class _MultipartSource(object):
             streams = [io.open(chunk, 'rb') for chunk in self.__source]
         firstStream = True
         for stream in streams:
-            # if tabular, skip header row in the concatenation stream
-            if self.__remove_chunk_header_row and not firstStream:
-                # remove header row
-                stream.next()
+            firstRow = True
             for row in stream:
                 if not row.endswith(b'\n'):
                     row += b'\n'
-                yield row
+                # if tabular, skip header row in the concatenation stream
+                if firstRow and self.__remove_chunk_header_row and not firstStream:
+                    # remove header row
+                    pass
+                else:
+                    yield row
+                firstRow = False
             firstStream = False
