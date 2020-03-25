@@ -23,19 +23,23 @@ NAME = PACKAGE.replace('_', '-')
 INSTALL_REQUIRES = [
     'six>=1.10',
     'click>=6.7',
+    'chardet>=3.0',
     'requests>=2.8',
-    'cchardet>=1.0',
     'jsonschema>=2.5',
     'unicodecsv>=0.14',
     'jsonpointer>=1.10',
     'tableschema>=1.12.1',
     'tabulator>=1.29',
 ]
+INSTALL_CCHARDET_REQUIRES = [
+    'cchardet>=2.0',
+]
 TESTS_REQUIRE = [
     'mock',
     'pylama',
     'pytest',
     'pytest-cov',
+    'httpretty',
     'tableschema-sql',
     'tox',
 ]
@@ -52,7 +56,10 @@ setup(
     include_package_data=True,
     install_requires=INSTALL_REQUIRES,
     tests_require=TESTS_REQUIRE,
-    extras_require={'develop': TESTS_REQUIRE},
+    extras_require={
+        'develop': TESTS_REQUIRE,
+        'cchardet': INSTALL_CCHARDET_REQUIRES,
+    },
     entry_points={
         'console_scripts': [
             'datapackage = datapackage.__main__:cli',

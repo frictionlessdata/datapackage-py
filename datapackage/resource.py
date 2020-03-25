@@ -8,7 +8,10 @@ import os
 import six
 import json
 import warnings
-import cchardet
+try:
+    from cchardet import detect
+except ImportError:
+    from chardet import detect
 import requests
 from copy import deepcopy
 from tableschema import Table, Storage
@@ -519,7 +522,7 @@ class Resource(object):
                     for chunk in stream:
                         contents += chunk
                         if len(contents) > 1000: break
-                encoding = cchardet.detect(contents)['encoding']
+                encoding = detect(contents)['encoding']
                 if encoding is not None:
                     encoding = encoding.lower()
                     descriptor['encoding'] = 'utf-8' if encoding == 'ascii' else encoding
