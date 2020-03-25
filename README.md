@@ -1459,10 +1459,11 @@ Here described only breaking and the most important changes. The full changelog 
 
 #### v1.12
 
-- `resource/package.save` now accept a `to_base_path` argument (#254)
+- Use `chardet` for encoding deteciton by default. For `cchardet`: `pip install datapackage[cchardet]`
 
 #### v1.11
 
+- `resource/package.save` now accept a `to_base_path` argument (#254)
 - `package.save` now returns a `Storage` instance if available
 
 #### v1.10
