@@ -63,6 +63,8 @@ class Package(object):
                     schema = 'tabular-data-package'
                 elif schema == 'fiscal':
                     schema = 'fiscal-data-package'
+                if descriptor is None:
+                    descriptor = {}
                 descriptor['profile'] = schema
 
         # Handle deprecated default_base_path argument
