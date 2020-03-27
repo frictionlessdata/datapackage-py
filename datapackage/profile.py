@@ -100,17 +100,15 @@ class Profile(object):
     def _load_schema(self, schema, registry):
         the_schema = schema
 
+        # For a reference:
+        # https://frictionlessdata.io/specs/profiles/
         if isinstance(schema, six.string_types):
             try:
                 the_schema = registry.get(schema)
                 if not the_schema:
-                    if os.path.isfile(schema):
-                        with open(schema, 'r') as f:
-                            the_schema = json.load(f)
-                    else:
-                        req = requests.get(schema)
-                        req.raise_for_status()
-                        the_schema = req.json()
+                    req = requests.get(schema)
+                    req.raise_for_status()
+                    the_schema = req.json()
             except (IOError, ValueError, requests.exceptions.RequestException) as ex:
                 message = 'Unable to load profile at "{0}"'
                 six.raise_from(

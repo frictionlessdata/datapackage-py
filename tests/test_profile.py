@@ -33,6 +33,7 @@ def test_init_changing_the_original_schema_dict_doesnt_change_schema():
     assert 'bar' not in schema.to_dict()
 
 
+@pytest.mark.skip('Not supported: https://frictionlessdata.io/specs/profiles/')
 def test_init_loads_schema_from_path():
     assert Profile('data/empty_schema.json').to_dict() == {}
 
