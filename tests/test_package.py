@@ -1337,6 +1337,11 @@ def test_package_save_slugify_fk_resource_name_issue_181():
         {'fields': 'lang', 'reference': {'resource': 'my_langs', 'fields': 'lang'}}
     ]
 
+
+def test_package_legacy_schema_tabular_issue_197():
+    package = Package(None, schema='tabular')
+
+
 # Fixtures
 
 @pytest.fixture
