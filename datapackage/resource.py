@@ -34,6 +34,10 @@ class Resource(object):
         strict (bool):
             strict flag to alter validation behavior.  Setting it to `true`
             leads to throwing errors on any operation with invalid descriptor
+        unsafe (bool):
+            if `True` unsafe paths will be allowed. For more inforamtion
+            https\\://specs.frictionlessdata.io/data-resource/#data-location.
+            Default to `False`
         storage (str/tableschema.Storage): storage name like `sql` or storage instance
         options (dict): storage options to use for storage creation
 
@@ -44,7 +48,7 @@ class Resource(object):
 
     # Public
 
-    def __init__(self, descriptor={}, base_path=None, strict=False, storage=None,
+    def __init__(self, descriptor={}, base_path=None, strict=False, unsafe=False, storage=None,
                  # Internal
                  package=None, **options):
 
@@ -77,6 +81,7 @@ class Resource(object):
         self.__storage = storage
         self.__relations = None
         self.__strict = strict
+        self.__unsafe = unsafe
         self.__table = None
         self.__errors = []
         self.__table_options = options
@@ -605,7 +610,7 @@ class Resource(object):
                 encoding = None
             json_target = target
             if not os.path.isabs(json_target) and to_base_path:
-                if not helpers.is_safe_path(target):
+                if not self.__unsafe and not helpers.is_safe_path(target):
                     raise exceptions.DataPackageException('Target path "%s" is not safe', target)
                 json_target = os.path.join(self.__base_path, target)
             else:
@@ -626,8 +631,9 @@ class Resource(object):
         self.__source_inspection = _inspect_source(
             self.__current_descriptor.get('data'),
             self.__current_descriptor.get('path'),
-            self.__base_path,
-            self.__storage)
+            base_path=self.__base_path,
+            unsafe=self.__unsafe,
+            storage=self.__storage)
 
         # Instantiate profile
         self.__profile = Profile(self.__current_descriptor.get('profile'))
@@ -762,7 +768,7 @@ _DIALECT_KEYS = [
 ]
 
 
-def _inspect_source(data, path, base_path, storage):
+def _inspect_source(data, path, base_path=None, unsafe=False, storage=None):
     inspection = {}
 
     # Normalize path
@@ -803,7 +809,7 @@ def _inspect_source(data, path, base_path, storage):
         else:
 
             # Path is not safe
-            if not helpers.is_safe_path(path[0]):
+            if not unsafe and not helpers.is_safe_path(path[0]):
                 raise exceptions.DataPackageException(
                     'Local path "%s" is not safe' % path[0])
 
@@ -823,7 +829,8 @@ def _inspect_source(data, path, base_path, storage):
 
     # Multipart Local/Remote
     elif len(path) > 1:
-        inspections = list(map(lambda item: _inspect_source(None, item, base_path, None), path))
+        inspect = lambda item: _inspect_source(None, item, base_path=base_path, unsafe=unsafe)
+        inspections = list(map(inspect, path))
         inspection.update(inspections[0])
         inspection['source'] = list(map(lambda item: item['source'], inspections))
         inspection['multipart'] = True

@@ -774,6 +774,17 @@ def test_local_with_resources_outside_base_path_isnt_safe(tmpfile):
         Package(tmpfile.name, {})
 
 
+def test_local_relative_parent_path_with_unsafe_option_issue_171():
+    descriptor = {'resources': [{'name': 'table', 'path': 'data/../data/table.csv'}]}
+    # unsafe=false (default)
+    with pytest.raises(exceptions.DataPackageException) as excinfo:
+        package = Package(descriptor)
+    assert 'is not safe' in str(excinfo.value)
+    # unsafe=true
+    package = Package(descriptor, unsafe=True)
+    assert package.get_resource('table').read() == [['1', 'english'], ['2', '中国人']]
+
+
 @pytest.mark.skip(reason='Wait for specs-v1.rc2 resource.data/path')
 def test_zip_with_relative_resources_paths_is_safe(datapackage_zip):
     package = Package(datapackage_zip.name, {})
