@@ -386,12 +386,13 @@ def test_source_multipart_remote_path_remote_and_base_path_remote():
 
 
 def test_source_relative_parent_path_with_unsafe_option_issue_171():
+    descriptor = {'path': 'data/../data/table.csv'}
     # unsafe=false (default)
     with pytest.raises(exceptions.DataPackageException) as excinfo:
-        resource = Resource({'path': 'data/../data/table.csv'})
+        resource = Resource(descriptor)
     assert 'is not safe' in str(excinfo.value)
     # unsafe=true
-    resource = Resource({'path': 'data/../data/table.csv'}, unsafe=True)
+    resource = Resource(descriptor, unsafe=True)
     assert resource.read() == [['1', 'english'], ['2', '中国人']]
 
 

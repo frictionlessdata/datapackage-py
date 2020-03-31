@@ -565,6 +565,7 @@ Package(self,
         descriptor=None,
         base_path=None,
         strict=False,
+        unsafe=False,
         storage=None,
         schema=None,
         default_base_path=None,
@@ -578,6 +579,10 @@ __Arguments__
 - __strict (bool)__: strict flag to alter validation behavior.
         Setting it to `True` leads to throwing errors
         on any operation with invalid descriptor
+- __unsafe (bool)__:
+        if `True` unsafe paths will be allowed. For more inforamtion
+        https://specs.frictionlessdata.io/data-resource/#data-location.
+        Default to `False`
 - __storage (str/tableschema.Storage)__: storage name like `sql` or storage instance
 - __options (dict)__: storage options to use for storage creation
 
