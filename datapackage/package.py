@@ -493,7 +493,7 @@ class Package(object):
                         path_inside_dp = os.path.join('data', basename)
                         z.write(path, path_inside_dp)
                         descriptor['resources'][index]['path'] = path_inside_dp
-                    z.writestr('datapackage.json', json.dumps(descriptor))
+                    z.writestr('datapackage.json', json.dumps(descriptor, indent=4))
             except (IOError, zipfile.BadZipfile, zipfile.LargeZipFile) as exception:
                 six.raise_from(exceptions.DataPackageException(exception), exception)
 
