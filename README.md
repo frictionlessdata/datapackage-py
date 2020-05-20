@@ -1553,6 +1553,10 @@ $ make test
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
+#### v1.14
+
+- Add experimental options for pick/skiping fileds/rows
+
 #### v1.13
 
 - Add `unsafe` option to Package and Resource (#262)
