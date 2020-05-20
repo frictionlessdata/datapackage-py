@@ -668,6 +668,8 @@ class Resource(object):
             else:
                 options = self.__table_options
                 descriptor = self.__current_descriptor
+                # TODO: this option is experimental
+                options['scheme'] = descriptor.get('scheme')
                 options['format'] = descriptor.get('format', 'csv')
                 if descriptor.get('data'):
                     options['format'] = 'inline'
@@ -676,12 +678,19 @@ class Resource(object):
                 if descriptor.get('compression'):
                     options['compression'] = descriptor['compression']
                 # TODO: these options are experimental
+                options['pick_fields'] = descriptor.get(
+                    'pickFields', options.get('pick_fields', None))
+                options['skip_fields'] = descriptor.get(
+                    'skipFields', options.get('skip_fields', None))
+                options['pick_rows'] = descriptor.get(
+                    'pickRows', options.get('pick_rows', []))
                 options['skip_rows'] = descriptor.get(
                     'skipRows', options.get('skip_rows', []))
-                options['ignore_listed_headers'] = descriptor.get(
-                    'skipColumns', options.get('ignore_listed_headers', None))
-                options['ignore_not_listed_headers'] = descriptor.get(
-                    'pickColumns', options.get('ignore_not_listed_headers', None))
+                # TODO: these options are depricated
+                options['pick_fields'] = descriptor.get(
+                    'pickColumns', options.get('pick_columns', None))
+                options['skip_fields'] = descriptor.get(
+                    'skipColumns', options.get('skip_columns', None))
                 dialect = descriptor.get('dialect')
                 if dialect:
                     if not dialect.get('header', config.DEFAULT_DIALECT['header']):
