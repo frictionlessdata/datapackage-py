@@ -857,9 +857,9 @@ class _MultipartSource(object):
         self.__rows = self.__iter_rows()
 
     def __enter__(self):
-        pass
+        return self
 
-    def __exit__(self):
+    def __exit__(self, *args, **kwargs):
         pass
 
     def __iter__(self):

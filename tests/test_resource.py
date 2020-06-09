@@ -396,6 +396,27 @@ def test_source_relative_parent_path_with_unsafe_option_issue_171():
     assert resource.read() == [['1', 'english'], ['2', '中国人']]
 
 
+def test_source_multipart_local_infer():
+    descriptor = {'path': ['data/chunk1.csv', 'data/chunk2.csv']}
+    resource = Resource(descriptor)
+    resource.infer()
+    assert resource.descriptor == {
+        'name': 'chunk1',
+        'profile': 'tabular-data-resource',
+        'path': ['data/chunk1.csv', 'data/chunk2.csv'],
+        'format': 'csv',
+        'mediatype': 'text/csv',
+        'encoding': 'utf-8',
+        'schema': {
+            'fields': [
+                {'name': 'id', 'type': 'integer', 'format': 'default'},
+                {'name': 'name', 'type': 'string', 'format': 'default'}
+            ],
+            'missingValues': ['']
+        }
+    }
+
+
 # Resource.table
 
 def test_descriptor_table():
