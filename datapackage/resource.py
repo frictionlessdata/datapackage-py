@@ -457,7 +457,7 @@ class Resource(object):
 
         # Get filelike
         if self.multipart:
-            filelike = _MultipartSource(self.source, remote=self.remote)
+            filelike = _MultipartSource(self)
         elif self.remote:
             if self.__table_options.get('http_session'):
                 http_session = self.__table_options['http_session']
@@ -657,7 +657,7 @@ class Resource(object):
             # Get source/schema
             source = self.source
             if self.multipart:
-                source = _MultipartSource(self.source, remote=self.remote)
+                source = _MultipartSource(self)
             schema = self.__current_descriptor.get('schema')
 
             # Storage resource
@@ -851,9 +851,17 @@ class _MultipartSource(object):
 
     # Public
 
-    def __init__(self, source, remote=False):
-        self.__source = source
-        self.__remote = remote
+    def __init__(self, resource):
+        # testing if we have headers
+        if resource.tabular \
+           and (resource.descriptor.get('dialect') and resource.descriptor.get('dialect').get('header')
+               or (not resource.descriptor.get('dialect') and config.DEFAULT_DIALECT['header'])):
+            remove_chunk_header_row = True
+        else:
+            remove_chunk_header_row = False
+        self.__source = resource.source
+        self.__remote = resource.remote
+        self.__remove_chunk_header_row = remove_chunk_header_row
         self.__rows = self.__iter_rows()
 
     def __enter__(self):
@@ -910,8 +918,30 @@ class _MultipartSource(object):
             streams = (urlopen(chunk) for chunk in self.__source)
         else:
             streams = (io.open(chunk, 'rb') for chunk in self.__source)
-        for stream in streams:
+        firstStream = True
+        header_row = None
+        for stream, chunk in zip(streams, self.__source):
+            firstRow = True
             for row in stream:
                 if not row.endswith(b'\n'):
                     row += b'\n'
-                yield row
+                # if tabular, skip header row in the concatenation stream
+                if firstRow and self.__remove_chunk_header_row:
+                    if firstStream:
+                        # store the first stream header row and yield it
+                        header_row = row
+                        yield row
+                    elif row == header_row:
+                        # remove header row of new stream is same as header from first stream
+                        pass
+                    else:
+                        # yield this first row but warn the user for deprecated situation
+                        # TODO: this warning might be removed in future releases ?
+                        warnings.warn("""%s has no headers whereas header = True.
+                            Deprecated legacy multi-part mode for tabular data.
+                            Headers will be required in chunks/multiparts in future."""%chunk, UserWarning)
+                        yield row
+                else:
+                    yield row
+                firstRow = False
+            firstStream = False
