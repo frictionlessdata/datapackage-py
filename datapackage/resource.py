@@ -933,7 +933,7 @@ class _MultipartSource(object):
                         yield row
                     elif row == header_row:
                         # remove header row of new stream is same as header from first stream
-                        continue
+                        pass
                     else:
                         # yield this first row but warn the user for deprecated situation
                         # TODO: this warning might be removed in future releases ?
