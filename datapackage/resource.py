@@ -920,7 +920,7 @@ class _MultipartSource(object):
             streams = [io.open(chunk, 'rb') for chunk in self.__source]
         firstStream = True
         header_row = None
-        for stream in streams:
+        for stream, chunk in zip(streams, self.__source):
             firstRow = True
             for row in stream:
                 if not row.endswith(b'\n'):
@@ -937,9 +937,9 @@ class _MultipartSource(object):
                     else:
                         # yield this first row but warn the user for deprecated situation
                         # TODO: this warning might be removed in future releases ?
-                        warnings.warn("""Chunks with no headers whereas header = True.
+                        warnings.warn("""%s has no headers whereas header = True.
                             Deprecated legacy multi-part mode for tabular data.
-                            Headers will be required in chunks/multiparts in future.""", UserWarning)
+                            Headers will be required in chunks/multiparts in future."""%chunk, UserWarning)
                         yield row
                 else:
                     yield row
