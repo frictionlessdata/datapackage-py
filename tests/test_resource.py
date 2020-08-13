@@ -504,6 +504,23 @@ def test_descriptor_table_tabular_multipart_noheader_local():
         {'id': 2, 'name': '中国人'},
     ]
 
+# test warning on legacy multipart header
+# TODO: to remove in future release ?
+def test_descriptor_table_tabular_multipart_mix_header_local():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': ['chunk1.csv', 'chunk2.csv'],
+        'schema': 'resource_schema.json',
+        'dialect': {'header': True},
+    }
+    with pytest.warns(UserWarning):
+        resource = Resource(descriptor, base_path='data')
+        assert resource.table.read(keyed=True) == [
+            {'id': 1, 'name': 'english'},
+            {'id': 2, 'name': '中国人'},
+        ]
+
 def test_descriptor_table_tabular_multipart_remote(patch_get):
     descriptor = {
         'name': 'name',

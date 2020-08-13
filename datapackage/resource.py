@@ -919,15 +919,28 @@ class _MultipartSource(object):
         else:
             streams = [io.open(chunk, 'rb') for chunk in self.__source]
         firstStream = True
+        header_row = None
         for stream in streams:
             firstRow = True
             for row in stream:
                 if not row.endswith(b'\n'):
                     row += b'\n'
                 # if tabular, skip header row in the concatenation stream
-                if firstRow and self.__remove_chunk_header_row and not firstStream:
-                    # remove header row
-                    pass
+                if firstRow and self.__remove_chunk_header_row:
+                    if firstStream:
+                        # store the first stream header row and yield it
+                        header_row = row
+                        yield row
+                    elif row == header_row:
+                        # remove header row of new stream is same as header from first stream
+                        continue
+                    else:
+                        # yield this first row but warn the user for deprecated situation
+                        # TODO: this warning might be removed in future releases ?
+                        warnings.warn("""Chunks with no headers whereas header = True.
+                            Deprecated legacy multi-part mode for tabular data.
+                            Headers will be required in chunks/multiparts in future.""", UserWarning)
+                        yield row
                 else:
                     yield row
                 firstRow = False
