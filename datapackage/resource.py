@@ -8,7 +8,10 @@ import os
 import six
 import json
 import warnings
-import cchardet
+try:
+    from cchardet import detect
+except ImportError:
+    from chardet import detect
 import requests
 from copy import deepcopy
 from tableschema import Table, Storage
@@ -31,6 +34,10 @@ class Resource(object):
         strict (bool):
             strict flag to alter validation behavior.  Setting it to `true`
             leads to throwing errors on any operation with invalid descriptor
+        unsafe (bool):
+            if `True` unsafe paths will be allowed. For more inforamtion
+            https\\://specs.frictionlessdata.io/data-resource/#data-location.
+            Default to `False`
         storage (str/tableschema.Storage): storage name like `sql` or storage instance
         options (dict): storage options to use for storage creation
 
@@ -41,7 +48,7 @@ class Resource(object):
 
     # Public
 
-    def __init__(self, descriptor={}, base_path=None, strict=False, storage=None,
+    def __init__(self, descriptor={}, base_path=None, strict=False, unsafe=False, storage=None,
                  # Internal
                  package=None, **options):
 
@@ -74,6 +81,7 @@ class Resource(object):
         self.__storage = storage
         self.__relations = None
         self.__strict = strict
+        self.__unsafe = unsafe
         self.__table = None
         self.__errors = []
         self.__table_options = options
@@ -519,7 +527,7 @@ class Resource(object):
                     for chunk in stream:
                         contents += chunk
                         if len(contents) > 1000: break
-                encoding = cchardet.detect(contents)['encoding']
+                encoding = detect(contents)['encoding']
                 if encoding is not None:
                     encoding = encoding.lower()
                     descriptor['encoding'] = 'utf-8' if encoding == 'ascii' else encoding
@@ -602,7 +610,7 @@ class Resource(object):
                 encoding = None
             json_target = target
             if not os.path.isabs(json_target) and to_base_path:
-                if not helpers.is_safe_path(target):
+                if not self.__unsafe and not helpers.is_safe_path(target):
                     raise exceptions.DataPackageException('Target path "%s" is not safe', target)
                 json_target = os.path.join(self.__base_path, target)
             else:
@@ -623,8 +631,9 @@ class Resource(object):
         self.__source_inspection = _inspect_source(
             self.__current_descriptor.get('data'),
             self.__current_descriptor.get('path'),
-            self.__base_path,
-            self.__storage)
+            base_path=self.__base_path,
+            unsafe=self.__unsafe,
+            storage=self.__storage)
 
         # Instantiate profile
         self.__profile = Profile(self.__current_descriptor.get('profile'))
@@ -659,6 +668,8 @@ class Resource(object):
             else:
                 options = self.__table_options
                 descriptor = self.__current_descriptor
+                # TODO: this option is experimental
+                options['scheme'] = descriptor.get('scheme')
                 options['format'] = descriptor.get('format', 'csv')
                 if descriptor.get('data'):
                     options['format'] = 'inline'
@@ -667,12 +678,19 @@ class Resource(object):
                 if descriptor.get('compression'):
                     options['compression'] = descriptor['compression']
                 # TODO: these options are experimental
+                options['pick_fields'] = descriptor.get(
+                    'pickFields', options.get('pick_fields', None))
+                options['skip_fields'] = descriptor.get(
+                    'skipFields', options.get('skip_fields', None))
+                options['pick_rows'] = descriptor.get(
+                    'pickRows', options.get('pick_rows', []))
                 options['skip_rows'] = descriptor.get(
                     'skipRows', options.get('skip_rows', []))
-                options['ignore_listed_headers'] = descriptor.get(
-                    'skipColumns', options.get('ignore_listed_headers', None))
-                options['ignore_not_listed_headers'] = descriptor.get(
-                    'pickColumns', options.get('ignore_not_listed_headers', None))
+                # TODO: these options are depricated
+                options['pick_fields'] = descriptor.get(
+                    'pickColumns', options.get('pick_columns', None))
+                options['skip_fields'] = descriptor.get(
+                    'skipColumns', options.get('skip_columns', None))
                 dialect = descriptor.get('dialect')
                 if dialect:
                     if not dialect.get('header', config.DEFAULT_DIALECT['header']):
@@ -759,7 +777,7 @@ _DIALECT_KEYS = [
 ]
 
 
-def _inspect_source(data, path, base_path, storage):
+def _inspect_source(data, path, base_path=None, unsafe=False, storage=None):
     inspection = {}
 
     # Normalize path
@@ -800,7 +818,7 @@ def _inspect_source(data, path, base_path, storage):
         else:
 
             # Path is not safe
-            if not helpers.is_safe_path(path[0]):
+            if not unsafe and not helpers.is_safe_path(path[0]):
                 raise exceptions.DataPackageException(
                     'Local path "%s" is not safe' % path[0])
 
@@ -820,7 +838,8 @@ def _inspect_source(data, path, base_path, storage):
 
     # Multipart Local/Remote
     elif len(path) > 1:
-        inspections = list(map(lambda item: _inspect_source(None, item, base_path, None), path))
+        inspect = lambda item: _inspect_source(None, item, base_path=base_path, unsafe=unsafe)
+        inspections = list(map(inspect, path))
         inspection.update(inspections[0])
         inspection['source'] = list(map(lambda item: item['source'], inspections))
         inspection['multipart'] = True
@@ -846,9 +865,9 @@ class _MultipartSource(object):
         self.__rows = self.__iter_rows()
 
     def __enter__(self):
-        pass
+        return self
 
-    def __exit__(self):
+    def __exit__(self, *args, **kwargs):
         pass
 
     def __iter__(self):

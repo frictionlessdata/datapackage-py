@@ -385,6 +385,38 @@ def test_source_multipart_remote_path_remote_and_base_path_remote():
     assert resource.multipart == True
 
 
+def test_source_relative_parent_path_with_unsafe_option_issue_171():
+    descriptor = {'path': 'data/../data/table.csv'}
+    # unsafe=false (default)
+    with pytest.raises(exceptions.DataPackageException) as excinfo:
+        resource = Resource(descriptor)
+    assert 'is not safe' in str(excinfo.value)
+    # unsafe=true
+    resource = Resource(descriptor, unsafe=True)
+    assert resource.read() == [['1', 'english'], ['2', '中国人']]
+
+
+def test_source_multipart_local_infer():
+    descriptor = {'path': ['data/chunk1.csv', 'data/chunk2.csv']}
+    resource = Resource(descriptor)
+    resource.infer()
+    assert resource.descriptor == {
+        'name': 'chunk1',
+        'profile': 'tabular-data-resource',
+        'path': ['data/chunk1.csv', 'data/chunk2.csv'],
+        'format': 'csv',
+        'mediatype': 'text/csv',
+        'encoding': 'utf-8',
+        'schema': {
+            'fields': [
+                {'name': 'id', 'type': 'integer', 'format': 'default'},
+                {'name': 'name', 'type': 'string', 'format': 'default'}
+            ],
+            'missingValues': ['']
+        }
+    }
+
+
 # Resource.table
 
 def test_descriptor_table():
@@ -518,6 +550,20 @@ def test_resource_options_skip_rows():
         'schema': 'resource_schema.json',
     }
     resource = Resource(descriptor, base_path='data', skip_rows=[2])
+    assert resource.table.read(keyed=True) == [
+        {'id': 2, 'name': '中国人'},
+    ]
+
+
+def test_resource_options_skip_rows_in_descriptor():
+    descriptor = {
+        'name': 'name',
+        'profile': 'tabular-data-resource',
+        'path': 'resource_data.csv',
+        'schema': 'resource_schema.json',
+        'skipRows': [2],
+    }
+    resource = Resource(descriptor, base_path='data')
     assert resource.table.read(keyed=True) == [
         {'id': 2, 'name': '中国人'},
     ]

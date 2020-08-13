@@ -26,12 +26,11 @@ readme:
 	pip install md-toc
 	pip install referencer
 	referencer $(PACKAGE) README.md --in-place
-	md_toc -p README.md github --header-levels 3
+	md_toc -p github --header-levels 3 README.md
 	sed -i '/(#$(PACKAGE)-py)/,+2d' README.md
 
 release:
-	git checkout master && git pull origin && git fetch -p && git diff
-	@echo "\nContinuing in 10 seconds. Press <CTRL+C> to abort\n" && sleep 10
+	git checkout master && git pull origin && git fetch -p
 	@git log --pretty=format:"%C(yellow)%h%Creset %s%Cgreen%d" --reverse -20
 	@echo "\nReleasing v$(VERSION) in 10 seconds. Press <CTRL+C> to abort\n" && sleep 10
 	git commit -a -m 'v$(VERSION)' && git tag -a v$(VERSION) -m 'v$(VERSION)'

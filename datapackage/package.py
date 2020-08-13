@@ -36,6 +36,10 @@ class Package(object):
         strict (bool): strict flag to alter validation behavior.
             Setting it to `True` leads to throwing errors
             on any operation with invalid descriptor
+        unsafe (bool):
+            if `True` unsafe paths will be allowed. For more inforamtion
+            https\\://specs.frictionlessdata.io/data-resource/#data-location.
+            Default to `False`
         storage (str/tableschema.Storage): storage name like `sql` or storage instance
         options (dict): storage options to use for storage creation
 
@@ -46,7 +50,7 @@ class Package(object):
 
     # Public
 
-    def __init__(self, descriptor=None, base_path=None, strict=False, storage=None,
+    def __init__(self, descriptor=None, base_path=None, strict=False, unsafe=False, storage=None,
                  # Deprecated
                  schema=None, default_base_path=None, **options):
 
@@ -63,6 +67,8 @@ class Package(object):
                     schema = 'tabular-data-package'
                 elif schema == 'fiscal':
                     schema = 'fiscal-data-package'
+                if descriptor is None:
+                    descriptor = {}
                 descriptor['profile'] = schema
 
         # Handle deprecated default_base_path argument
@@ -112,6 +118,7 @@ class Package(object):
         self.__base_path = base_path
         self.__storage = storage
         self.__strict = strict
+        self.__unsafe = unsafe
         self.__resources = []
         self.__errors = []
 
@@ -460,7 +467,7 @@ class Package(object):
                 encoding = None
             json_target = target
             if not os.path.isabs(json_target) and to_base_path:
-                if not helpers.is_safe_path(target):
+                if not self.__unsafe and not helpers.is_safe_path(target):
                     raise exceptions.DataPackageException('Target path "%s" is not safe', target)
                 json_target = os.path.join(self.__base_path, target)
             else:
@@ -486,7 +493,7 @@ class Package(object):
                         path_inside_dp = os.path.join('data', basename)
                         z.write(path, path_inside_dp)
                         descriptor['resources'][index]['path'] = path_inside_dp
-                    z.writestr('datapackage.json', json.dumps(descriptor))
+                    z.writestr('datapackage.json', json.dumps(descriptor, indent=4))
             except (IOError, zipfile.BadZipfile, zipfile.LargeZipFile) as exception:
                 six.raise_from(exceptions.DataPackageException(exception), exception)
 
@@ -525,8 +532,9 @@ class Package(object):
             if (not resource or resource.descriptor != descriptor or
                     (resource.schema and resource.schema.foreign_keys)):
                 updated_resource = Resource(descriptor,
-                    strict=self.__strict,
                     base_path=self.__base_path,
+                    strict=self.__strict,
+                    unsafe=self.__unsafe,
                     storage=self.__storage,
                     package=self)
                 if not resource:

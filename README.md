@@ -561,7 +561,15 @@ Commands:
 
 ### `Package`
 ```python
-Package(self, descriptor=None, base_path=None, strict=False, storage=None, schema=None, default_base_path=None, **options)
+Package(self,
+        descriptor=None,
+        base_path=None,
+        strict=False,
+        unsafe=False,
+        storage=None,
+        schema=None,
+        default_base_path=None,
+        **options)
 ```
 Package representation
 
@@ -571,11 +579,16 @@ __Arguments__
 - __strict (bool)__: strict flag to alter validation behavior.
         Setting it to `True` leads to throwing errors
         on any operation with invalid descriptor
+- __unsafe (bool)__:
+        if `True` unsafe paths will be allowed. For more inforamtion
+        https://specs.frictionlessdata.io/data-resource/#data-location.
+        Default to `False`
 - __storage (str/tableschema.Storage)__: storage name like `sql` or storage instance
 - __options (dict)__: storage options to use for storage creation
 
 __Raises__
 - `DataPackageException`: raises error if something goes wrong
+
 
 
 #### `package.base_path`
@@ -586,12 +599,14 @@ __Returns__
 `str/None`: returns the data package base path
 
 
+
 #### `package.descriptor`
 Package's descriptor
 
 __Returns__
 
 `dict`: descriptor
+
 
 
 #### `package.errors`
@@ -604,12 +619,14 @@ __Returns__
 `Exception[]`: validation errors
 
 
+
 #### `package.profile`
 Package's profile
 
 __Returns__
 
 `Profile`: an instance of `Profile` class
+
 
 
 #### `package.resource_names`
@@ -620,12 +637,14 @@ __Returns__
 `str[]`: returns an array of resource names
 
 
+
 #### `package.resources`
 Package's resources
 
 __Returns__
 
 `Resource[]`: returns an array of `Resource` instances
+
 
 
 #### `package.valid`
@@ -638,9 +657,10 @@ __Returns__
 `bool`: validation status
 
 
+
 #### `package.get_resource`
 ```python
-package.get_resource(self, name)
+package.get_resource(name)
 ```
 Get data package resource by name.
 
@@ -652,9 +672,10 @@ __Returns__
 `Resource/None`: returns `Resource` instances or null if not found
 
 
+
 #### `package.add_resource`
 ```python
-package.add_resource(self, descriptor)
+package.add_resource(descriptor)
 ```
 Add new resource to data package.
 
@@ -671,9 +692,10 @@ __Returns__
 `Resource/None`: returns added `Resource` instance or null if not added
 
 
+
 #### `package.remove_resource`
 ```python
-package.remove_resource(self, name)
+package.remove_resource(name)
 ```
 Remove data package resource by name.
 
@@ -690,9 +712,10 @@ __Returns__
 `Resource/None`: returns removed `Resource` instances or null if not found
 
 
+
 #### `package.get_group`
 ```python
-package.get_group(self, name)
+package.get_group(name)
 ```
 Returns a group of tabular resources by name.
 
@@ -709,9 +732,10 @@ __Returns__
 `Group/None`: returns a `Group` instance or null if not found
 
 
+
 #### `package.infer`
 ```python
-package.infer(self, pattern=False)
+package.infer(pattern=False)
 ```
 Infer a data package metadata.
 
@@ -730,9 +754,10 @@ __Returns__
 `dict`: returns data package descriptor
 
 
+
 #### `package.commit`
 ```python
-package.commit(self, strict=None)
+package.commit(strict=None)
 ```
 Update data package instance if there are in-place changes in the descriptor.
 
@@ -763,9 +788,14 @@ __Returns__
 `bool`: returns true on success and false if not modified
 
 
+
 #### `package.save`
 ```python
-package.save(self, target=None, storage=None, merge_groups=False, to_base_path=False, **options)
+package.save(target=None,
+             storage=None,
+             merge_groups=False,
+             to_base_path=False,
+             **options)
 ```
 Saves this data package
 
@@ -832,7 +862,14 @@ __Returns__
 
 ### `Resource`
 ```python
-Resource(self, descriptor={}, base_path=None, strict=False, storage=None, package=None, **options)
+Resource(self,
+         descriptor={},
+         base_path=None,
+         strict=False,
+         unsafe=False,
+         storage=None,
+         package=None,
+         **options)
 ```
 Resource represenation
 
@@ -842,6 +879,10 @@ __Arguments__
 - __strict (bool)__:
         strict flag to alter validation behavior.  Setting it to `true`
         leads to throwing errors on any operation with invalid descriptor
+- __unsafe (bool)__:
+        if `True` unsafe paths will be allowed. For more inforamtion
+        https://specs.frictionlessdata.io/data-resource/#data-location.
+        Default to `False`
 - __storage (str/tableschema.Storage)__: storage name like `sql` or storage instance
 - __options (dict)__: storage options to use for storage creation
 
@@ -849,8 +890,10 @@ __Raises__
 - `DataPackageException`: raises error if something goes wrong
 
 
+
 #### `resource.data`
 Return resource data
+
 
 #### `resource.descriptor`
 Package's descriptor
@@ -858,6 +901,7 @@ Package's descriptor
 __Returns__
 
 `dict`: descriptor
+
 
 
 #### `resource.errors`
@@ -870,12 +914,14 @@ __Returns__
 `Exception[]`: validation errors
 
 
+
 #### `resource.group`
 Group name
 
 __Returns__
 
 `str`: group name
+
 
 
 #### `resource.headers`
@@ -888,12 +934,14 @@ __Returns__
 `str[]/None`: returns data source headers
 
 
+
 #### `resource.inline`
 Whether resource inline
 
 __Returns__
 
 `bool`: returns true if resource is inline
+
 
 
 #### `resource.local`
@@ -904,12 +952,14 @@ __Returns__
 `bool`: returns true if resource is local
 
 
+
 #### `resource.multipart`
 Whether resource multipart
 
 __Returns__
 
 `bool`: returns true if resource is multipart
+
 
 
 #### `resource.name`
@@ -920,12 +970,14 @@ __Returns__
 `str`: name
 
 
+
 #### `resource.package`
 Package instance if the resource belongs to some package
 
 __Returns__
 
 `Package/None`: a package instance if available
+
 
 
 #### `resource.profile`
@@ -936,12 +988,14 @@ __Returns__
 `Profile`: an instance of `Profile` class
 
 
+
 #### `resource.remote`
 Whether resource remote
 
 __Returns__
 
 `bool`: returns true if resource is remote
+
 
 
 #### `resource.schema`
@@ -957,6 +1011,7 @@ __Returns__
 `tableschema.Schema`: schema
 
 
+
 #### `resource.source`
 Resource's source
 
@@ -968,8 +1023,10 @@ __Returns__
 `list/str`: returns `data` or `path` property
 
 
+
 #### `resource.table`
 Return resource table
+
 
 #### `resource.tabular`
 Whether resource tabular
@@ -977,6 +1034,7 @@ Whether resource tabular
 __Returns__
 
 `bool`: returns true if resource is tabular
+
 
 
 #### `resource.valid`
@@ -989,9 +1047,10 @@ __Returns__
 `bool`: validation status
 
 
+
 #### `resource.iter`
 ```python
-resource.iter(self, integrity=False, relations=False, **options)
+resource.iter(integrity=False, relations=False, **options)
 ```
 Iterates through the resource data and emits rows cast based on table schema.
 
@@ -999,28 +1058,35 @@ Iterates through the resource data and emits rows cast based on table schema.
 
 __Arguments__
 
-- __keyed (bool)__:
+
+    keyed (bool):
         yield keyed rows in a form of `{header1: value1, header2: value2}`
         (default is false; the form of rows is `[value1, value2]`)
-- __extended (bool)__:
+
+    extended (bool):
         yield extended rows in a for of `[rowNumber, [header1, header2], [value1, value2]]`
         (default is false; the form of rows is `[value1, value2]`)
-- __cast (bool)__:
+
+    cast (bool):
         disable data casting if false
         (default is true)
-- __integrity (bool)__:
+
+    integrity (bool):
         if true actual size in BYTES and SHA256 hash of the file
         will be checked against `descriptor.bytes` and `descriptor.hash`
         (other hashing algorithms are not supported and will be skipped silently)
-- __relations (bool)__:
+
+    relations (bool):
         if true foreign key fields will be checked and resolved to its references
-- __foreign_keys_values (dict)__:
+
+    foreign_keys_values (dict):
         three-level dictionary of foreign key references optimized
         to speed up validation process in a form of
         `{resource1: {(fk_field1, fk_field2): {(value1, value2): {one_keyedrow}, ... }}}`.
         If not provided but relations is true, it will be created
         before the validation process by *index_foreign_keys_values* method
-- __exc_handler (func)__:
+
+    exc_handler (func):
         optional custom exception handler callable.
         Can be used to defer raising errors (i.e. "fail late"), e.g.
         for data validation purposes. Must support the signature below
@@ -1059,9 +1125,13 @@ __Returns__
 `Iterator[list]`: yields rows
 
 
+
 #### `resource.read`
 ```python
-resource.read(self, integrity=False, relations=False, foreign_keys_values=False, **options)
+resource.read(integrity=False,
+              relations=False,
+              foreign_keys_values=False,
+              **options)
 ```
 Read the whole resource and return as array of rows
 
@@ -1076,9 +1146,10 @@ __Returns__
 `list[]`: returns rows
 
 
+
 #### `resource.check_integrity`
 ```python
-resource.check_integrity(self)
+resource.check_integrity()
 ```
 Checks resource integrity
 
@@ -1096,9 +1167,10 @@ __Returns__
 `bool`: returns True if no issues
 
 
+
 #### `resource.check_relations`
 ```python
-resource.check_relations(self, foreign_keys_values=False)
+resource.check_relations(foreign_keys_values=False)
 ```
 Check relations
 
@@ -1114,9 +1186,10 @@ __Returns__
 `bool`: returns True if no issues
 
 
+
 #### `resource.drop_relations`
 ```python
-resource.drop_relations(self)
+resource.drop_relations()
 ```
 Drop relations
 
@@ -1129,9 +1202,10 @@ __Returns__
 `bool`: returns True
 
 
+
 #### `resource.raw_iter`
 ```python
-resource.raw_iter(self, stream=False)
+resource.raw_iter(stream=False)
 ```
 Iterate over data chunks as bytes.
 
@@ -1145,9 +1219,10 @@ __Returns__
 `bytes[]/filelike`: returns bytes[]/filelike
 
 
+
 #### `resource.raw_read`
 ```python
-resource.raw_read(self)
+resource.raw_read()
 ```
 Returns resource data as bytes.
 
@@ -1156,9 +1231,10 @@ __Returns__
 `bytes`: returns resource data in bytes
 
 
+
 #### `resource.infer`
 ```python
-resource.infer(self, **options)
+resource.infer(**options)
 ```
 Infer resource metadata
 
@@ -1175,9 +1251,10 @@ __Returns__
 `dict`: returns resource descriptor
 
 
+
 #### `resource.commit`
 ```python
-resource.commit(self, strict=None)
+resource.commit(strict=None)
 ```
 Update resource instance if there are in-place changes in the descriptor.
 
@@ -1192,9 +1269,10 @@ __Returns__
 `bool`: returns true on success and false if not modified
 
 
+
 #### `resource.save`
 ```python
-resource.save(self, target, storage=None, to_base_path=False, **options)
+resource.save(target, storage=None, to_base_path=False, **options)
 ```
 Saves this resource
 
@@ -1231,12 +1309,14 @@ __Arguments__
 - __Resource[]__: list of TABULAR resources
 
 
+
 #### `group.headers`
 Group's headers
 
 __Returns__
 
 `str[]/None`: returns headers
+
 
 
 #### `group.name`
@@ -1247,6 +1327,7 @@ __Returns__
 `str`: name
 
 
+
 #### `group.schema`
 Resource's schema
 
@@ -1255,27 +1336,30 @@ __Returns__
 `tableschema.Schema`: schema
 
 
+
 #### `group.iter`
 ```python
-group.iter(self, **options)
+group.iter(**options)
 ```
 Iterates through the group data and emits rows cast based on table schema.
 
 > It concatenates all the resources and has the same API as `resource.iter`
 
 
+
 #### `group.read`
 ```python
-group.read(self, limit=None, **options)
+group.read(limit=None, **options)
 ```
 Read the whole group and return as array of rows
 
 > It concatenates all the resources and has the same API as `resource.read`
 
 
+
 #### `group.check_relations`
 ```python
-group.check_relations(self)
+group.check_relations()
 ```
 Check group's relations
 
@@ -1298,12 +1382,14 @@ __Raises__
 - `DataPackageException`: raises error if something goes wrong
 
 
+
 #### `profile.jsonschema`
 JSONSchema content
 
 __Returns__
 
 `dict`: returns profile's JSON Schema contents
+
 
 
 #### `profile.name`
@@ -1314,9 +1400,10 @@ __Returns__
 `str/None`: name if available
 
 
+
 #### `profile.validate`
 ```python
-profile.validate(self, descriptor)
+profile.validate(descriptor)
 ```
 Validate a data package `descriptor` against the profile.
 
@@ -1384,12 +1471,14 @@ except DataPackageException as exception:
 ```
 
 
+
 #### `datapackageexception.errors`
 List of nested errors
 
 __Returns__
 
 `DataPackageException[]`: list of nested errors
+
 
 
 #### `datapackageexception.multiple`
@@ -1400,11 +1489,13 @@ __Returns__
 `bool`: whether it's a nested exception
 
 
+
 ### `TableSchemaException`
 ```python
 TableSchemaException(self, message, errors=[])
 ```
 Base class for all TableSchema exceptions.
+
 
 ### `LoadError`
 ```python
@@ -1412,11 +1503,13 @@ LoadError(self, message, errors=[])
 ```
 All loading errors.
 
+
 ### `CastError`
 ```python
 CastError(self, message, errors=[])
 ```
 All value cast errors.
+
 
 ### `IntegrityError`
 ```python
@@ -1424,17 +1517,20 @@ IntegrityError(self, message, errors=[])
 ```
 All integrity errors.
 
+
 ### `RelationError`
 ```python
 RelationError(self, message, errors=[])
 ```
 All relations errors.
 
+
 ### `StorageError`
 ```python
 StorageError(self, message, errors=[])
 ```
 All storage errors.
+
 
 ## Contributing
 
@@ -1457,8 +1553,21 @@ $ make test
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
+#### v1.14
+
+- Add experimental options for pick/skiping fileds/rows
+
+#### v1.13
+
+- Add `unsafe` option to Package and Resource (#262)
+
+#### v1.12
+
+- Use `chardet` for encoding deteciton by default. For `cchardet`: `pip install datapackage[cchardet]`
+
 #### v1.11
 
+- `resource/package.save` now accept a `to_base_path` argument (#254)
 - `package.save` now returns a `Storage` instance if available
 
 #### v1.10
