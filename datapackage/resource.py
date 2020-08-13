@@ -907,9 +907,9 @@ class _MultipartSource(object):
     def __iter_rows(self):
         streams = []
         if self.__remote:
-            streams = [urlopen(chunk) for chunk in self.__source]
+            streams = (urlopen(chunk) for chunk in self.__source)
         else:
-            streams = [io.open(chunk, 'rb') for chunk in self.__source]
+            streams = (io.open(chunk, 'rb') for chunk in self.__source)
         for stream in streams:
             for row in stream:
                 if not row.endswith(b'\n'):
