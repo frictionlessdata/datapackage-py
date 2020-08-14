@@ -1553,6 +1553,15 @@ $ make test
 
 Here described only breaking and the most important changes. The full changelog and documentation for all released versions could be found in nicely formatted [commit history](https://github.com/frictionlessdata/datapackage-py/commits/master).
 
+#### v1.15
+
+> WARNING: it can be breaking for some setups, please read the discussions below
+
+- Fixed header management according to the specs:
+    - https://github.com/frictionlessdata/datapackage-py/pull/257
+    - https://github.com/frictionlessdata/datapackage-py/issues/256
+    - https://github.com/frictionlessdata/forum/issues/1
+
 #### v1.14
 
 - Add experimental options for pick/skiping fileds/rows
