@@ -939,7 +939,7 @@ class _MultipartSource(object):
                         # TODO: this warning might be removed in future releases ?
                         warnings.warn("""%s has no headers whereas header = True.
                             Deprecated legacy multi-part mode for tabular data.
-                            Headers will be required in chunks/multiparts in future."""%chunk, UserWarning)
+                            Headers will be required in chunks/multiparts in future.""" % chunk, UserWarning)
                         yield row
                 else:
                     yield row
