@@ -42,7 +42,7 @@ templates:
 
 test:
 	pylama $(PACKAGE)
-	tox
+	pytest --cov ${PACKAGE} --cov-report term-missing --cov-fail-under 90
 
 version:
 	@echo $(VERSION)

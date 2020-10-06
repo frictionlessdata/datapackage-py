@@ -41,7 +41,6 @@ TESTS_REQUIRE = [
     'pytest-cov',
     'httpretty',
     'tableschema-sql',
-    'tox',
 ]
 README = read('README.md')
 VERSION = read(PACKAGE, 'VERSION')
