@@ -854,7 +854,7 @@ __Arguments__
         Read more about [Group](#group).
 - __to_base_path (bool)__:
         save the package to the package's base path
-        using the "<base_path>/<target>" route
+        using the "\<base_path\>/\<target\>" route
 - __options (dict)__:
         storage options to use for storage creation
 
@@ -1291,7 +1291,7 @@ __Arguments__
         storage name like `sql` or storage instance
 - __to_base_path (bool)__:
         save the resource to the resource's base path
-        using the "<base_path>/<target>" route
+        using the "\<base_path\>/\<target\>" route
 - __options (dict)__:
         storage options to use for storage creation
 
