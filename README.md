@@ -1,10 +1,10 @@
 # datapackage-py
 
-[![Travis](https://travis-ci.org/frictionlessdata/datapackage-py.svg?branch=master)](https://travis-ci.org/frictionlessdata/datapackage-py)
-[![Coveralls](https://coveralls.io/repos/github/frictionlessdata/datapackage-py/badge.svg?branch=master)](https://coveralls.io/github/frictionlessdata/datapackage-py?branch=master)
-[![PyPi](https://img.shields.io/pypi/v/datapackage.svg)](https://pypi.python.org/pypi/datapackage)
+[![Build](https://img.shields.io/github/workflow/status/frictionlessdata/datapackage-py/general/main)](https://github.com/frictionlessdata/datapackage-py/actions)
+[![Coverage](http://img.shields.io/coveralls/frictionlessdata/datapackage-py.svg?branch=master)](https://coveralls.io/r/frictionlessdata/datapackage-py?branch=master)
+[![Release](https://img.shields.io/pypi/v/datapackage.svg)](https://pypi.python.org/pypi/datapackage)
 [![Codebase](https://img.shields.io/badge/codebase-github-brightgreen)](https://github.com/frictionlessdata/datapackage-py)
-[![Support](https://img.shields.io/badge/support-discord-brightgreen)](https://discordapp.com/invite/Sewv6av)
+[![Support](https://img.shields.io/badge/support-discord-brightgreen)](https://discord.com/channels/695635777199145130/695635777199145133)
 
 A library for working with [Data Packages](http://specs.frictionlessdata.io/data-package/).
 
