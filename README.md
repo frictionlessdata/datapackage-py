@@ -4,7 +4,7 @@
 [![Coverage](https://img.shields.io/codecov/c/github/frictionlessdata/datapackage-py/main)](https://codecov.io/gh/frictionlessdata/datapackage-py)
 [![Release](https://img.shields.io/pypi/v/datapackage.svg)](https://pypi.python.org/pypi/datapackage)
 [![Codebase](https://img.shields.io/badge/codebase-github-brightgreen)](https://github.com/frictionlessdata/datapackage-py)
-[![Support](https://img.shields.io/badge/support-discord-brightgreen)](https://discord.com/channels/695635777199145130/695635777199145133)
+[![Support](https://img.shields.io/badge/support-discord-brightgreen)](https://discordapp.com/invite/Sewv6av)
 
 A library for working with [Data Packages](http://specs.frictionlessdata.io/data-package/).
 
