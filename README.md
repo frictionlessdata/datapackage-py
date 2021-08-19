@@ -1,7 +1,7 @@
 # datapackage-py
 
 [![Build](https://img.shields.io/github/workflow/status/frictionlessdata/datapackage-py/general/main)](https://github.com/frictionlessdata/datapackage-py/actions)
-[![Coverage](http://img.shields.io/coveralls/frictionlessdata/datapackage-py.svg?branch=master)](https://coveralls.io/r/frictionlessdata/datapackage-py?branch=master)
+[![Coverage](https://img.shields.io/codecov/c/github/frictionlessdata/datapackage-py/main)](https://codecov.io/gh/frictionlessdata/datapackage-py)
 [![Release](https://img.shields.io/pypi/v/datapackage.svg)](https://pypi.python.org/pypi/datapackage)
 [![Codebase](https://img.shields.io/badge/codebase-github-brightgreen)](https://github.com/frictionlessdata/datapackage-py)
 [![Support](https://img.shields.io/badge/support-discord-brightgreen)](https://discord.com/channels/695635777199145130/695635777199145133)
