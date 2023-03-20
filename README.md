@@ -8,6 +8,8 @@
 
 A library for working with [Data Packages](http://specs.frictionlessdata.io/data-package/).
 
+> **[Important Notice]** We have released [Frictionless Framework](https://github.com/frictionlessdata/framework). This framework provides improved `datapackage` functionality extended to be a complete data solution. The change in not breaking for the existing software so no actions are required. Please read the [Migration Guide](https://framework.frictionlessdata.io/docs/codebase/migration.html) from `datapackage` to Frictionless Framework.
+
 ## Features
 
  - `Package` class for working with data packages
