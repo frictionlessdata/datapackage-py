@@ -29,7 +29,7 @@ INSTALL_REQUIRES = [
     'unicodecsv>=0.14',
     'jsonpointer>=1.10',
     'tableschema>=1.12.1',
-    'tabulator>=1.29',
+    'dataflows-tabulator>=1.29',
 ]
 INSTALL_CCHARDET_REQUIRES = [
     'cchardet>=2.0',
