@@ -28,7 +28,7 @@ INSTALL_REQUIRES = [
     'jsonschema>=2.5',
     'unicodecsv>=0.14',
     'jsonpointer>=1.10',
-    'tableschema>=1.12.1',
+    'tableschema>=1.20.3',
     'dataflows-tabulator>=1.29',
 ]
 INSTALL_CCHARDET_REQUIRES = [
