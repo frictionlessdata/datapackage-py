@@ -9,6 +9,7 @@ LEAD := $(shell head -n 1 LEAD.md)
 all: list
 
 install:
+	pip instal setuptools
 	pip install --upgrade -e .[develop]
 
 list:
