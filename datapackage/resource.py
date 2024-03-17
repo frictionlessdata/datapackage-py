@@ -711,24 +711,44 @@ class Resource(object):
 
     def __get_relations(self):
         if not self.__relations:
+            table = self.__get_table()
 
             # Prepare resources
             resources = {}
-            if self.__get_table() and self.__get_table().schema:
-                for fk in self.__get_table().schema.foreign_keys:
-                    resources.setdefault(fk['reference']['resource'], [])
-                    for field in fk['reference']['fields']:
-                        resources[fk['reference']['resource']].append(field)
+            if table and table.schema:
+                for fk in table.schema.foreign_keys:
+                    resource_name = fk['reference'].get('resource')
+                    package_name = fk['reference'].get('package')
+
+                    # Self-referenced resource
+                    if not resource_name:
+                        resource = self
+
+                    # Internal resource
+                    elif not package_name:
+                        if not self.__package:
+                            continue
+                        resource = self.__package.get_resource(resource_name)
+
+                    # External resource (experimental)
+                    # For now, we rely on uniqueness of resource names and relative paths
+                    else:
+                        from .package import Package
+                        package = Package('/'.join([self.__base_path, package_name]))
+                        resource = package.get_resource(resource_name)
+
+                    # Check/add resource
+                    if not resource:
+                        message = 'Foreign key "%s" violation: resource not found'
+                        message = message % fk['fields']
+                        raise exceptions.RelationError(message)
+                    resources[resource_name] = resource
 
             # Fill relations
             self.__relations = {}
-            for resource, fields in resources.items():
-                if resource and not self.__package:
-                    continue
-                self.__relations.setdefault(resource, [])
-                data = self.__package.get_resource(resource) if resource else self
-                if data.tabular:
-                    self.__relations[resource] = data.read(keyed=True)
+            for resource_name, resource in resources.items():
+                if resource.tabular:
+                    self.__relations[resource_name] = resource.read(keyed=True)
 
         return self.__relations
 
